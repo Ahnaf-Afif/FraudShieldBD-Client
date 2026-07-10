@@ -33,10 +33,10 @@ const reports = [
 export default function RecentReports() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-black text-[#06285c]">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[1fr_1.2fr]">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="mb-5 flex min-w-0 items-center justify-between gap-4">
+            <h2 className="min-w-0 text-xl font-black text-[#06285c] sm:text-2xl">
               Recent Published Reports
             </h2>
 
@@ -56,8 +56,8 @@ export default function RecentReports() {
           </button>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-[#f8fbff] p-6 shadow-sm">
-          <h2 className="text-2xl font-black text-[#06285c]">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-[#f8fbff] p-4 shadow-sm sm:p-6">
+          <h2 className="text-xl font-black text-[#06285c] sm:text-2xl">
             Why this matters
           </h2>
 
@@ -80,8 +80,8 @@ export default function RecentReports() {
 
 function ReportRow({ report }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#eef6ff] font-black text-[#0b63f6]">
+    <div className="flex min-w-0 items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:items-center sm:gap-4 sm:p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef6ff] text-sm font-black text-[#0b63f6] sm:h-12 sm:w-12 sm:text-base">
         {report.title.slice(0, 2).toUpperCase()}
       </div>
 
@@ -93,10 +93,14 @@ function ReportRow({ report }) {
             {report.risk}
           </span>
 
-          <h3 className="font-black text-[#06285c]">{report.title}</h3>
+          <h3 className="min-w-0 break-words text-sm font-black text-[#06285c] sm:text-base">
+            {report.title}
+          </h3>
         </div>
 
-        <p className="mt-1 text-sm text-slate-600">{report.description}</p>
+        <p className="mt-1 break-words text-sm text-slate-600">
+          {report.description}
+        </p>
 
         <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-500">
           <span className="inline-flex items-center gap-1">
@@ -116,7 +120,10 @@ function ReportRow({ report }) {
         <p className="text-xs text-slate-500">Reports</p>
       </div>
 
-      <ChevronRight size={20} className="text-[#06285c]" />
+      <ChevronRight
+        size={20}
+        className="mt-2 shrink-0 text-[#06285c] sm:mt-0"
+      />
     </div>
   );
 }
