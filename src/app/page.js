@@ -1,7 +1,13 @@
+import HeroSection from "./components/HeroSection";
+import Navbar from "./components/Navbar";
+import StatsSection from "./components/StatsSection";
+
 export default function Home() {
   return (
-    <div>
-      <h1>Welcome to Next.js!</h1>
-    </div>
+    <main className="min-h-screen bg-white">
+      <Navbar />
+      <HeroSection />
+      <StatsSection />
+    </main>
   );
 }
