@@ -1,6 +1,7 @@
 import HeroSection from "./components/HeroSection";
 import Navbar from "./components/Navbar";
 import StatsSection from "./components/StatsSection";
+import ActionCards from "./components/ActionCards";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <StatsSection />
+      <ActionCards />
     </main>
   );
 }
