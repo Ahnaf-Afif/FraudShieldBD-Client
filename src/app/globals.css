@@ -1,7 +1,28 @@
 @import "tailwindcss";
+@import "@heroui/styles";
+
+:root {
+  --navy: #06285c;
+  --deep-navy: #00214d;
+  --green: #009879;
+  --blue: #0b63f6;
+  --red: #ff3b4f;
+  --orange: #ff9f1c;
+  --soft-bg: #f7fbff;
+  --border: #dbe7f3;
+}
 
 html,
 body {
-  background: white;
-  color: black;
+  min-height: 100%;
+  background: #ffffff;
+  color: var(--navy);
+}
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
 }
