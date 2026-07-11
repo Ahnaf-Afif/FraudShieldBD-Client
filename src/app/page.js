@@ -6,6 +6,7 @@ import HowItWorks from "./components/HowItWorks";
 import ScamCategories from "./components/ScamCategories";
 import RecentReports from "./components/RecentReports";
 import ScamGuides from "./components/ScamGuides";
+import Footer from "./components/Footer";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <ScamCategories />
       <RecentReports />
       <ScamGuides />
+      <Footer />
     </main>
   );
 }
