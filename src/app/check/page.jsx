@@ -1,8 +1,9 @@
-import CheckSearchPanel from "../components/CheckSearchPanel";
-import CheckResultCard from "../components/CheckResultCard";
-import RelatedReports from "../components/RelatedReports";
-import Footer from "../components/Footer";
-import Navbar from "../components/Navbar";
+import CheckSearchPanel from "../components/check/CheckSearchPanel";
+import CheckResultCard from "../components/check/CheckResultCard";
+import RelatedReports from "../components/check/RelatedReports";
+import SuggestedSafetyActions from "../components/check/SuggestedSafetyActions";
+import Footer from "../components/shared/Footer";
+import Navbar from "../components/shared/Navbar";
 
 export default function CheckPage() {
   return (
@@ -25,6 +26,8 @@ export default function CheckPage() {
       <CheckResultCard />
 
       <RelatedReports />
+
+      <SuggestedSafetyActions />
 
       <Footer />
     </main>
