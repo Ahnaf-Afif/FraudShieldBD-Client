@@ -7,6 +7,7 @@ import ScamCategories from "./components/ScamCategories";
 import RecentReports from "./components/RecentReports";
 import ScamGuides from "./components/ScamGuides";
 import Footer from "./components/Footer";
+import SafetyTipBanner from "./components/SafetyTipBanner";
 
 export default function Home() {
   return (
@@ -19,6 +20,7 @@ export default function Home() {
       <ScamCategories />
       <RecentReports />
       <ScamGuides />
+      <SafetyTipBanner />
       <Footer />
     </main>
   );
