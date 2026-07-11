@@ -1,3 +1,5 @@
+import ReportsPagination from "./ReportsPagination";
+
 import {
   BriefcaseBusiness,
   ChevronRight,
@@ -15,7 +17,8 @@ const reports = [
   {
     title: "01912-345678 (bKash)",
     category: "Mobile Financial",
-    description: "Fraudulent transaction after advance payment for a mobile phone.",
+    description:
+      "Fraudulent transaction after advance payment for a mobile phone.",
     identifier: "bKash: 01***345678",
     risk: "High Risk",
     reports: 23,
@@ -122,6 +125,7 @@ export default function PublishedReportsList() {
             <ReportRow key={report.title} report={report} />
           ))}
         </div>
+        <ReportsPagination />
       </div>
     </section>
   );
@@ -143,7 +147,9 @@ function ReportRow({ report }) {
           <h2 className="min-w-0 break-words text-lg font-black text-[#06285c]">
             {report.title}
           </h2>
-          <span className={`rounded-lg px-2.5 py-1 text-xs font-bold ${report.riskStyle}`}>
+          <span
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold ${report.riskStyle}`}
+          >
             {report.risk}
           </span>
         </div>
