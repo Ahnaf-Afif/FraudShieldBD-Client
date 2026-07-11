@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -15,6 +16,10 @@ const navLinks = [
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+  function isActive(href) {
+    return pathname === href;
+  }
 
   function toggleMenu() {
     setIsMenuOpen(!isMenuOpen);
@@ -49,7 +54,7 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               className={
-                link.href === "/" ? "border-b-2 border-[#06285c] py-2" : ""
+                isActive(link.href) ? "border-b-2 border-[#06285c] py-2" : ""
               }
             >
               {link.label}
@@ -91,7 +96,7 @@ export default function Navbar() {
                 href={link.href}
                 onClick={closeMenu}
                 className={`rounded-xl px-4 py-3 text-sm font-bold ${
-                  link.href === "/"
+                  isActive(link.href)
                     ? "bg-[#e9f8f4] text-[#009879]"
                     : "text-[#06285c]"
                 }`}
