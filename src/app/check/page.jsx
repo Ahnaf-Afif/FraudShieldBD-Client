@@ -1,5 +1,6 @@
 import CheckSearchPanel from "../components/CheckSearchPanel";
 import CheckResultCard from "../components/CheckResultCard";
+import RelatedReports from "../components/RelatedReports";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 
@@ -22,6 +23,8 @@ export default function CheckPage() {
       <CheckSearchPanel />
 
       <CheckResultCard />
+
+      <RelatedReports />
 
       <Footer />
     </main>
