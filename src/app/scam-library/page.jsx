@@ -1,7 +1,15 @@
+import ScamLibraryHero from "../components/scam-library/ScamLibraryHero";
+import ScamLibraryTabs from "../components/scam-library/ScamLibraryTabs";
+import Footer from "../components/shared/Footer";
+import Navbar from "../components/shared/Navbar";
+
 export default function ScamLibraryPage() {
   return (
-    <main className="min-h-screen bg-white p-6">
-      <h1 className="text-3xl font-black text-[#06285c]">Scam Library</h1>
+    <main className="min-h-screen bg-white">
+      <Navbar />
+      <ScamLibraryHero />
+      <ScamLibraryTabs />
+      <Footer />
     </main>
   );
 }
