@@ -4,6 +4,8 @@ import ReportStepBar from "../components/report-fraud/ReportStepBar";
 import ReportStoryForm from "../components/report-fraud/ReportStoryForm";
 import ReportFinancialForm from "../components/report-fraud/ReportFinancialForm";
 import ReportIdentifiersForm from "../components/report-fraud/ReportIdentifiersForm";
+import ReportEvidenceForm from "../components/report-fraud/ReportEvidenceForm";
+import ReportReviewForm from "../components/report-fraud/ReportReviewForm";
 import Footer from "../components/shared/Footer";
 import Navbar from "../components/shared/Navbar";
 
@@ -17,6 +19,8 @@ export default function ReportFraudPage() {
       <ReportStoryForm />
       <ReportFinancialForm />
       <ReportIdentifiersForm />
+      <ReportEvidenceForm />
+      <ReportReviewForm />
       <Footer />
     </main>
   );
