@@ -3,8 +3,7 @@ import { FaFacebookF } from "react-icons/fa6";
 
 export default function ReportIdentifiersForm() {
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
-      <form className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="border-b border-slate-200 p-5 sm:p-6">
         <div className="border-b border-slate-200 pb-4">
           <h2 className="text-2xl font-black text-[#06285c]">4. Identifiers</h2>
 
@@ -49,22 +48,25 @@ export default function ReportIdentifiersForm() {
             people before they pay.
           </p>
         </div>
-      </form>
-
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-xl font-black text-[#06285c]">
-          Good identifier examples
-        </h2>
-
-        <div className="mt-5 space-y-4">
-          <Example label="Phone" value="017******78" />
-          <Example label="Payment" value="bKash / Nagad number" />
-          <Example label="Facebook" value="facebook.com/page-name" />
-          <Example label="Website" value="example-shop.com" />
-          <Example label="Business" value="Shop or company name" />
-        </div>
-      </aside>
     </section>
+  );
+}
+
+export function ReportIdentifiersTips() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-xl font-black text-[#06285c]">
+        Good identifier examples
+      </h2>
+
+      <div className="mt-5 space-y-4">
+        <Example label="Phone" value="017******78" />
+        <Example label="Payment" value="bKash / Nagad number" />
+        <Example label="Facebook" value="facebook.com/page-name" />
+        <Example label="Website" value="example-shop.com" />
+        <Example label="Business" value="Shop or company name" />
+      </div>
+    </div>
   );
 }
 

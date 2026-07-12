@@ -2,8 +2,7 @@ import { CalendarDays, HelpCircle } from "lucide-react";
 
 export default function ReportCategoryForm() {
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
-      <form className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="border-b border-slate-200 p-5 sm:p-6">
         <div className="border-b border-slate-200 pb-4">
           <h2 className="text-2xl font-black text-[#06285c]">
             1. What happened?
@@ -86,37 +85,34 @@ export default function ReportCategoryForm() {
             </div>
           </div>
         </div>
-
-        <div className="mt-6 flex justify-end">
-          <button className="rounded-xl bg-[#009879] px-6 py-3 font-bold text-white">
-            Save & Continue →
-          </button>
-        </div>
-      </form>
-
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-xl font-black text-[#06285c]">
-          Why structured reports matter
-        </h2>
-
-        <div className="mt-5 space-y-5">
-          <InfoPoint
-            title="Faster investigations"
-            text="Well-structured reports help moderators review cases quickly."
-          />
-
-          <InfoPoint
-            title="Stronger evidence"
-            text="Detailed information increases the chance of action."
-          />
-
-          <InfoPoint
-            title="Community protection"
-            text="Your report helps warn and protect other people."
-          />
-        </div>
-      </aside>
     </section>
+  );
+}
+
+export function ReportCategoryTips() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-xl font-black text-[#06285c]">
+        Why structured reports matter
+      </h2>
+
+      <div className="mt-5 space-y-5">
+        <InfoPoint
+          title="Faster investigations"
+          text="Well-structured reports help moderators review cases quickly."
+        />
+
+        <InfoPoint
+          title="Stronger evidence"
+          text="Detailed information increases the chance of action."
+        />
+
+        <InfoPoint
+          title="Community protection"
+          text="Your report helps warn and protect other people."
+        />
+      </div>
+    </div>
   );
 }
 

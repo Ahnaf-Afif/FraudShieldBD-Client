@@ -6,8 +6,7 @@ export default function ReportStoryForm() {
   const [story, setStory] = useState("");
 
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
-      <form className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="border-b border-slate-200 p-5 sm:p-6">
         <div className="border-b border-slate-200 pb-4">
           <h2 className="text-2xl font-black text-[#06285c]">
             2. Tell us what happened
@@ -77,31 +76,34 @@ export default function ReportStoryForm() {
             <input type="checkbox" className="h-5 w-5 accent-[#009879]" />
           </label>
         </div>
-      </form>
-
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-xl font-black text-[#06285c]">
-          Good report writing tips
-        </h2>
-
-        <div className="mt-5 space-y-5">
-          <Tip
-            title="Write in order"
-            text="Explain what happened first, then what happened next."
-          />
-
-          <Tip
-            title="Include important details"
-            text="Mention dates, amounts, account names, links, numbers and promises."
-          />
-
-          <Tip
-            title="Avoid private secrets"
-            text="Never include OTP, PIN, passwords, NID numbers or full addresses."
-          />
-        </div>
-      </aside>
     </section>
+  );
+}
+
+export function ReportStoryTips() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-xl font-black text-[#06285c]">
+        Good report writing tips
+      </h2>
+
+      <div className="mt-5 space-y-5">
+        <Tip
+          title="Write in order"
+          text="Explain what happened first, then what happened next."
+        />
+
+        <Tip
+          title="Include important details"
+          text="Mention dates, amounts, account names, links, numbers and promises."
+        />
+
+        <Tip
+          title="Avoid private secrets"
+          text="Never include OTP, PIN, passwords, NID numbers or full addresses."
+        />
+      </div>
+    </div>
   );
 }
 

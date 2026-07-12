@@ -2,8 +2,7 @@ import { BadgeDollarSign, Info } from "lucide-react";
 
 export default function ReportFinancialForm() {
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
-      <form className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="border-b border-slate-200 p-5 sm:p-6">
         <div className="border-b border-slate-200 pb-4">
           <h2 className="text-2xl font-black text-[#06285c]">
             3. Financial Info
@@ -88,23 +87,26 @@ export default function ReportFinancialForm() {
             </div>
           </div>
         </div>
-      </form>
-
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
-          <BadgeDollarSign size={30} />
-        </div>
-
-        <h2 className="mt-5 text-xl font-black text-[#06285c]">
-          Why financial details help
-        </h2>
-
-        <p className="mt-3 leading-7 text-slate-600">
-          Payment method, amount, and transaction timing help moderators connect
-          similar reports and identify repeated scam patterns.
-        </p>
-      </aside>
     </section>
+  );
+}
+
+export function ReportFinancialTips() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+        <BadgeDollarSign size={30} />
+      </div>
+
+      <h2 className="mt-5 text-xl font-black text-[#06285c]">
+        Why financial details help
+      </h2>
+
+      <p className="mt-3 leading-7 text-slate-600">
+        Payment method, amount, and transaction timing help moderators connect
+        similar reports and identify repeated scam patterns.
+      </p>
+    </div>
   );
 }
 

@@ -1,9 +1,8 @@
-import { CheckCircle2, FileCheck, ShieldCheck } from "lucide-react";
+import { CheckCircle2, FileCheck } from "lucide-react";
 
 export default function ReportReviewForm() {
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
-      <form className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="p-5 sm:p-6">
         <div className="border-b border-slate-200 pb-4">
           <h2 className="text-2xl font-black text-[#06285c]">
             6. Prevention & Review
@@ -53,35 +52,38 @@ export default function ReportReviewForm() {
             Submit Report
           </button>
         </div>
-      </form>
-
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
-          <FileCheck size={30} />
-        </div>
-
-        <h2 className="mt-5 text-xl font-black text-[#06285c]">
-          What happens next?
-        </h2>
-
-        <div className="mt-5 space-y-5">
-          <NextStep
-            title="Moderators review"
-            text="Your report will be checked before it becomes public."
-          />
-
-          <NextStep
-            title="Sensitive data hidden"
-            text="Full numbers and private details should not be shown publicly."
-          />
-
-          <NextStep
-            title="Community warning"
-            text="If approved, your report can help warn others before they pay."
-          />
-        </div>
-      </aside>
     </section>
+  );
+}
+
+export function ReportReviewTips() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+        <FileCheck size={30} />
+      </div>
+
+      <h2 className="mt-5 text-xl font-black text-[#06285c]">
+        What happens next?
+      </h2>
+
+      <div className="mt-5 space-y-5">
+        <NextStep
+          title="Moderators review"
+          text="Your report will be checked before it becomes public."
+        />
+
+        <NextStep
+          title="Sensitive data hidden"
+          text="Full numbers and private details should not be shown publicly."
+        />
+
+        <NextStep
+          title="Community warning"
+          text="If approved, your report can help warn others before they pay."
+        />
+      </div>
+    </div>
   );
 }
 

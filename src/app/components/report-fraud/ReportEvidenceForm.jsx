@@ -11,8 +11,7 @@ const evidenceTypes = [
 
 export default function ReportEvidenceForm() {
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
-      <form className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="border-b border-slate-200 p-5 sm:p-6">
         <div className="border-b border-slate-200 pb-4">
           <h2 className="text-2xl font-black text-[#06285c]">5. Evidence</h2>
 
@@ -81,24 +80,27 @@ export default function ReportEvidenceForm() {
             </div>
           </div>
         </div>
-      </form>
-
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#eef6ff] text-[#0b63f6]">
-          <FileImage size={30} />
-        </div>
-
-        <h2 className="mt-5 text-xl font-black text-[#06285c]">
-          What evidence helps?
-        </h2>
-
-        <div className="mt-5 space-y-4 text-sm leading-6 text-slate-600">
-          <p>Clear screenshots of conversations.</p>
-          <p>Transaction receipts with private data hidden.</p>
-          <p>Links or screenshots of fake pages/websites.</p>
-          <p>Any message showing promises, threats or payment requests.</p>
-        </div>
-      </aside>
     </section>
+  );
+}
+
+export function ReportEvidenceTips() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#eef6ff] text-[#0b63f6]">
+        <FileImage size={30} />
+      </div>
+
+      <h2 className="mt-5 text-xl font-black text-[#06285c]">
+        What evidence helps?
+      </h2>
+
+      <div className="mt-5 space-y-4 text-sm leading-6 text-slate-600">
+        <p>Clear screenshots of conversations.</p>
+        <p>Transaction receipts with private data hidden.</p>
+        <p>Links or screenshots of fake pages/websites.</p>
+        <p>Any message showing promises, threats or payment requests.</p>
+      </div>
+    </div>
   );
 }
