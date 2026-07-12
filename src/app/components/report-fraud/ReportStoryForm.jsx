@@ -1,81 +1,94 @@
-"use client";
-
-import { useState } from "react";
-
-export default function ReportStoryForm() {
-  const [story, setStory] = useState("");
-
+export default function ReportStoryForm({ reportData, updateReportData }) {
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
-        <div className="border-b border-slate-200 pb-4">
-          <h2 className="text-2xl font-black text-[#06285c]">
-            2. Tell us what happened
-          </h2>
+      <div className="border-b border-slate-200 pb-4">
+        <h2 className="text-2xl font-black text-[#06285c]">
+          2. Tell us what happened
+        </h2>
 
-          <p className="mt-1 text-slate-600">
-            Provide a detailed description to help us understand the fraud.
-          </p>
-        </div>
+        <p className="mt-1 text-slate-600">
+          Provide a detailed description to help us understand the fraud.
+        </p>
+      </div>
 
-        <div className="mt-6">
-          <label className="block">
-            <span className="mb-2 block text-sm font-bold text-[#06285c]">
-              Your story <span className="text-red-500">*</span>
-            </span>
+      <div className="mt-6">
+        <label className="block">
+          <span className="mb-2 block text-sm font-bold text-[#06285c]">
+            Your story <span className="text-red-500">*</span>
+          </span>
 
-            <textarea
-              value={story}
-              onChange={(event) => setStory(event.target.value)}
-              maxLength={2000}
-              className="min-h-40 w-full resize-y rounded-xl border border-[#dbe7f3] bg-white p-4 leading-7 text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
-              placeholder="Describe what happened in your own words. Include how you were contacted, what was promised, what you did, and what happened next..."
-            />
+          <textarea
+            value={reportData.story}
+            onChange={(event) => updateReportData("story", event.target.value)}
+            maxLength={2000}
+            className="min-h-40 w-full resize-y rounded-xl border border-[#dbe7f3] bg-white p-4 leading-7 text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+            placeholder="Describe what happened in your own words. Include how you were contacted, what was promised, what you did, and what happened next..."
+          />
 
-            <span className="mt-2 block text-right text-sm text-slate-500">
-              {story.length} / 2000
-            </span>
-          </label>
-        </div>
+          <span className="mt-2 block text-right text-sm text-slate-500">
+            {reportData.story.length} / 2000
+          </span>
+        </label>
+      </div>
 
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          <FormField label="How did the fraud start?">
-            <select className="form-input">
-              <option>Select how the contact started</option>
-              <option>Facebook message</option>
-              <option>Phone call</option>
-              <option>SMS</option>
-              <option>WhatsApp</option>
-              <option>Website</option>
-              <option>Friend referral</option>
-            </select>
-          </FormField>
+      <div className="mt-5 grid gap-5 md:grid-cols-2">
+        <FormField label="How did the fraud start?">
+          <select
+            value={reportData.contactMethod}
+            onChange={(event) =>
+              updateReportData("contactMethod", event.target.value)
+            }
+            className="form-input"
+          >
+            <option value="">Select how the contact started</option>
+            <option>Facebook message</option>
+            <option>Phone call</option>
+            <option>SMS</option>
+            <option>WhatsApp</option>
+            <option>Website</option>
+            <option>Friend referral</option>
+          </select>
+        </FormField>
 
-          <FormField label="Were you promised something?">
-            <select className="form-input">
-              <option>Select what was promised</option>
-              <option>Product delivery</option>
-              <option>Job opportunity</option>
-              <option>Investment return</option>
-              <option>Loan approval</option>
-              <option>Account recovery</option>
-              <option>Prize or lottery</option>
-            </select>
-          </FormField>
-        </div>
+        <FormField label="Were you promised something?">
+          <select
+            value={reportData.promisedItem}
+            onChange={(event) =>
+              updateReportData("promisedItem", event.target.value)
+            }
+            className="form-input"
+          >
+            <option value="">Select what was promised</option>
+            <option>Product delivery</option>
+            <option>Job opportunity</option>
+            <option>Investment return</option>
+            <option>Loan approval</option>
+            <option>Account recovery</option>
+            <option>Prize or lottery</option>
+          </select>
+        </FormField>
+      </div>
 
-        <div className="mt-6 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5">
-          <label className="flex cursor-pointer items-center justify-between gap-4">
-            <div>
-              <h3 className="font-black text-[#06285c]">Report anonymously</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                Your identity will be hidden publicly. We still need your
-                account internally to prevent abuse.
-              </p>
-            </div>
+      <div className="mt-6 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5">
+        <label className="flex cursor-pointer items-center justify-between gap-4">
+          <div>
+            <h3 className="font-black text-[#06285c]">Report anonymously</h3>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Your identity will be hidden publicly. We still need your account
+              internally to prevent abuse.
+            </p>
+          </div>
 
-            <input type="checkbox" className="h-5 w-5 accent-[#009879]" />
-          </label>
-        </div>
+          <input
+            type="checkbox"
+            checked={reportData.anonymous}
+            onChange={(event) =>
+              updateReportData("anonymous", event.target.checked)
+            }
+            className="h-5 w-5 accent-[#009879]"
+          />
+        </label>
+      </div>
     </section>
   );
 }
