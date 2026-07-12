@@ -1,6 +1,6 @@
 import { BadgeDollarSign, Info } from "lucide-react";
 
-export default function ReportFinancialForm() {
+export default function ReportFinancialForm({ reportData, updateReportData }) {
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
         <div className="border-b border-slate-200 pb-4">
@@ -15,8 +15,14 @@ export default function ReportFinancialForm() {
 
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <FormField label="Did you lose money?" required>
-            <select className="form-input">
-              <option>Select an answer</option>
+            <select
+              value={reportData.moneyStatus}
+              onChange={(event) =>
+                updateReportData("moneyStatus", event.target.value)
+              }
+              className="form-input"
+            >
+              <option value="">Select an answer</option>
               <option>Yes, I lost money</option>
               <option>No, but they asked for money</option>
               <option>No money was involved</option>
@@ -33,6 +39,10 @@ export default function ReportFinancialForm() {
               <input
                 type="number"
                 min="0"
+                value={reportData.amount}
+                onChange={(event) =>
+                  updateReportData("amount", event.target.value)
+                }
                 className="min-h-12 w-full min-w-0 px-4 text-[#06285c] outline-none"
                 placeholder="Example: 5000"
               />
@@ -40,8 +50,14 @@ export default function ReportFinancialForm() {
           </FormField>
 
           <FormField label="Payment method">
-            <select className="form-input">
-              <option>Select payment method</option>
+            <select
+              value={reportData.paymentMethod}
+              onChange={(event) =>
+                updateReportData("paymentMethod", event.target.value)
+              }
+              className="form-input"
+            >
+              <option value="">Select payment method</option>
               <option>bKash</option>
               <option>Nagad</option>
               <option>Rocket</option>
@@ -53,15 +69,33 @@ export default function ReportFinancialForm() {
           </FormField>
 
           <FormField label="Transaction date">
-            <input type="date" className="form-input" />
+            <input
+              type="date"
+              value={reportData.transactionDate}
+              onChange={(event) =>
+                updateReportData("transactionDate", event.target.value)
+              }
+              className="form-input"
+            />
           </FormField>
 
           <FormField label="Transaction ID">
-            <input className="form-input" placeholder="Example: TXN123456789" />
+            <input
+              value={reportData.transactionId}
+              onChange={(event) =>
+                updateReportData("transactionId", event.target.value)
+              }
+              className="form-input"
+              placeholder="Example: TXN123456789"
+            />
           </FormField>
 
           <FormField label="Payment account name">
             <input
+              value={reportData.paymentAccountName}
+              onChange={(event) =>
+                updateReportData("paymentAccountName", event.target.value)
+              }
               className="form-input"
               placeholder="Name shown in payment app or bank"
             />

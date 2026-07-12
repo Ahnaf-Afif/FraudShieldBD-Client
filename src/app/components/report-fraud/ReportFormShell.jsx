@@ -22,6 +22,12 @@ const initialReportData = {
   contactMethod: "",
   promisedItem: "",
   anonymous: false,
+  moneyStatus: "",
+  amount: "",
+  paymentMethod: "",
+  transactionDate: "",
+  transactionId: "",
+  paymentAccountName: "",
 };
 
 export default function ReportFormShell() {
@@ -53,7 +59,10 @@ export default function ReportFormShell() {
           reportData={reportData}
           updateReportData={updateReportData}
         />
-        <ReportFinancialForm />
+        <ReportFinancialForm
+          reportData={reportData}
+          updateReportData={updateReportData}
+        />
         <ReportIdentifiersForm />
         <ReportEvidenceForm />
         <ReportReviewForm />
