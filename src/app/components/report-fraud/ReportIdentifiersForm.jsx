@@ -1,53 +1,64 @@
 import { Building2, Globe, Phone } from "lucide-react";
 import { FaFacebookF } from "react-icons/fa6";
 
-export default function ReportIdentifiersForm() {
+export default function ReportIdentifiersForm({
+  reportData,
+  updateReportData,
+}) {
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
-        <div className="border-b border-slate-200 pb-4">
-          <h2 className="text-2xl font-black text-[#06285c]">4. Identifiers</h2>
+      <div className="border-b border-slate-200 pb-4">
+        <h2 className="text-2xl font-black text-[#06285c]">4. Identifiers</h2>
 
-          <p className="mt-1 text-slate-600">
-            Add numbers, pages, websites or business names connected to the
-            incident.
-          </p>
-        </div>
+        <p className="mt-1 text-slate-600">
+          Add numbers, pages, websites or business names connected to the
+          incident.
+        </p>
+      </div>
 
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <IdentifierField
-            label="Phone or payment number"
-            placeholder="Example: 01712345678"
-            icon={Phone}
-          />
+      <div className="mt-6 grid gap-5 md:grid-cols-2">
+        <IdentifierField
+          label="Phone or payment number"
+          placeholder="Example: 01712345678"
+          icon={Phone}
+          value={reportData.phoneOrPaymentNumber}
+          onChange={(value) => updateReportData("phoneOrPaymentNumber", value)}
+        />
 
-          <IdentifierField
-            label="Facebook page/profile link"
-            placeholder="Example: facebook.com/fakepage"
-            icon={FaFacebookF}
-          />
+        <IdentifierField
+          label="Facebook page/profile link"
+          placeholder="Example: facebook.com/fakepage"
+          icon={FaFacebookF}
+          value={reportData.facebookLink}
+          onChange={(value) => updateReportData("facebookLink", value)}
+        />
 
-          <IdentifierField
-            label="Website link"
-            placeholder="Example: scamshop.com"
-            icon={Globe}
-          />
+        <IdentifierField
+          label="Website link"
+          placeholder="Example: scamshop.com"
+          icon={Globe}
+          value={reportData.websiteLink}
+          onChange={(value) => updateReportData("websiteLink", value)}
+        />
 
-          <IdentifierField
-            label="Business or shop name"
-            placeholder="Example: Dream Electronics BD"
-            icon={Building2}
-          />
-        </div>
+        <IdentifierField
+          label="Business or shop name"
+          placeholder="Example: Dream Electronics BD"
+          icon={Building2}
+          value={reportData.businessName}
+          onChange={(value) => updateReportData("businessName", value)}
+        />
+      </div>
 
-        <div className="mt-6 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5">
-          <h3 className="font-black text-[#06285c]">Why identifiers matter</h3>
+      <div className="mt-6 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5">
+        <h3 className="font-black text-[#06285c]">Why identifiers matter</h3>
 
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Identifiers help us connect multiple reports about the same scammer,
-            page, website or business. This is how the search feature can warn
-            people before they pay.
-          </p>
-        </div>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Identifiers help us connect multiple reports about the same scammer,
+          page, website or business. This is how the search feature can warn
+          people before they pay.
+        </p>
+      </div>
     </section>
   );
 }
@@ -70,7 +81,7 @@ export function ReportIdentifiersTips() {
   );
 }
 
-function IdentifierField({ label, placeholder, icon: Icon }) {
+function IdentifierField({ label, placeholder, icon: Icon, value, onChange }) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-bold text-[#06285c]">
@@ -83,6 +94,8 @@ function IdentifierField({ label, placeholder, icon: Icon }) {
         </span>
 
         <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
           className="min-h-12 w-full min-w-0 px-4 text-[#06285c] outline-none"
           placeholder={placeholder}
         />

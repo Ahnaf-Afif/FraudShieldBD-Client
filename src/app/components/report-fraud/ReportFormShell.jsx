@@ -28,6 +28,10 @@ const initialReportData = {
   transactionDate: "",
   transactionId: "",
   paymentAccountName: "",
+  phoneOrPaymentNumber: "",
+  facebookLink: "",
+  websiteLink: "",
+  businessName: "",
 };
 
 export default function ReportFormShell() {
@@ -63,7 +67,10 @@ export default function ReportFormShell() {
           reportData={reportData}
           updateReportData={updateReportData}
         />
-        <ReportIdentifiersForm />
+        <ReportIdentifiersForm
+          reportData={reportData}
+          updateReportData={updateReportData}
+        />
         <ReportEvidenceForm />
         <ReportReviewForm />
       </form>
