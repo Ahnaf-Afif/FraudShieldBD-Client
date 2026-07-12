@@ -1,5 +1,7 @@
 import ScamLibraryHero from "../components/scam-library/ScamLibraryHero";
 import ScamLibraryTabs from "../components/scam-library/ScamLibraryTabs";
+import FeaturedGuide from "../components/scam-library/FeaturedGuide";
+
 import Footer from "../components/shared/Footer";
 import Navbar from "../components/shared/Navbar";
 
@@ -9,6 +11,7 @@ export default function ScamLibraryPage() {
       <Navbar />
       <ScamLibraryHero />
       <ScamLibraryTabs />
+      <FeaturedGuide />
       <Footer />
     </main>
   );
