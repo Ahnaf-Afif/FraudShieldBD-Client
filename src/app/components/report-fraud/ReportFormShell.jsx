@@ -35,6 +35,11 @@ const initialReportData = {
   evidenceType: "",
   evidenceFiles: [],
   evidenceDetails: "",
+  preventionAdvice: "",
+  confirmsAccuracy: false,
+  confirmsPrivacy: false,
+  confirmsReview: false,
+  confirmsHonesty: false,
 };
 
 export default function ReportFormShell() {
@@ -78,7 +83,10 @@ export default function ReportFormShell() {
           reportData={reportData}
           updateReportData={updateReportData}
         />
-        <ReportReviewForm />
+        <ReportReviewForm
+          reportData={reportData}
+          updateReportData={updateReportData}
+        />
       </form>
 
       <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
