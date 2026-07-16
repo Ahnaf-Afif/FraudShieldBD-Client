@@ -32,6 +32,9 @@ const initialReportData = {
   facebookLink: "",
   websiteLink: "",
   businessName: "",
+  evidenceType: "",
+  evidenceFiles: [],
+  evidenceDetails: "",
 };
 
 export default function ReportFormShell() {
@@ -71,7 +74,10 @@ export default function ReportFormShell() {
           reportData={reportData}
           updateReportData={updateReportData}
         />
-        <ReportEvidenceForm />
+        <ReportEvidenceForm
+          reportData={reportData}
+          updateReportData={updateReportData}
+        />
         <ReportReviewForm />
       </form>
 

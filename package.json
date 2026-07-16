@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -18,6 +18,8 @@
     "react-icons": "^5.7.0"
   },
   "devDependencies": {
+    "@babel/preset-react": "^8.0.1",
+    "@locator/babel-jsx": "^0.5.1",
     "@locator/webpack-loader": "^0.5.1",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",

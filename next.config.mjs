@@ -1,19 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  turbopack: {
-    rules: {
-      "**/*.{js,jsx,ts,tsx}": {
-        loaders: [
-          {
-            loader: "@locator/webpack-loader",
-            options: {
-              env: "development",
-            },
-          },
-        ],
-      },
-    },
-  },
-};
+const nextConfig = {};
 
 export default nextConfig;

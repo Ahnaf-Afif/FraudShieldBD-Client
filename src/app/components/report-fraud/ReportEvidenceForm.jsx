@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef } from "react";
 import { FileImage, Upload, XCircle } from "lucide-react";
 
 const evidenceTypes = [
@@ -9,7 +12,18 @@ const evidenceTypes = [
   "Other evidence",
 ];
 
-export default function ReportEvidenceForm() {
+export default function ReportEvidenceForm({ reportData, updateReportData }) {
+  const fileInputRef = useRef(null);
+
+  function openFilePicker() {
+    fileInputRef.current?.click();
+  }
+
+  function handleFileChange(event) {
+    const selectedFiles = Array.from(event.target.files);
+    updateReportData("evidenceFiles", selectedFiles);
+  }
+
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
         <div className="border-b border-slate-200 pb-4">
@@ -35,15 +49,41 @@ export default function ReportEvidenceForm() {
 
           <button
             type="button"
+            onClick={openFilePicker}
             className="mt-5 rounded-xl bg-[#009879] px-6 py-3 font-bold text-white"
           >
             Choose Files
           </button>
 
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/png,image/jpeg,image/webp,application/pdf"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
           <p className="mt-3 text-xs text-slate-500">
             PNG, JPG, WEBP or PDF. Maximum 5 files.
           </p>
         </div>
+
+        {reportData.evidenceFiles.length > 0 && (
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <h3 className="text-sm font-black text-[#06285c]">
+              Selected files
+            </h3>
+
+            <ul className="mt-3 space-y-2 text-sm text-slate-600">
+              {reportData.evidenceFiles.map((file) => (
+                <li key={`${file.name}-${file.size}`} className="break-words">
+                  {file.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="mt-6">
           <label className="block">
@@ -51,12 +91,37 @@ export default function ReportEvidenceForm() {
               Evidence type
             </span>
 
-            <select className="form-input">
-              <option>Select evidence type</option>
+            <select
+              value={reportData.evidenceType}
+              onChange={(event) =>
+                updateReportData("evidenceType", event.target.value)
+              }
+              className="form-input"
+            >
+              <option value="">Select evidence type</option>
               {evidenceTypes.map((type) => (
-                <option key={type}>{type}</option>
+                <option key={type} value={type}>
+                  {type}
+                </option>
               ))}
             </select>
+          </label>
+        </div>
+
+        <div className="mt-6">
+          <label className="block">
+            <span className="mb-2 block text-sm font-bold text-[#06285c]">
+              Evidence notes
+            </span>
+
+            <textarea
+              value={reportData.evidenceDetails}
+              onChange={(event) =>
+                updateReportData("evidenceDetails", event.target.value)
+              }
+              className="min-h-28 w-full resize-y rounded-xl border border-[#dbe7f3] bg-white p-4 leading-7 text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+              placeholder="Example: The first screenshot shows the payment request. The second screenshot shows the transaction receipt."
+            />
           </label>
         </div>
 
