@@ -1,6 +1,12 @@
 import { CheckCircle2, FileCheck } from "lucide-react";
 
 export default function ReportReviewForm({ reportData, updateReportData }) {
+  const canSubmitReport =
+    reportData.confirmsAccuracy &&
+    reportData.confirmsPrivacy &&
+    reportData.confirmsReview &&
+    reportData.confirmsHonesty;
+
   return (
     <section className="p-5 sm:p-6">
       <div className="border-b border-slate-200 pb-4">
@@ -72,7 +78,8 @@ export default function ReportReviewForm({ reportData, updateReportData }) {
 
         <button
           type="submit"
-          className="rounded-xl bg-[#009879] px-6 py-3 font-bold text-white"
+          disabled={!canSubmitReport}
+          className="rounded-xl bg-[#009879] px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
         >
           Submit Report
         </button>
