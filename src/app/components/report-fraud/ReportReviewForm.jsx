@@ -5,6 +5,7 @@ export default function ReportReviewForm({
   updateReportData,
   submitStatus,
   onSaveDraft,
+  onResetForm,
 }) {
   const canSubmitReport =
     reportData.confirmsAccuracy &&
@@ -95,6 +96,16 @@ export default function ReportReviewForm({
             store drafts in the backend or browser local storage.
           </p>
         </div>
+      )}
+
+      {submitStatus && (
+        <button
+          type="button"
+          onClick={onResetForm}
+          className="mt-4 rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-[#06285c] transition hover:border-red-300 hover:bg-red-50 hover:text-red-500 active:bg-slate-300 active:text-slate-600"
+        >
+          Start New Report
+        </button>
       )}
 
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">

@@ -65,6 +65,11 @@ export default function ReportFormShell() {
     setSubmitStatus("draft");
   }
 
+  function handleResetForm() {
+    setReportData(initialReportData);
+    setSubmitStatus("");
+  }
+
   return (
     <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
       <form
@@ -96,6 +101,7 @@ export default function ReportFormShell() {
           reportData={reportData}
           updateReportData={updateReportData}
           onSaveDraft={handleSaveDraft}
+          onResetForm={handleResetForm}
         />
       </form>
 
