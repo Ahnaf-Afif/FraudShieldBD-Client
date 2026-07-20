@@ -100,8 +100,8 @@ export default function ReportReviewForm({
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         <button
           type="button"
-          className="rounded-xl border border-slate-200 px-6 py-3 font-bold text-[#06285c]"
           onClick={onSaveDraft}
+          className="rounded-xl border border-slate-200 px-6 py-3 font-bold text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] active:bg-slate-300 active:text-slate-600"
         >
           Save as Draft
         </button>
@@ -109,7 +109,7 @@ export default function ReportReviewForm({
         <button
           type="submit"
           disabled={!canSubmitReport}
-          className="rounded-xl bg-[#009879] px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+          className="rounded-xl bg-[#009879] px-6 py-3 font-bold text-white transition hover:bg-[#007f66] active:bg-slate-400 active:text-slate-100 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:bg-slate-300"
         >
           Submit Report
         </button>
