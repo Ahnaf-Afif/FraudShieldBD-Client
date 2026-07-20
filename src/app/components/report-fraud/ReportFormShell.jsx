@@ -44,8 +44,10 @@ const initialReportData = {
 
 export default function ReportFormShell() {
   const [reportData, setReportData] = useState(initialReportData);
+  const [submitStatus, setSubmitStatus] = useState("");
 
   function updateReportData(fieldName, value) {
+    setSubmitStatus("");
     setReportData((currentData) => ({
       ...currentData,
       [fieldName]: value,
@@ -55,6 +57,7 @@ export default function ReportFormShell() {
   function handleSubmit(event) {
     event.preventDefault();
     console.log("Report data:", reportData);
+    setSubmitStatus("submitted");
   }
 
   return (

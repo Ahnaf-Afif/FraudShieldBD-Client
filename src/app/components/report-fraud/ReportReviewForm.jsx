@@ -1,6 +1,10 @@
 import { CheckCircle2, FileCheck } from "lucide-react";
 
-export default function ReportReviewForm({ reportData, updateReportData }) {
+export default function ReportReviewForm({
+  reportData,
+  updateReportData,
+  submitStatus,
+}) {
   const canSubmitReport =
     reportData.confirmsAccuracy &&
     reportData.confirmsPrivacy &&
@@ -67,6 +71,19 @@ export default function ReportReviewForm({ reportData, updateReportData }) {
           />
         </div>
       </div>
+
+      {submitStatus === "submitted" && (
+        <div className="mt-6 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5">
+          <h3 className="font-black text-[#06285c]">
+            Report submitted for review
+          </h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Your report has been saved in the form state. Later, we will send
+            this same data to the backend API.
+          </p>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         <button
