@@ -60,6 +60,11 @@ export default function ReportFormShell() {
     setSubmitStatus("submitted");
   }
 
+  function handleSaveDraft() {
+    console.log("Draft data:", reportData);
+    setSubmitStatus("draft");
+  }
+
   return (
     <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
       <form
@@ -87,8 +92,10 @@ export default function ReportFormShell() {
           updateReportData={updateReportData}
         />
         <ReportReviewForm
+          submitStatus={submitStatus}
           reportData={reportData}
           updateReportData={updateReportData}
+          onSaveDraft={handleSaveDraft}
         />
       </form>
 

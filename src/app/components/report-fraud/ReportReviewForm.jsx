@@ -4,6 +4,7 @@ export default function ReportReviewForm({
   reportData,
   updateReportData,
   submitStatus,
+  onSaveDraft,
 }) {
   const canSubmitReport =
     reportData.confirmsAccuracy &&
@@ -85,10 +86,22 @@ export default function ReportReviewForm({
         </div>
       )}
 
+      {submitStatus === "draft" && (
+        <div className="mt-6 rounded-2xl border border-[#bfdbfe] bg-[#eff6ff] p-5">
+          <h3 className="font-black text-[#06285c]">Draft saved</h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Your report draft has been saved in the form state. Later, we can
+            store drafts in the backend or browser local storage.
+          </p>
+        </div>
+      )}
+
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         <button
           type="button"
           className="rounded-xl border border-slate-200 px-6 py-3 font-bold text-[#06285c]"
+          onClick={onSaveDraft}
         >
           Save as Draft
         </button>
