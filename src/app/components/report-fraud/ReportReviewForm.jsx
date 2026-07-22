@@ -95,8 +95,8 @@ export default function ReportReviewForm({
           <h3 className="font-black text-[#06285c]">Draft saved</h3>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Your report draft has been saved in the form state. Later, we can
-            store drafts in the backend or browser local storage.
+            Your progress has been saved in this browser. You can come back and
+            continue this report later.
           </p>
         </div>
       )}
@@ -106,8 +106,8 @@ export default function ReportReviewForm({
           <h3 className="font-black text-[#06285c]">Draft loaded</h3>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Your saved draft was restored from this browser. Uploaded files need
-            to be selected again.
+            We restored your saved report draft. Please reselect any evidence
+            files before submitting.
           </p>
         </div>
       )}
