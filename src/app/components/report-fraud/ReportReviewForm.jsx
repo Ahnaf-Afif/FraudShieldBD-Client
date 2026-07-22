@@ -101,6 +101,17 @@ export default function ReportReviewForm({
         </div>
       )}
 
+      {submitStatus === "draft-loaded" && (
+        <div className="mt-6 rounded-2xl border border-[#bfdbfe] bg-[#eff6ff] p-5">
+          <h3 className="font-black text-[#06285c]">Draft loaded</h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Your saved draft was restored from this browser. Uploaded files need
+            to be selected again.
+          </p>
+        </div>
+      )}
+
       {submitStatus && (
         <button
           type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReportCategoryForm, { ReportCategoryTips } from "./ReportCategoryForm";
 import ReportEvidenceForm, { ReportEvidenceTips } from "./ReportEvidenceForm";
 import ReportFinancialForm, {
@@ -46,6 +46,24 @@ const initialReportData = {
 export default function ReportFormShell() {
   const [reportData, setReportData] = useState(initialReportData);
   const [submitStatus, setSubmitStatus] = useState("");
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("fraudshield-report-draft");
+
+    if (!savedDraft) {
+      return;
+    }
+
+    const parsedDraft = JSON.parse(savedDraft);
+
+    setReportData({
+      ...initialReportData,
+      ...parsedDraft,
+      evidenceFiles: [],
+    });
+
+    setSubmitStatus("draft-loaded");
+  }, []);
 
   function updateReportData(fieldName, value) {
     setSubmitStatus("");
