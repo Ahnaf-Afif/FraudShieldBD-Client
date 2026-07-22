@@ -4,6 +4,7 @@ import { FaFacebookF } from "react-icons/fa6";
 export default function ReportIdentifiersForm({
   reportData,
   updateReportData,
+  submitStatus,
 }) {
   const hasIdentifier =
     reportData.phoneOrPaymentNumber ||
@@ -22,7 +23,13 @@ export default function ReportIdentifiersForm({
       </div>
 
       {!hasIdentifier && (
-        <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-semibold text-orange-700">
+        <div
+          className={`mt-6 rounded-2xl border p-4 text-sm font-semibold ${
+            submitStatus === "missing-identifier"
+              ? "border-red-200 bg-red-50 text-red-600"
+              : "border-orange-200 bg-orange-50 text-orange-700"
+          }`}
+        >
           Add at least one identifier so people can search and recognize this
           fraud later.
         </div>

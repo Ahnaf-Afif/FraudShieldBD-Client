@@ -57,6 +57,18 @@ export default function ReportFormShell() {
 
   function handleSubmit(event) {
     event.preventDefault();
+
+    const hasIdentifier =
+      reportData.phoneOrPaymentNumber ||
+      reportData.facebookLink ||
+      reportData.websiteLink ||
+      reportData.businessName;
+
+    if (!hasIdentifier) {
+      setSubmitStatus("missing-identifier");
+      return;
+    }
+
     console.log("Report data:", reportData);
     setSubmitStatus("submitted");
   }
@@ -92,6 +104,7 @@ export default function ReportFormShell() {
         <ReportIdentifiersForm
           reportData={reportData}
           updateReportData={updateReportData}
+          submitStatus={submitStatus}
         />
         <ReportEvidenceForm
           reportData={reportData}
