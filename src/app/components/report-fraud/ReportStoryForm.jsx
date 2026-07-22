@@ -18,6 +18,8 @@ export default function ReportStoryForm({ reportData, updateReportData }) {
           </span>
 
           <textarea
+            required
+            minLength={30}
             value={reportData.story}
             onChange={(event) => updateReportData("story", event.target.value)}
             maxLength={2000}
