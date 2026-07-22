@@ -5,16 +5,28 @@ export default function ReportIdentifiersForm({
   reportData,
   updateReportData,
 }) {
+  const hasIdentifier =
+    reportData.phoneOrPaymentNumber ||
+    reportData.facebookLink ||
+    reportData.websiteLink ||
+    reportData.businessName;
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
       <div className="border-b border-slate-200 pb-4">
         <h2 className="text-2xl font-black text-[#06285c]">4. Identifiers</h2>
 
         <p className="mt-1 text-slate-600">
-          Add numbers, pages, websites or business names connected to the
-          incident.
+          Add at least one number, page, website or business name connected to
+          the incident.
         </p>
       </div>
+
+      {!hasIdentifier && (
+        <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-semibold text-orange-700">
+          Add at least one identifier so people can search and recognize this
+          fraud later.
+        </div>
+      )}
 
       <div className="mt-6 grid gap-5 md:grid-cols-2">
         <IdentifierField
