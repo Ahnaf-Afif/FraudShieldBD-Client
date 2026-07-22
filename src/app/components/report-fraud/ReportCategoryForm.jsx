@@ -16,6 +16,7 @@ export default function ReportCategoryForm({ reportData, updateReportData }) {
       <div className="mt-6 grid gap-5 md:grid-cols-2">
         <FormField label="Fraud Category" required>
           <select
+            required
             value={reportData.fraudCategory}
             onChange={(event) =>
               updateReportData("fraudCategory", event.target.value)
@@ -33,6 +34,7 @@ export default function ReportCategoryForm({ reportData, updateReportData }) {
 
         <FormField label="Platform / Channel" required>
           <select
+            required
             value={reportData.platform}
             onChange={(event) =>
               updateReportData("platform", event.target.value)
@@ -51,6 +53,7 @@ export default function ReportCategoryForm({ reportData, updateReportData }) {
         <FormField label="When did it happen?" required>
           <div className="relative">
             <input
+              required
               type="date"
               value={reportData.incidentDate}
               onChange={(event) =>
@@ -67,6 +70,7 @@ export default function ReportCategoryForm({ reportData, updateReportData }) {
 
         <FormField label="Where did it happen?" required>
           <select
+            required
             value={reportData.location}
             onChange={(event) =>
               updateReportData("location", event.target.value)
@@ -86,6 +90,7 @@ export default function ReportCategoryForm({ reportData, updateReportData }) {
       <div className="mt-5">
         <FormField label="Brief Title" required>
           <input
+            required
             value={reportData.title}
             onChange={(event) => updateReportData("title", event.target.value)}
             className="form-input"
