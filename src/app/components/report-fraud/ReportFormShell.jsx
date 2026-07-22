@@ -54,15 +54,20 @@ export default function ReportFormShell() {
       return;
     }
 
-    const parsedDraft = JSON.parse(savedDraft);
+    try {
+      const parsedDraft = JSON.parse(savedDraft);
 
-    setReportData({
-      ...initialReportData,
-      ...parsedDraft,
-      evidenceFiles: [],
-    });
+      setReportData({
+        ...initialReportData,
+        ...parsedDraft,
+        evidenceFiles: [],
+      });
 
-    setSubmitStatus("draft-loaded");
+      setSubmitStatus("draft-loaded");
+    } catch (error) {
+      console.error("Could not load report draft:", error);
+      localStorage.removeItem("fraudshield-report-draft");
+    }
   }, []);
 
   function updateReportData(fieldName, value) {
