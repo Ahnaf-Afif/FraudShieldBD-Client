@@ -84,8 +84,8 @@ export default function ReportReviewForm({
           </h3>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Your report has been saved in the form state. Later, we will send
-            this same data to the backend API.
+            Thank you for helping protect others. Your report is ready for
+            moderator review.
           </p>
         </div>
       )}
