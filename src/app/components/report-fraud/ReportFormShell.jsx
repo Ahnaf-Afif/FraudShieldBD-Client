@@ -11,6 +11,7 @@ import ReportIdentifiersForm, {
 } from "./ReportIdentifiersForm";
 import ReportReviewForm, { ReportReviewTips } from "./ReportReviewForm";
 import ReportStoryForm, { ReportStoryTips } from "./ReportStoryForm";
+import ReportLiveSummary from "./ReportLiveSummary";
 
 const initialReportData = {
   fraudCategory: "",
@@ -106,6 +107,7 @@ export default function ReportFormShell() {
       </form>
 
       <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+        <ReportLiveSummary reportData={reportData} />
         <ReportCategoryTips />
         <ReportStoryTips />
         <ReportFinancialTips />
