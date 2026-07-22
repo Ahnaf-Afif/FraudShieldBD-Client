@@ -74,11 +74,19 @@ export default function ReportFormShell() {
   }
 
   function handleSaveDraft() {
-    console.log("Draft data:", reportData);
+    const draftData = {
+      ...reportData,
+      evidenceFiles: [],
+    };
+
+    localStorage.setItem("fraudshield-report-draft", JSON.stringify(draftData));
+
+    console.log("Draft data:", draftData);
     setSubmitStatus("draft");
   }
 
   function handleResetForm() {
+    localStorage.removeItem("fraudshield-report-draft");
     setReportData(initialReportData);
     setSubmitStatus("");
   }
