@@ -92,6 +92,7 @@ export default function ReportFormShell() {
       return;
     }
 
+    localStorage.removeItem("fraudshield-report-draft");
     console.log("Report data:", reportData);
     setSubmitStatus("submitted");
   }
