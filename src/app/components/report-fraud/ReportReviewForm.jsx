@@ -28,10 +28,13 @@ export default function ReportReviewForm({
       <div className="mt-6">
         <label className="block">
           <span className="mb-2 block text-sm font-bold text-[#06285c]">
-            How can others avoid this scam?
+            How can others avoid this scam?{" "}
+            <span className="text-red-500">*</span>
           </span>
 
           <textarea
+            required
+            minLength={20}
             className="min-h-32 w-full resize-y rounded-xl border border-[#dbe7f3] bg-white p-4 leading-7 text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
             placeholder="Example: Do not send advance payment before verifying the seller. Check page reviews, call official numbers, and avoid sharing OTP or PIN."
             value={reportData.preventionAdvice}
