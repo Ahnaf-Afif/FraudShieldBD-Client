@@ -65,6 +65,7 @@ export default function ReportFormShell() {
         evidenceFiles: [],
       });
 
+      setReportId(parsedDraft.reportId || "");
       setSubmitStatus("draft-loaded");
     } catch (error) {
       console.error("Could not load report draft:", error);
@@ -94,7 +95,7 @@ export default function ReportFormShell() {
       return;
     }
 
-    const newReportId = createReportId();
+    const newReportId = reportId || createReportId();
 
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setReportId(newReportId);

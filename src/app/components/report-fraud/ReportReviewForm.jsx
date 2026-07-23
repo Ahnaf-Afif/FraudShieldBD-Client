@@ -122,6 +122,12 @@ export default function ReportReviewForm({
             We restored your saved report draft. Please reselect any evidence
             files before submitting.
           </p>
+
+          {reportId && (
+            <p className="mt-3 rounded-xl bg-white px-4 py-3 text-sm font-black text-[#06285c]">
+              Draft ID: {reportId}
+            </p>
+          )}
         </div>
       )}
 
