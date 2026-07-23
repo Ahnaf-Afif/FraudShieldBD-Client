@@ -12,6 +12,7 @@ import ReportIdentifiersForm, {
 import ReportReviewForm, { ReportReviewTips } from "./ReportReviewForm";
 import ReportStoryForm, { ReportStoryTips } from "./ReportStoryForm";
 import ReportLiveSummary from "./ReportLiveSummary";
+const REPORT_DRAFT_KEY = "fraudshield-report-draft";
 
 const initialReportData = {
   fraudCategory: "",
@@ -48,7 +49,7 @@ export default function ReportFormShell() {
   const [submitStatus, setSubmitStatus] = useState("");
 
   useEffect(() => {
-    const savedDraft = localStorage.getItem("fraudshield-report-draft");
+    const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
 
     if (!savedDraft) {
       return;
@@ -66,7 +67,7 @@ export default function ReportFormShell() {
       setSubmitStatus("draft-loaded");
     } catch (error) {
       console.error("Could not load report draft:", error);
-      localStorage.removeItem("fraudshield-report-draft");
+      localStorage.removeItem(REPORT_DRAFT_KEY);
     }
   }, []);
 
@@ -92,7 +93,7 @@ export default function ReportFormShell() {
       return;
     }
 
-    localStorage.removeItem("fraudshield-report-draft");
+    localStorage.removeItem(REPORT_DRAFT_KEY);
     console.log("Report data:", reportData);
     setSubmitStatus("submitted");
   }
@@ -103,14 +104,14 @@ export default function ReportFormShell() {
       evidenceFiles: [],
     };
 
-    localStorage.setItem("fraudshield-report-draft", JSON.stringify(draftData));
+    localStorage.setItem(REPORT_DRAFT_KEY, JSON.stringify(draftData));
 
     console.log("Draft data:", draftData);
     setSubmitStatus("draft");
   }
 
   function handleResetForm() {
-    localStorage.removeItem("fraudshield-report-draft");
+    localStorage.removeItem(REPORT_DRAFT_KEY);
     setReportData(initialReportData);
     setSubmitStatus("");
   }
