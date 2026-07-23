@@ -1,4 +1,5 @@
-import { CheckCircle2, Copy, FileCheck } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Check, Copy, FileCheck } from "lucide-react";
 
 export default function ReportReviewForm({
   reportData,
@@ -8,9 +9,17 @@ export default function ReportReviewForm({
   onSaveDraft,
   onResetForm,
 }) {
+  const [copiedReportId, setCopiedReportId] = useState(false);
+
   function copyReportId() {
     navigator.clipboard.writeText(reportId);
+    setCopiedReportId(true);
+
+    setTimeout(() => {
+      setCopiedReportId(false);
+    }, 1500);
   }
+
   const canSubmitReport =
     reportData.confirmsAccuracy &&
     reportData.confirmsPrivacy &&
@@ -96,6 +105,7 @@ export default function ReportReviewForm({
             <ReportIdBox
               label="Report ID"
               reportId={reportId}
+              copied={copiedReportId}
               onCopy={copyReportId}
             />
           )}
@@ -115,6 +125,7 @@ export default function ReportReviewForm({
             <ReportIdBox
               label="Draft ID"
               reportId={reportId}
+              copied={copiedReportId}
               onCopy={copyReportId}
             />
           )}
@@ -134,6 +145,7 @@ export default function ReportReviewForm({
             <ReportIdBox
               label="Draft ID"
               reportId={reportId}
+              copied={copiedReportId}
               onCopy={copyReportId}
             />
           )}
@@ -202,7 +214,7 @@ export function ReportReviewTips() {
   );
 }
 
-function ReportIdBox({ label, reportId, onCopy }) {
+function ReportIdBox({ label, reportId, copied, onCopy }) {
   return (
     <div className="mt-3 flex flex-col gap-3 rounded-xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="break-words text-sm font-black text-[#06285c]">
@@ -214,8 +226,8 @@ function ReportIdBox({ label, reportId, onCopy }) {
         onClick={onCopy}
         className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] active:bg-slate-300"
       >
-        <Copy size={14} />
-        Copy
+        {copied ? <Check size={14} /> : <Copy size={14} />}
+        {copied ? "Copied" : "Copy"}
       </button>
     </div>
   );
