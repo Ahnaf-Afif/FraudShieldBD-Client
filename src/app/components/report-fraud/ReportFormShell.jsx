@@ -172,7 +172,11 @@ export default function ReportFormShell() {
       </form>
 
       <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-        <ReportLiveSummary reportData={reportData} />
+        <ReportLiveSummary
+          reportData={reportData}
+          reportId={reportId}
+          submitStatus={submitStatus}
+        />
         <ReportCategoryTips />
         <ReportStoryTips />
         <ReportFinancialTips />

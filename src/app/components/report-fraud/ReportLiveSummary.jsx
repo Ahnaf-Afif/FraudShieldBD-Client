@@ -1,6 +1,10 @@
 import { ClipboardList } from "lucide-react";
 
-export default function ReportLiveSummary({ reportData }) {
+export default function ReportLiveSummary({
+  reportData,
+  reportId,
+  submitStatus,
+}) {
   const identifiers = [
     reportData.phoneOrPaymentNumber,
     reportData.facebookLink,
@@ -26,6 +30,8 @@ export default function ReportLiveSummary({ reportData }) {
     (completedFields / requiredFields.length) * 100,
   );
 
+  const statusLabel = getStatusLabel(submitStatus);
+
   return (
     <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm sm:p-6">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#009879] shadow-sm">
@@ -33,6 +39,18 @@ export default function ReportLiveSummary({ reportData }) {
       </div>
 
       <h2 className="mt-4 text-xl font-black text-[#06285c]">Report Summary</h2>
+
+      <div className="mt-4 rounded-xl bg-white p-4">
+        <p className="text-sm font-bold text-slate-500">Report ID</p>
+        <p className="mt-1 break-words font-black text-[#06285c]">
+          {reportId || "Not created yet"}
+        </p>
+
+        <p className="mt-3 text-sm font-bold text-slate-500">Status</p>
+        <span className="mt-1 inline-flex rounded-full bg-[#e9f8f4] px-3 py-1 text-xs font-black text-[#009879]">
+          {statusLabel}
+        </span>
+      </div>
 
       <div className="mt-4">
         <div className="flex items-center justify-between gap-3">
@@ -98,4 +116,24 @@ function SummaryItem({ label, value }) {
       </p>
     </div>
   );
+}
+
+function getStatusLabel(submitStatus) {
+  if (submitStatus === "submitted") {
+    return "Submitted";
+  }
+
+  if (submitStatus === "draft") {
+    return "Draft saved";
+  }
+
+  if (submitStatus === "draft-loaded") {
+    return "Draft restored";
+  }
+
+  if (submitStatus === "missing-identifier") {
+    return "Needs identifier";
+  }
+
+  return "In progress";
 }
