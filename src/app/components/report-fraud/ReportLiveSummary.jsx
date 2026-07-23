@@ -13,19 +13,22 @@ export default function ReportLiveSummary({
   ].filter(Boolean);
 
   const requiredFields = [
-    reportData.fraudCategory,
-    reportData.platform,
-    reportData.incidentDate,
-    reportData.location,
-    reportData.title,
-    reportData.story,
-    reportData.moneyStatus,
-    identifiers.length > 0,
-    reportData.evidenceType,
-    reportData.preventionAdvice,
+    { label: "Fraud category", complete: reportData.fraudCategory },
+    { label: "Platform", complete: reportData.platform },
+    { label: "Incident date", complete: reportData.incidentDate },
+    { label: "Location", complete: reportData.location },
+    { label: "Brief title", complete: reportData.title },
+    { label: "Story", complete: reportData.story },
+    { label: "Money status", complete: reportData.moneyStatus },
+    { label: "At least one identifier", complete: identifiers.length > 0 },
+    { label: "Evidence type", complete: reportData.evidenceType },
+    { label: "Prevention advice", complete: reportData.preventionAdvice },
   ];
 
-  const completedFields = requiredFields.filter(Boolean).length;
+  const completedFields = requiredFields.filter(
+    (field) => field.complete,
+  ).length;
+  const missingFields = requiredFields.filter((field) => !field.complete);
   const completionPercent = Math.round(
     (completedFields / requiredFields.length) * 100,
   );
@@ -66,6 +69,23 @@ export default function ReportLiveSummary({
             style={{ width: `${completionPercent}%` }}
           />
         </div>
+        {missingFields.length > 0 && (
+          <div className="mt-4 rounded-xl bg-white p-4">
+            <p className="text-sm font-bold text-slate-500">Still needed</p>
+
+            <ul className="mt-2 space-y-1 text-sm font-semibold text-[#06285c]">
+              {missingFields.slice(0, 4).map((field) => (
+                <li key={field.label}>- {field.label}</li>
+              ))}
+            </ul>
+
+            {missingFields.length > 4 && (
+              <p className="mt-2 text-xs font-semibold text-slate-500">
+                +{missingFields.length - 4} more
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mt-5 space-y-4 text-sm">
