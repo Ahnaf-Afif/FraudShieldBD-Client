@@ -47,6 +47,7 @@ const initialReportData = {
 export default function ReportFormShell() {
   const [reportData, setReportData] = useState(initialReportData);
   const [submitStatus, setSubmitStatus] = useState("");
+  const [reportId, setReportId] = useState("");
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
@@ -93,16 +94,31 @@ export default function ReportFormShell() {
       return;
     }
 
+    const newReportId = createReportId();
+
     localStorage.removeItem(REPORT_DRAFT_KEY);
-    console.log("Report data:", reportData);
+    setReportId(newReportId);
+
+    console.log("Report data:", {
+      ...reportData,
+      reportId: newReportId,
+      status: "submitted",
+    });
+
     setSubmitStatus("submitted");
   }
 
   function handleSaveDraft() {
+    const draftReportId = reportId || createReportId();
+
     const draftData = {
       ...reportData,
+      reportId: draftReportId,
+      status: "draft",
       evidenceFiles: [],
     };
+
+    setReportId(draftReportId);
 
     localStorage.setItem(REPORT_DRAFT_KEY, JSON.stringify(draftData));
 
@@ -114,6 +130,7 @@ export default function ReportFormShell() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setReportData(initialReportData);
     setSubmitStatus("");
+    setReportId("");
   }
 
   return (
@@ -145,6 +162,7 @@ export default function ReportFormShell() {
         />
         <ReportReviewForm
           submitStatus={submitStatus}
+          reportId={reportId}
           reportData={reportData}
           updateReportData={updateReportData}
           onSaveDraft={handleSaveDraft}
@@ -163,4 +181,15 @@ export default function ReportFormShell() {
       </aside>
     </section>
   );
+}
+
+function createReportId() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const randomNumber = Math.floor(1000 + Math.random() * 9000);
+
+  return `FR-${year}-${month}${day}-${randomNumber}`;
 }

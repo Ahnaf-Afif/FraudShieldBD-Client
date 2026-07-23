@@ -4,6 +4,7 @@ export default function ReportReviewForm({
   reportData,
   updateReportData,
   submitStatus,
+  reportId,
   onSaveDraft,
   onResetForm,
 }) {
@@ -87,6 +88,12 @@ export default function ReportReviewForm({
             Thank you for helping protect others. Your report is ready for
             moderator review.
           </p>
+
+          {reportId && (
+            <p className="mt-3 rounded-xl bg-white px-4 py-3 text-sm font-black text-[#06285c]">
+              Report ID: {reportId}
+            </p>
+          )}
         </div>
       )}
 
@@ -98,6 +105,12 @@ export default function ReportReviewForm({
             Your progress has been saved in this browser. You can come back and
             continue this report later.
           </p>
+
+          {reportId && (
+            <p className="mt-3 rounded-xl bg-white px-4 py-3 text-sm font-black text-[#06285c]">
+              Draft ID: {reportId}
+            </p>
+          )}
         </div>
       )}
 
