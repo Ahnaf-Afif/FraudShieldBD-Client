@@ -48,6 +48,7 @@ export default function ReportFormShell() {
   const [reportData, setReportData] = useState(initialReportData);
   const [submitStatus, setSubmitStatus] = useState("");
   const [reportId, setReportId] = useState("");
+  const [statusTime, setStatusTime] = useState("");
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
@@ -66,6 +67,7 @@ export default function ReportFormShell() {
       });
 
       setReportId(parsedDraft.reportId || "");
+      setStatusTime(parsedDraft.savedAt || "");
       setSubmitStatus("draft-loaded");
     } catch (error) {
       console.error("Could not load report draft:", error);
@@ -96,14 +98,17 @@ export default function ReportFormShell() {
     }
 
     const newReportId = reportId || createReportId();
+    const submittedAt = new Date().toLocaleString();
 
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setReportId(newReportId);
+    setStatusTime(submittedAt);
 
     console.log("Report data:", {
       ...reportData,
       reportId: newReportId,
       status: "submitted",
+      submittedAt,
     });
 
     setSubmitStatus("submitted");
@@ -111,15 +116,18 @@ export default function ReportFormShell() {
 
   function handleSaveDraft() {
     const draftReportId = reportId || createReportId();
+    const savedAt = new Date().toLocaleString();
 
     const draftData = {
       ...reportData,
       reportId: draftReportId,
       status: "draft",
+      savedAt,
       evidenceFiles: [],
     };
 
     setReportId(draftReportId);
+    setStatusTime(savedAt);
 
     localStorage.setItem(REPORT_DRAFT_KEY, JSON.stringify(draftData));
 
@@ -132,6 +140,7 @@ export default function ReportFormShell() {
     setReportData(initialReportData);
     setSubmitStatus("");
     setReportId("");
+    setStatusTime("");
   }
 
   return (
@@ -164,6 +173,7 @@ export default function ReportFormShell() {
         <ReportReviewForm
           submitStatus={submitStatus}
           reportId={reportId}
+          statusTime={statusTime}
           reportData={reportData}
           updateReportData={updateReportData}
           onSaveDraft={handleSaveDraft}

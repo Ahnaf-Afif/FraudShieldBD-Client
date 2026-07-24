@@ -6,6 +6,7 @@ export default function ReportReviewForm({
   updateReportData,
   submitStatus,
   reportId,
+  statusTime,
   onSaveDraft,
   onResetForm,
 }) {
@@ -105,6 +106,7 @@ export default function ReportReviewForm({
             <ReportIdBox
               label="Report ID"
               reportId={reportId}
+              statusTime={statusTime}
               copied={copiedReportId}
               onCopy={copyReportId}
             />
@@ -125,6 +127,7 @@ export default function ReportReviewForm({
             <ReportIdBox
               label="Draft ID"
               reportId={reportId}
+              statusTime={statusTime}
               copied={copiedReportId}
               onCopy={copyReportId}
             />
@@ -145,6 +148,7 @@ export default function ReportReviewForm({
             <ReportIdBox
               label="Draft ID"
               reportId={reportId}
+              statusTime={statusTime}
               copied={copiedReportId}
               onCopy={copyReportId}
             />
@@ -217,9 +221,17 @@ export function ReportReviewTips() {
 function ReportIdBox({ label, reportId, copied, onCopy }) {
   return (
     <div className="mt-3 flex flex-col gap-3 rounded-xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="break-words text-sm font-black text-[#06285c]">
-        {label}: {reportId}
-      </p>
+      <div>
+        <p className="break-words text-sm font-black text-[#06285c]">
+          {label}: {reportId}
+        </p>
+
+        {statusTime && (
+          <p className="mt-1 text-xs font-semibold text-slate-500">
+            {statusTime}
+          </p>
+        )}
+      </div>
 
       <button
         type="button"
