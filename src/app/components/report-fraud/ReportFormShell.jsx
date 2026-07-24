@@ -145,6 +145,12 @@ export default function ReportFormShell() {
     setStatusTime("");
   }
 
+  function handleDiscardDraft() {
+    localStorage.removeItem(REPORT_DRAFT_KEY);
+    setSubmitStatus("");
+    setStatusTime("");
+  }
+
   return (
     <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
       <form
@@ -181,6 +187,7 @@ export default function ReportFormShell() {
           hasSavedDraft={hasSavedDraft}
           onSaveDraft={handleSaveDraft}
           onResetForm={handleResetForm}
+          onDiscardDraft={handleDiscardDraft}
         />
       </form>
 

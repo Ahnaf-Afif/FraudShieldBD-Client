@@ -10,6 +10,7 @@ export default function ReportReviewForm({
   hasSavedDraft,
   onSaveDraft,
   onResetForm,
+  onDiscardDraft,
 }) {
   const [copiedReportId, setCopiedReportId] = useState(false);
 
@@ -170,7 +171,7 @@ export default function ReportReviewForm({
           {hasSavedDraft && (
             <button
               type="button"
-              onClick={onResetForm}
+              onClick={onDiscardDraft}
               className="rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100 active:bg-slate-300 active:text-slate-600"
             >
               Discard Draft
