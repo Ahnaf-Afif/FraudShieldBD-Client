@@ -49,6 +49,8 @@ export default function ReportFormShell() {
   const [submitStatus, setSubmitStatus] = useState("");
   const [reportId, setReportId] = useState("");
   const [statusTime, setStatusTime] = useState("");
+  const hasSavedDraft =
+    submitStatus === "draft" || submitStatus === "draft-loaded";
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
@@ -176,6 +178,7 @@ export default function ReportFormShell() {
           statusTime={statusTime}
           reportData={reportData}
           updateReportData={updateReportData}
+          hasSavedDraft={hasSavedDraft}
           onSaveDraft={handleSaveDraft}
           onResetForm={handleResetForm}
         />

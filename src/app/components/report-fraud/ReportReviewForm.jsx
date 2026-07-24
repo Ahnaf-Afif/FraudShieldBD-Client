@@ -7,6 +7,7 @@ export default function ReportReviewForm({
   submitStatus,
   reportId,
   statusTime,
+  hasSavedDraft,
   onSaveDraft,
   onResetForm,
 }) {
@@ -156,14 +157,26 @@ export default function ReportReviewForm({
         </div>
       )}
 
-      {submitStatus && (
-        <button
-          type="button"
-          onClick={onResetForm}
-          className="mt-4 rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-[#06285c] transition hover:border-red-300 hover:bg-red-50 hover:text-red-500 active:bg-slate-300 active:text-slate-600"
-        >
-          Start New Report
-        </button>
+      {(submitStatus || hasSavedDraft) && (
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={onResetForm}
+            className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-[#06285c] transition hover:border-red-300 hover:bg-red-50 hover:text-red-500 active:bg-slate-300 active:text-slate-600"
+          >
+            Start New Report
+          </button>
+
+          {hasSavedDraft && (
+            <button
+              type="button"
+              onClick={onResetForm}
+              className="rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100 active:bg-slate-300 active:text-slate-600"
+            >
+              Discard Draft
+            </button>
+          )}
+        </div>
       )}
 
       <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
