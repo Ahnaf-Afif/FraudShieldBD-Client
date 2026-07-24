@@ -4,6 +4,7 @@ export default function ReportLiveSummary({
   reportData,
   reportId,
   submitStatus,
+  statusTime,
 }) {
   const identifiers = [
     reportData.phoneOrPaymentNumber,
@@ -53,6 +54,12 @@ export default function ReportLiveSummary({
         <span className="mt-1 inline-flex rounded-full bg-[#e9f8f4] px-3 py-1 text-xs font-black text-[#009879]">
           {statusLabel}
         </span>
+
+        {statusTime && (
+          <p className="mt-2 text-xs font-semibold text-slate-500">
+            {statusTime}
+          </p>
+        )}
       </div>
 
       <div className="mt-4">

@@ -186,6 +186,7 @@ export default function ReportFormShell() {
           reportData={reportData}
           reportId={reportId}
           submitStatus={submitStatus}
+          statusTime={statusTime}
         />
         <ReportCategoryTips />
         <ReportStoryTips />

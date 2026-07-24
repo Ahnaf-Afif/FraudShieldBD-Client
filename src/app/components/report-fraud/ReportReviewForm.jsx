@@ -218,7 +218,7 @@ export function ReportReviewTips() {
   );
 }
 
-function ReportIdBox({ label, reportId, copied, onCopy }) {
+function ReportIdBox({ label, reportId, statusTime, copied, onCopy }) {
   return (
     <div className="mt-3 flex flex-col gap-3 rounded-xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
