@@ -49,8 +49,7 @@ export default function ReportFormShell() {
   const [submitStatus, setSubmitStatus] = useState("");
   const [reportId, setReportId] = useState("");
   const [statusTime, setStatusTime] = useState("");
-  const hasSavedDraft =
-    submitStatus === "draft" || submitStatus === "draft-loaded";
+  const [hasSavedDraft, setHasSavedDraft] = useState(false);
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
@@ -70,10 +69,12 @@ export default function ReportFormShell() {
 
       setReportId(parsedDraft.reportId || "");
       setStatusTime(parsedDraft.savedAt || "");
+      setHasSavedDraft(true);
       setSubmitStatus("draft-loaded");
     } catch (error) {
       console.error("Could not load report draft:", error);
       localStorage.removeItem(REPORT_DRAFT_KEY);
+      setHasSavedDraft(false);
     }
   }, []);
 
@@ -103,6 +104,7 @@ export default function ReportFormShell() {
     const submittedAt = new Date().toLocaleString();
 
     localStorage.removeItem(REPORT_DRAFT_KEY);
+    setHasSavedDraft(false);
     setReportId(newReportId);
     setStatusTime(submittedAt);
 
@@ -132,6 +134,7 @@ export default function ReportFormShell() {
     setStatusTime(savedAt);
 
     localStorage.setItem(REPORT_DRAFT_KEY, JSON.stringify(draftData));
+    setHasSavedDraft(true);
 
     console.log("Draft data:", draftData);
     setSubmitStatus("draft");
@@ -139,6 +142,7 @@ export default function ReportFormShell() {
 
   function handleResetForm() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
+    setHasSavedDraft(false);
     setReportData(initialReportData);
     setSubmitStatus("");
     setReportId("");
@@ -147,6 +151,7 @@ export default function ReportFormShell() {
 
   function handleDiscardDraft() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
+    setHasSavedDraft(false);
     setSubmitStatus("draft-discarded");
     setStatusTime(new Date().toLocaleString());
   }
