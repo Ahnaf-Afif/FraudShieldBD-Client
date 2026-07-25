@@ -30,6 +30,8 @@ export default function ReportReviewForm({
     reportData.confirmsReview &&
     reportData.confirmsHonesty;
 
+  const draftButtonText = getDraftButtonText(hasSavedDraft, hasUnsavedChanges);
+
   return (
     <section className="p-5 sm:p-6">
       <div className="border-b border-slate-200 pb-4">
@@ -215,7 +217,7 @@ export default function ReportReviewForm({
           onClick={onSaveDraft}
           className="rounded-xl border border-slate-200 px-6 py-3 font-bold text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] active:bg-slate-300 active:text-slate-600"
         >
-          Save as Draft
+          {draftButtonText}
         </button>
 
         <button
@@ -259,6 +261,18 @@ export function ReportReviewTips() {
       </div>
     </div>
   );
+}
+
+function getDraftButtonText(hasSavedDraft, hasUnsavedChanges) {
+  if (hasSavedDraft && hasUnsavedChanges) {
+    return "Update Draft";
+  }
+
+  if (hasSavedDraft) {
+    return "Draft Saved";
+  }
+
+  return "Save as Draft";
 }
 
 function ReportIdBox({ label, reportId, statusTime, copied, onCopy }) {
