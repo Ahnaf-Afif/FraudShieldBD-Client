@@ -50,6 +50,7 @@ export default function ReportFormShell() {
   const [reportId, setReportId] = useState("");
   const [statusTime, setStatusTime] = useState("");
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
@@ -70,6 +71,7 @@ export default function ReportFormShell() {
       setReportId(parsedDraft.reportId || "");
       setStatusTime(parsedDraft.savedAt || "");
       setHasSavedDraft(true);
+      setHasUnsavedChanges(false);
       setSubmitStatus("draft-loaded");
     } catch (error) {
       console.error("Could not load report draft:", error);
@@ -80,6 +82,8 @@ export default function ReportFormShell() {
 
   function updateReportData(fieldName, value) {
     setSubmitStatus("");
+    setHasUnsavedChanges(true);
+
     setReportData((currentData) => ({
       ...currentData,
       [fieldName]: value,
@@ -105,6 +109,7 @@ export default function ReportFormShell() {
 
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setHasSavedDraft(false);
+    setHasUnsavedChanges(false);
     setReportId(newReportId);
     setStatusTime(submittedAt);
 
@@ -135,6 +140,7 @@ export default function ReportFormShell() {
 
     localStorage.setItem(REPORT_DRAFT_KEY, JSON.stringify(draftData));
     setHasSavedDraft(true);
+    setHasUnsavedChanges(false);
 
     console.log("Draft data:", draftData);
     setSubmitStatus("draft");
@@ -143,6 +149,7 @@ export default function ReportFormShell() {
   function handleResetForm() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setHasSavedDraft(false);
+    setHasUnsavedChanges(false);
     setReportData(initialReportData);
     setSubmitStatus("");
     setReportId("");
@@ -152,6 +159,7 @@ export default function ReportFormShell() {
   function handleDiscardDraft() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setHasSavedDraft(false);
+    setHasUnsavedChanges(true);
     setSubmitStatus("draft-discarded");
     setStatusTime(new Date().toLocaleString());
   }
@@ -190,6 +198,7 @@ export default function ReportFormShell() {
           reportData={reportData}
           updateReportData={updateReportData}
           hasSavedDraft={hasSavedDraft}
+          hasUnsavedChanges={hasUnsavedChanges}
           onSaveDraft={handleSaveDraft}
           onResetForm={handleResetForm}
           onDiscardDraft={handleDiscardDraft}

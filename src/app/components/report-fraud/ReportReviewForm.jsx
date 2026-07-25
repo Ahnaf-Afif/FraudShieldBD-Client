@@ -8,6 +8,7 @@ export default function ReportReviewForm({
   reportId,
   statusTime,
   hasSavedDraft,
+  hasUnsavedChanges,
   onSaveDraft,
   onResetForm,
   onDiscardDraft,
@@ -172,6 +173,17 @@ export default function ReportReviewForm({
               {statusTime}
             </p>
           )}
+        </div>
+      )}
+
+      {hasSavedDraft && hasUnsavedChanges && (
+        <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-5">
+          <h3 className="font-black text-[#06285c]">Unsaved changes</h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            You changed this report after saving the draft. Save again to update
+            the browser draft.
+          </p>
         </div>
       )}
 
