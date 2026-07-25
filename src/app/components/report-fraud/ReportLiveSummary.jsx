@@ -158,6 +158,10 @@ function getStatusLabel(submitStatus) {
     return "Draft restored";
   }
 
+  if (submitStatus === "draft-discarded") {
+    return "Draft discarded";
+  }
+
   if (submitStatus === "missing-identifier") {
     return "Needs identifier";
   }

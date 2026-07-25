@@ -158,6 +158,23 @@ export default function ReportReviewForm({
         </div>
       )}
 
+      {submitStatus === "draft-discarded" && (
+        <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-5">
+          <h3 className="font-black text-[#06285c]">Draft discarded</h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            The saved browser draft was removed. The current form fields are
+            still visible so you can continue editing if needed.
+          </p>
+
+          {statusTime && (
+            <p className="mt-3 text-xs font-semibold text-orange-700">
+              {statusTime}
+            </p>
+          )}
+        </div>
+      )}
+
       {(submitStatus || hasSavedDraft) && (
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <button

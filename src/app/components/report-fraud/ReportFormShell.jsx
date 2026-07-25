@@ -147,8 +147,8 @@ export default function ReportFormShell() {
 
   function handleDiscardDraft() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
-    setSubmitStatus("");
-    setStatusTime("");
+    setSubmitStatus("draft-discarded");
+    setStatusTime(new Date().toLocaleString());
   }
 
   return (
