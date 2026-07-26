@@ -5,6 +5,8 @@ export default function ReportLiveSummary({
   reportId,
   submitStatus,
   statusTime,
+  hasSavedDraft,
+  hasUnsavedChanges,
 }) {
   const identifiers = [
     reportData.phoneOrPaymentNumber,
@@ -34,7 +36,11 @@ export default function ReportLiveSummary({
     (completedFields / requiredFields.length) * 100,
   );
 
-  const statusLabel = getStatusLabel(submitStatus);
+  const statusLabel = getStatusLabel(
+    submitStatus,
+    hasSavedDraft,
+    hasUnsavedChanges,
+  );
 
   return (
     <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm sm:p-6">
@@ -51,13 +57,25 @@ export default function ReportLiveSummary({
         </p>
 
         <p className="mt-3 text-sm font-bold text-slate-500">Status</p>
-        <span className="mt-1 inline-flex rounded-full bg-[#e9f8f4] px-3 py-1 text-xs font-black text-[#009879]">
+        <span
+          className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-black ${
+            hasSavedDraft && hasUnsavedChanges
+              ? "bg-orange-50 text-orange-700"
+              : "bg-[#e9f8f4] text-[#009879]"
+          }`}
+        >
           {statusLabel}
         </span>
 
         {statusTime && (
           <p className="mt-2 text-xs font-semibold text-slate-500">
             {statusTime}
+          </p>
+        )}
+
+        {hasSavedDraft && hasUnsavedChanges && (
+          <p className="mt-3 rounded-xl bg-orange-50 px-3 py-2 text-xs font-semibold leading-5 text-orange-700">
+            Save again to update the browser draft.
           </p>
         )}
       </div>
@@ -145,7 +163,7 @@ function SummaryItem({ label, value }) {
   );
 }
 
-function getStatusLabel(submitStatus) {
+function getStatusLabel(submitStatus, hasSavedDraft, hasUnsavedChanges) {
   if (submitStatus === "submitted") {
     return "Submitted";
   }
@@ -164,6 +182,9 @@ function getStatusLabel(submitStatus) {
 
   if (submitStatus === "missing-identifier") {
     return "Needs identifier";
+  }
+  if (hasSavedDraft && hasUnsavedChanges) {
+    return "Unsaved changes";
   }
 
   return "In progress";

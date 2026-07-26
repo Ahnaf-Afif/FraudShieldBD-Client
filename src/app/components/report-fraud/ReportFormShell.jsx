@@ -211,6 +211,8 @@ export default function ReportFormShell() {
           reportId={reportId}
           submitStatus={submitStatus}
           statusTime={statusTime}
+          hasSavedDraft={hasSavedDraft}
+          hasUnsavedChanges={hasUnsavedChanges}
         />
         <ReportCategoryTips />
         <ReportStoryTips />
