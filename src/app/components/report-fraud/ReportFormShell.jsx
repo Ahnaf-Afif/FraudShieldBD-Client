@@ -113,12 +113,14 @@ export default function ReportFormShell() {
     setReportId(newReportId);
     setStatusTime(submittedAt);
 
-    console.log("Report data:", {
-      ...reportData,
+    const submittedReportPayload = createReportPayload({
+      reportData,
       reportId: newReportId,
       status: "submitted",
-      submittedAt,
+      statusTime: submittedAt,
     });
+
+    console.log("Report data:", submittedReportPayload);
 
     setSubmitStatus("submitted");
   }
@@ -127,13 +129,12 @@ export default function ReportFormShell() {
     const draftReportId = reportId || createReportId();
     const savedAt = new Date().toLocaleString();
 
-    const draftData = {
-      ...reportData,
+    const draftData = createReportPayload({
+      reportData,
       reportId: draftReportId,
       status: "draft",
-      savedAt,
-      evidenceFiles: [],
-    };
+      statusTime: savedAt,
+    });
 
     setReportId(draftReportId);
     setStatusTime(savedAt);
@@ -234,4 +235,23 @@ function createReportId() {
   const randomNumber = Math.floor(1000 + Math.random() * 9000);
 
   return `FR-${year}-${month}${day}-${randomNumber}`;
+}
+
+function createReportPayload({ reportData, reportId, status, statusTime }) {
+  const payload = {
+    ...reportData,
+    reportId,
+    status,
+    evidenceFiles: [],
+  };
+
+  if (status === "draft") {
+    payload.savedAt = statusTime;
+  }
+
+  if (status === "submitted") {
+    payload.submittedAt = statusTime;
+  }
+
+  return payload;
 }
