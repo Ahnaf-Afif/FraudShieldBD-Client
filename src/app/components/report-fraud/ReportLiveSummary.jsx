@@ -164,6 +164,9 @@ function SummaryItem({ label, value }) {
 }
 
 function getStatusLabel(submitStatus, hasSavedDraft, hasUnsavedChanges) {
+  if (hasSavedDraft && hasUnsavedChanges) {
+    return "Unsaved changes";
+  }
   if (submitStatus === "submitted") {
     return "Submitted";
   }
@@ -182,9 +185,6 @@ function getStatusLabel(submitStatus, hasSavedDraft, hasUnsavedChanges) {
 
   if (submitStatus === "missing-identifier") {
     return "Needs identifier";
-  }
-  if (hasSavedDraft && hasUnsavedChanges) {
-    return "Unsaved changes";
   }
 
   return "In progress";
