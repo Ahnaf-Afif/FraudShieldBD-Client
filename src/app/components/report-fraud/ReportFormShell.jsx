@@ -93,14 +93,10 @@ export default function ReportFormShell() {
   function handleSubmit(event) {
     event.preventDefault();
 
-    const hasIdentifier =
-      reportData.phoneOrPaymentNumber ||
-      reportData.facebookLink ||
-      reportData.websiteLink ||
-      reportData.businessName;
+    const validationResult = validateReportBeforeSubmit(reportData);
 
-    if (!hasIdentifier) {
-      setSubmitStatus("missing-identifier");
+    if (!validationResult.isValid) {
+      setSubmitStatus(validationResult.status);
       return;
     }
 
@@ -254,4 +250,43 @@ function createReportPayload({ reportData, reportId, status, statusTime }) {
   }
 
   return payload;
+}
+
+function createReportPayload({ reportData, reportId, status, statusTime }) {
+  const payload = {
+    ...reportData,
+    reportId,
+    status,
+    evidenceFiles: [],
+  };
+
+  if (status === "draft") {
+    payload.savedAt = statusTime;
+  }
+
+  if (status === "submitted") {
+    payload.submittedAt = statusTime;
+  }
+
+  return payload;
+}
+
+function validateReportBeforeSubmit(reportData) {
+  const hasIdentifier =
+    reportData.phoneOrPaymentNumber ||
+    reportData.facebookLink ||
+    reportData.websiteLink ||
+    reportData.businessName;
+
+  if (!hasIdentifier) {
+    return {
+      isValid: false,
+      status: "missing-identifier",
+    };
+  }
+
+  return {
+    isValid: true,
+    status: "",
+  };
 }
