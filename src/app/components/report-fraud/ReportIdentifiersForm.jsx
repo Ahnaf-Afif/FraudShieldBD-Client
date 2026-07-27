@@ -6,11 +6,14 @@ export default function ReportIdentifiersForm({
   updateReportData,
   submitStatus,
 }) {
-  const hasIdentifier =
-    reportData.phoneOrPaymentNumber ||
-    reportData.facebookLink ||
-    reportData.websiteLink ||
-    reportData.businessName;
+  const identifiers = [
+    reportData.phoneOrPaymentNumber,
+    reportData.facebookLink,
+    reportData.websiteLink,
+    reportData.businessName,
+  ].filter(Boolean);
+
+  const hasIdentifier = identifiers.length > 0;
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
       <div className="border-b border-slate-200 pb-4">
@@ -32,6 +35,14 @@ export default function ReportIdentifiersForm({
         >
           Add at least one identifier so people can search and recognize this
           fraud later.
+        </div>
+      )}
+
+      {hasIdentifier && (
+        <div className="mt-6 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-4 text-sm font-semibold text-[#007f66]">
+          {identifiers.length === 1
+            ? "1 identifier added."
+            : `${identifiers.length} identifiers added.`}
         </div>
       )}
 
