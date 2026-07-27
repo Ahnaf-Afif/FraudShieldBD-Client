@@ -266,7 +266,7 @@ function validateReportBeforeSubmit(reportData) {
     };
   }
 
-  if (reportData.moneyStatus === "Yes, I lost money " && !reportData.amount) {
+  if (reportData.moneyStatus === "Yes, I lost money" && !reportData.amount) {
     return {
       isValid: false,
       status: "missing-amount",

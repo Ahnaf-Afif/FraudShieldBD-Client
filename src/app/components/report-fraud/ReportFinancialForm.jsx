@@ -31,7 +31,10 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
           </select>
         </FormField>
 
-        <FormField label="Amount lost/requested">
+        <FormField
+          label="Amount lost/requested"
+          required={reportData.moneyStatus === "Yes, I lost money"}
+        >
           <div className="flex overflow-hidden rounded-xl border border-[#dbe7f3] bg-white focus-within:border-[#009879] focus-within:ring-4 focus-within:ring-[#009879]/10">
             <span className="flex min-h-12 items-center border-r border-[#dbe7f3] px-4 text-sm font-bold text-slate-500">
               BDT
@@ -48,6 +51,12 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
               placeholder="Example: 5000"
             />
           </div>
+          {reportData.moneyStatus === "Yes, I lost money" &&
+            !reportData.amount && (
+              <p className="mt-2 text-sm font-semibold text-red-500">
+                Please add the amount you lost.
+              </p>
+            )}
         </FormField>
 
         <FormField label="Payment method">
