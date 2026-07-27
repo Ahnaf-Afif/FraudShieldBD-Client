@@ -9,11 +9,23 @@ export default function ReportLiveSummary({
   hasUnsavedChanges,
 }) {
   const identifiers = [
-    reportData.phoneOrPaymentNumber,
-    reportData.facebookLink,
-    reportData.websiteLink,
-    reportData.businessName,
-  ].filter(Boolean);
+    {
+      label: "Phone/payment",
+      value: reportData.phoneOrPaymentNumber,
+    },
+    {
+      label: "Facebook",
+      value: reportData.facebookLink,
+    },
+    {
+      label: "Website",
+      value: reportData.websiteLink,
+    },
+    {
+      label: "Business",
+      value: reportData.businessName,
+    },
+  ].filter((identifier) => identifier.value);
 
   const requiredFields = [
     { label: "Fraud category", complete: reportData.fraudCategory },
@@ -138,20 +150,19 @@ export default function ReportLiveSummary({
           </div>
         </div>
 
-        <div>
+        <div className="rounded-xl bg-white p-4">
           <p className="font-bold text-slate-500">Identifiers</p>
 
           {identifiers.length > 0 ? (
-            <ul className="mt-2 space-y-1">
+            <div className="mt-3 space-y-3">
               {identifiers.map((identifier) => (
-                <li
-                  key={identifier}
-                  className="break-words font-black text-[#06285c]"
-                >
-                  {identifier}
-                </li>
+                <SummaryItem
+                  key={identifier.label}
+                  label={identifier.label}
+                  value={identifier.value}
+                />
               ))}
-            </ul>
+            </div>
           ) : (
             <p className="mt-1 text-slate-400">Not added yet</p>
           )}
