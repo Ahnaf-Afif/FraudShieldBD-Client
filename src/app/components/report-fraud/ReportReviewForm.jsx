@@ -178,6 +178,17 @@ export default function ReportReviewForm({
         </div>
       )}
 
+      {submitStatus === "missing-amount" && (
+        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5">
+          <h3 className="font-black text-[#06285c]">Amount is required</h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            You selected that money was lost. Please add the amount in the
+            Financial Info section before submitting.
+          </p>
+        </div>
+      )}
+
       {hasSavedDraft && hasUnsavedChanges && (
         <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-5">
           <h3 className="font-black text-[#06285c]">Unsaved changes</h3>

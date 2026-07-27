@@ -252,25 +252,6 @@ function createReportPayload({ reportData, reportId, status, statusTime }) {
   return payload;
 }
 
-function createReportPayload({ reportData, reportId, status, statusTime }) {
-  const payload = {
-    ...reportData,
-    reportId,
-    status,
-    evidenceFiles: [],
-  };
-
-  if (status === "draft") {
-    payload.savedAt = statusTime;
-  }
-
-  if (status === "submitted") {
-    payload.submittedAt = statusTime;
-  }
-
-  return payload;
-}
-
 function validateReportBeforeSubmit(reportData) {
   const hasIdentifier =
     reportData.phoneOrPaymentNumber ||
@@ -285,6 +266,12 @@ function validateReportBeforeSubmit(reportData) {
     };
   }
 
+  if (reportData.moneyStatus === "Yes, I lost money " && !reportData.amount) {
+    return {
+      isValid: false,
+      status: "missing-amount",
+    };
+  }
   return {
     isValid: true,
     status: "",
