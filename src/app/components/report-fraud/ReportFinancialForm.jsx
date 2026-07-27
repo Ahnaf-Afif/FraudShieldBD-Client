@@ -1,6 +1,18 @@
 import { BadgeDollarSign, Info } from "lucide-react";
 
 export default function ReportFinancialForm({ reportData, updateReportData }) {
+  function handleMoneyStatusChange(value) {
+    updateReportData("moneyStatus", value);
+
+    if (value === "No money was involved" || value === "I am not sure") {
+      updateReportData("amount", "");
+      updateReportData("paymentMethod", "");
+      updateReportData("transactionDate", "");
+      updateReportData("transactionId", "");
+      updateReportData("paymentAccountName", "");
+    }
+  }
+
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
       <div className="border-b border-slate-200 pb-4">
@@ -18,9 +30,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
           <select
             required
             value={reportData.moneyStatus}
-            onChange={(event) =>
-              updateReportData("moneyStatus", event.target.value)
-            }
+            onChange={(event) => handleMoneyStatusChange(event.target.value)}
             className="form-input"
           >
             <option value="">Select an answer</option>
