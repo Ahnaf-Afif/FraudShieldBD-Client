@@ -13,6 +13,10 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
     }
   }
 
+  const shouldDisablePaymentFields =
+    reportData.moneyStatus === "No money was involved" ||
+    reportData.moneyStatus === "I am not sure";
+
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
       <div className="border-b border-slate-200 pb-4">
@@ -53,6 +57,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
             <input
               type="number"
               min="0"
+              disabled={shouldDisablePaymentFields}
               value={reportData.amount}
               onChange={(event) =>
                 updateReportData("amount", event.target.value)
@@ -77,6 +82,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
           }
         >
           <select
+            disabled={shouldDisablePaymentFields}
             value={reportData.paymentMethod}
             onChange={(event) =>
               updateReportData("paymentMethod", event.target.value)
@@ -105,6 +111,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
         <FormField label="Transaction date">
           <input
             type="date"
+            disabled={shouldDisablePaymentFields}
             value={reportData.transactionDate}
             onChange={(event) =>
               updateReportData("transactionDate", event.target.value)
@@ -115,6 +122,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
 
         <FormField label="Transaction ID">
           <input
+            disabled={shouldDisablePaymentFields}
             value={reportData.transactionId}
             onChange={(event) =>
               updateReportData("transactionId", event.target.value)
@@ -126,6 +134,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
 
         <FormField label="Payment account name">
           <input
+            disabled={shouldDisablePaymentFields}
             value={reportData.paymentAccountName}
             onChange={(event) =>
               updateReportData("paymentAccountName", event.target.value)
