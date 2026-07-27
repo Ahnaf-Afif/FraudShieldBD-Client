@@ -62,7 +62,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
               onChange={(event) =>
                 updateReportData("amount", event.target.value)
               }
-              className="min-h-12 w-full min-w-0 px-4 text-[#06285c] outline-none"
+              className="min-h-12 w-full min-w-0 px-4 text-[#06285c] outline-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
               placeholder="Example: 5000"
             />
           </div>
@@ -87,7 +87,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
             onChange={(event) =>
               updateReportData("paymentMethod", event.target.value)
             }
-            className="form-input"
+            className="form-input disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
           >
             <option value="">Select payment method</option>
             <option>bKash</option>
@@ -116,7 +116,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
             onChange={(event) =>
               updateReportData("transactionDate", event.target.value)
             }
-            className="form-input"
+            className="form-input disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
           />
         </FormField>
 
@@ -127,7 +127,7 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
             onChange={(event) =>
               updateReportData("transactionId", event.target.value)
             }
-            className="form-input"
+            className="form-input disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
             placeholder="Example: TXN123456789"
           />
         </FormField>
@@ -139,11 +139,18 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
             onChange={(event) =>
               updateReportData("paymentAccountName", event.target.value)
             }
-            className="form-input"
+            className="form-input disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
             placeholder="Name shown in payment app or bank"
           />
         </FormField>
       </div>
+
+      {shouldDisablePaymentFields && (
+        <p className="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500">
+          Payment details are disabled because this report does not include a
+          confirmed payment.
+        </p>
+      )}
 
       <div className="mt-6 rounded-2xl bg-orange-50 p-5">
         <div className="flex gap-4">
