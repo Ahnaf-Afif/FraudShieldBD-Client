@@ -272,6 +272,16 @@ function validateReportBeforeSubmit(reportData) {
       status: "missing-amount",
     };
   }
+  if (
+    (reportData.moneyStatus === "Yes, I lost money" ||
+      reportData.moneyStatus === "No, but they asked for money") &&
+    !reportData.paymentMethod
+  ) {
+    return {
+      isValid: false,
+      status: "missing-payment-method",
+    };
+  }
   return {
     isValid: true,
     status: "",

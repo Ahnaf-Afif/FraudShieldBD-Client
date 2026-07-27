@@ -59,7 +59,13 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
             )}
         </FormField>
 
-        <FormField label="Payment method">
+        <FormField
+          label="Payment method"
+          required={
+            reportData.moneyStatus === "Yes, I lost money" ||
+            reportData.moneyStatus === "No, but they asked for money"
+          }
+        >
           <select
             value={reportData.paymentMethod}
             onChange={(event) =>
@@ -76,6 +82,14 @@ export default function ReportFinancialForm({ reportData, updateReportData }) {
             <option>Cash</option>
             <option>No payment made</option>
           </select>
+
+          {(reportData.moneyStatus === "Yes, I lost money" ||
+            reportData.moneyStatus === "No, but they asked for money") &&
+            !reportData.paymentMethod && (
+              <p className="mt-2 text-sm font-semibold text-red-500">
+                Please choose the payment method used or requested.
+              </p>
+            )}
         </FormField>
 
         <FormField label="Transaction date">
