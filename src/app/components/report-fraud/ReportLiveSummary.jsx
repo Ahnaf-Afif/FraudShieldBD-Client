@@ -117,8 +117,26 @@ export default function ReportLiveSummary({
         <SummaryItem label="Category" value={reportData.fraudCategory} />
         <SummaryItem label="Platform" value={reportData.platform} />
         <SummaryItem label="Title" value={reportData.title} />
-        <SummaryItem label="Money status" value={reportData.moneyStatus} />
-        <SummaryItem label="Amount" value={reportData.amount} />
+
+        <div className="rounded-xl bg-white p-4">
+          <p className="font-bold text-slate-500">Financial details</p>
+
+          <div className="mt-3 space-y-3">
+            <SummaryItem label="Money status" value={reportData.moneyStatus} />
+            <SummaryItem
+              label="Amount"
+              value={reportData.amount ? `BDT ${reportData.amount}` : ""}
+            />
+            <SummaryItem
+              label="Payment method"
+              value={reportData.paymentMethod}
+            />
+            <SummaryItem
+              label="Transaction date"
+              value={reportData.transactionDate}
+            />
+          </div>
+        </div>
 
         <div>
           <p className="font-bold text-slate-500">Identifiers</p>
@@ -185,6 +203,14 @@ function getStatusLabel(submitStatus, hasSavedDraft, hasUnsavedChanges) {
 
   if (submitStatus === "missing-identifier") {
     return "Needs identifier";
+  }
+
+  if (submitStatus === "missing-amount") {
+    return "Needs amount";
+  }
+
+  if (submitStatus === "missing-payment-method") {
+    return "Needs payment method";
   }
 
   return "In progress";
