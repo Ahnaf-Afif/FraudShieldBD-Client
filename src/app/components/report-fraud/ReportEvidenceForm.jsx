@@ -32,6 +32,7 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
   const fileInputRef = useRef(null);
   const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(null);
   const [evidenceError, setEvidenceError] = useState("");
+  const [isDraggingEvidence, setIsDraggingEvidence] = useState(false);
 
   const previewFiles = useMemo(
     () =>
@@ -75,9 +76,7 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
     fileInputRef.current?.click();
   }
 
-  function handleFileChange(event) {
-    const selectedFiles = Array.from(event.target.files);
-
+  function addEvidenceFiles(selectedFiles) {
     if (selectedFiles.length === 0) {
       return;
     }
@@ -126,7 +125,39 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
     ];
 
     updateReportData("evidenceFiles", nextFiles);
+  }
+
+  function handleFileChange(event) {
+    const selectedFiles = Array.from(event.target.files);
+
+    addEvidenceFiles(selectedFiles);
     event.target.value = "";
+  }
+
+  function handleDragOver(event) {
+    event.preventDefault();
+
+    if (!hasReachedFileLimit) {
+      setIsDraggingEvidence(true);
+    }
+  }
+
+  function handleDragLeave(event) {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setIsDraggingEvidence(false);
+    }
+  }
+
+  function handleDrop(event) {
+    event.preventDefault();
+    setIsDraggingEvidence(false);
+
+    if (hasReachedFileLimit) {
+      return;
+    }
+
+    const droppedFiles = Array.from(event.dataTransfer.files);
+    addEvidenceFiles(droppedFiles);
   }
 
   function removeEvidenceFile(fileIndex) {
@@ -156,7 +187,16 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
         </p>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-dashed border-[#009879] bg-[#f0fbf7] p-8 text-center">
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`mt-6 rounded-2xl border border-dashed p-8 text-center transition ${
+          isDraggingEvidence
+            ? "border-[#006b55] bg-[#dff7ef] shadow-inner"
+            : "border-[#009879] bg-[#f0fbf7]"
+        }`}
+      >
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#009879] shadow-sm">
           <Upload size={30} />
         </div>
