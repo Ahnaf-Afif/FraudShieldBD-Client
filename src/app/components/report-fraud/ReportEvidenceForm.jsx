@@ -24,6 +24,7 @@ const MAX_EVIDENCE_FILES = 5;
 export default function ReportEvidenceForm({ reportData, updateReportData }) {
   const fileInputRef = useRef(null);
   const [selectedPreviewIndex, setSelectedPreviewIndex] = useState(null);
+  const [evidenceError, setEvidenceError] = useState("");
 
   const previewFiles = useMemo(
     () =>
@@ -74,10 +75,35 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
       return;
     }
 
-    const nextFiles = [...reportData.evidenceFiles, ...selectedFiles].slice(
-      0,
-      MAX_EVIDENCE_FILES,
+    const existingFileKeys = new Set(
+      reportData.evidenceFiles.map((file) => createFileKey(file)),
     );
+    const uniqueSelectedFiles = selectedFiles.filter((file) => {
+      const fileKey = createFileKey(file);
+
+      if (existingFileKeys.has(fileKey)) {
+        return false;
+      }
+
+      existingFileKeys.add(fileKey);
+      return true;
+    });
+    const duplicateFileCount = selectedFiles.length - uniqueSelectedFiles.length;
+
+    if (duplicateFileCount > 0) {
+      setEvidenceError(
+        duplicateFileCount === 1
+          ? "This file is already selected."
+          : `${duplicateFileCount} files are already selected.`,
+      );
+    } else {
+      setEvidenceError("");
+    }
+
+    const nextFiles = [
+      ...reportData.evidenceFiles,
+      ...uniqueSelectedFiles,
+    ].slice(0, MAX_EVIDENCE_FILES);
 
     updateReportData("evidenceFiles", nextFiles);
     event.target.value = "";
@@ -90,6 +116,7 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
 
     updateReportData("evidenceFiles", nextFiles);
     setSelectedPreviewIndex(null);
+    setEvidenceError("");
   }
 
   const selectedFileCount = reportData.evidenceFiles.length;
@@ -144,6 +171,12 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
           PNG, JPG, WEBP or PDF. Maximum {MAX_EVIDENCE_FILES} files.
         </p>
       </div>
+
+      {evidenceError && (
+        <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+          {evidenceError}
+        </p>
+      )}
 
       {selectedFileCount > 0 && (
         <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -354,6 +387,10 @@ function formatFileSize(sizeInBytes) {
   }
 
   return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function createFileKey(file) {
+  return `${file.name}-${file.size}-${file.type}-${file.lastModified}`;
 }
 
 function PreviewThumb({ previewFile }) {
