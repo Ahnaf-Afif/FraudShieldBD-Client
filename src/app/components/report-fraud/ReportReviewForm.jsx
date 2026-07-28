@@ -24,11 +24,15 @@ export default function ReportReviewForm({
     }, 1500);
   }
 
-  const canSubmitReport =
-    reportData.confirmsAccuracy &&
-    reportData.confirmsPrivacy &&
-    reportData.confirmsReview &&
-    reportData.confirmsHonesty;
+  const confirmations = [
+    reportData.confirmsAccuracy,
+    reportData.confirmsPrivacy,
+    reportData.confirmsReview,
+    reportData.confirmsHonesty,
+  ];
+  const completedConfirmations = confirmations.filter(Boolean).length;
+  const totalConfirmations = confirmations.length;
+  const canSubmitReport = completedConfirmations === totalConfirmations;
 
   const draftButtonText = getDraftButtonText(hasSavedDraft, hasUnsavedChanges);
   const identifierCount = getIdentifierCount(reportData);
@@ -91,7 +95,22 @@ export default function ReportReviewForm({
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <h3 className="font-black text-[#06285c]">Before you submit</h3>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="font-black text-[#06285c]">Before you submit</h3>
+
+          <span className="inline-flex w-fit rounded-full bg-white px-3 py-1 text-xs font-black text-[#009879]">
+            {completedConfirmations} / {totalConfirmations} confirmed
+          </span>
+        </div>
+
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
+          <div
+            className="h-full rounded-full bg-[#009879] transition-all"
+            style={{
+              width: `${(completedConfirmations / totalConfirmations) * 100}%`,
+            }}
+          />
+        </div>
 
         <div className="mt-4 space-y-3">
           <ChecklistItem
@@ -278,6 +297,12 @@ export default function ReportReviewForm({
           Submit Report
         </button>
       </div>
+
+      {!canSubmitReport && (
+        <p className="mt-3 text-sm font-semibold text-slate-500">
+          Complete all {totalConfirmations} confirmations to enable submit.
+        </p>
+      )}
     </section>
   );
 }
