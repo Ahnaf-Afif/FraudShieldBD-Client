@@ -89,21 +89,23 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
       return true;
     });
     const duplicateFileCount = selectedFiles.length - uniqueSelectedFiles.length;
+    const availableFileSlots =
+      MAX_EVIDENCE_FILES - reportData.evidenceFiles.length;
+    const acceptedFiles = uniqueSelectedFiles.slice(0, availableFileSlots);
+    const limitRejectedFileCount =
+      uniqueSelectedFiles.length - acceptedFiles.length;
 
-    if (duplicateFileCount > 0) {
-      setEvidenceError(
-        duplicateFileCount === 1
-          ? "This file is already selected."
-          : `${duplicateFileCount} files are already selected.`,
-      );
-    } else {
-      setEvidenceError("");
-    }
+    setEvidenceError(
+      getEvidenceSelectionMessage({
+        duplicateFileCount,
+        limitRejectedFileCount,
+      }),
+    );
 
     const nextFiles = [
       ...reportData.evidenceFiles,
-      ...uniqueSelectedFiles,
-    ].slice(0, MAX_EVIDENCE_FILES);
+      ...acceptedFiles,
+    ];
 
     updateReportData("evidenceFiles", nextFiles);
     event.target.value = "";
@@ -391,6 +393,33 @@ function formatFileSize(sizeInBytes) {
 
 function createFileKey(file) {
   return `${file.name}-${file.size}-${file.type}-${file.lastModified}`;
+}
+
+function getEvidenceSelectionMessage({
+  duplicateFileCount,
+  limitRejectedFileCount,
+}) {
+  const messages = [];
+
+  if (duplicateFileCount === 1) {
+    messages.push("1 file was already selected.");
+  }
+
+  if (duplicateFileCount > 1) {
+    messages.push(`${duplicateFileCount} files were already selected.`);
+  }
+
+  if (limitRejectedFileCount === 1) {
+    messages.push("1 file was not added because the limit is 5 files.");
+  }
+
+  if (limitRejectedFileCount > 1) {
+    messages.push(
+      `${limitRejectedFileCount} files were not added because the limit is 5 files.`,
+    );
+  }
+
+  return messages.join(" ");
 }
 
 function PreviewThumb({ previewFile }) {
