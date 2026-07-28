@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FileImage, Upload, X, XCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileImage,
+  Upload,
+  X,
+  XCircle,
+} from "lucide-react";
 
 const evidenceTypes = [
   "Chat screenshot",
@@ -87,6 +94,10 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
 
   const selectedFileCount = reportData.evidenceFiles.length;
   const hasReachedFileLimit = selectedFileCount >= MAX_EVIDENCE_FILES;
+  const canShowPreviousPreview = selectedPreviewIndex > 0;
+  const canShowNextPreview =
+    selectedPreviewIndex !== null &&
+    selectedPreviewIndex < previewFiles.length - 1;
 
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
@@ -206,6 +217,7 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
                 </h3>
 
                 <p className="text-xs font-semibold text-slate-500">
+                  File {selectedPreviewIndex + 1} of {previewFiles.length} ·{" "}
                   {formatFileSize(selectedPreview.file.size)}
                 </p>
               </div>
@@ -221,6 +233,32 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
             </div>
 
             <div className="max-h-[78vh] overflow-auto bg-slate-100 p-4">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedPreviewIndex((currentIndex) => currentIndex - 1)
+                  }
+                  disabled={!canShowPreviousPreview}
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-[#06285c] shadow-sm transition hover:text-[#009879] disabled:cursor-not-allowed disabled:text-slate-300"
+                >
+                  <ChevronLeft size={18} />
+                  Previous
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedPreviewIndex((currentIndex) => currentIndex + 1)
+                  }
+                  disabled={!canShowNextPreview}
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-[#06285c] shadow-sm transition hover:text-[#009879] disabled:cursor-not-allowed disabled:text-slate-300"
+                >
+                  Next
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
               {selectedPreview.isImage && (
                 <img
                   src={selectedPreview.previewUrl}
