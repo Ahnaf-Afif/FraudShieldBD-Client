@@ -1,4 +1,4 @@
-import { Building2, Globe, Phone } from "lucide-react";
+import { Building2, Globe, Phone, X } from "lucide-react";
 import { FaFacebookF } from "react-icons/fa6";
 
 export default function ReportIdentifiersForm({
@@ -56,6 +56,7 @@ export default function ReportIdentifiersForm({
           type="tel"
           value={reportData.phoneOrPaymentNumber}
           onChange={(value) => updateReportData("phoneOrPaymentNumber", value)}
+          onClear={() => updateReportData("phoneOrPaymentNumber", "")}
         />
 
         <IdentifierField
@@ -65,6 +66,7 @@ export default function ReportIdentifiersForm({
           inputMode="url"
           value={reportData.facebookLink}
           onChange={(value) => updateReportData("facebookLink", value)}
+          onClear={() => updateReportData("facebookLink", "")}
         />
 
         <IdentifierField
@@ -74,6 +76,7 @@ export default function ReportIdentifiersForm({
           inputMode="url"
           value={reportData.websiteLink}
           onChange={(value) => updateReportData("websiteLink", value)}
+          onClear={() => updateReportData("websiteLink", "")}
         />
 
         <IdentifierField
@@ -83,6 +86,7 @@ export default function ReportIdentifiersForm({
           type="text"
           value={reportData.businessName}
           onChange={(value) => updateReportData("businessName", value)}
+          onClear={() => updateReportData("businessName", "")}
         />
       </div>
 
@@ -125,7 +129,10 @@ function IdentifierField({
   inputMode,
   value,
   onChange,
+  onClear,
 }) {
+  const hasValue = value.trim().length > 0;
+
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-bold text-[#06285c]">
@@ -146,6 +153,17 @@ function IdentifierField({
           className="min-h-12 w-full min-w-0 px-4 text-[#06285c] outline-none"
           placeholder={placeholder}
         />
+
+        {hasValue && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="flex min-h-12 items-center px-4 text-slate-400 transition hover:text-red-500"
+            aria-label={`Clear ${label}`}
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
     </label>
   );
