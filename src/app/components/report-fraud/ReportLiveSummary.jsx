@@ -173,14 +173,21 @@ export default function ReportLiveSummary({
           )}
         </div>
 
-        <SummaryItem
-          label="Evidence files"
-          value={
-            reportData.evidenceFiles.length > 0
-              ? `${reportData.evidenceFiles.length} file selected`
-              : ""
-          }
-        />
+        <div className="rounded-xl bg-white p-4">
+          <p className="font-bold text-slate-500">Evidence</p>
+
+          <div className="mt-3 space-y-3">
+            <SummaryItem label="Evidence type" value={reportData.evidenceType} />
+            <SummaryItem
+              label="Files"
+              value={formatEvidenceFileCount(reportData.evidenceFiles.length)}
+            />
+            <SummaryItem
+              label="Notes"
+              value={reportData.evidenceDetails ? "Added" : ""}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -195,6 +202,18 @@ function SummaryItem({ label, value }) {
       </p>
     </div>
   );
+}
+
+function formatEvidenceFileCount(fileCount) {
+  if (fileCount === 0) {
+    return "";
+  }
+
+  if (fileCount === 1) {
+    return "1 file selected";
+  }
+
+  return `${fileCount} files selected`;
 }
 
 function getStatusLabel(submitStatus, hasSavedDraft, hasUnsavedChanges) {
