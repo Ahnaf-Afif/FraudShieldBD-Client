@@ -254,10 +254,10 @@ function createReportPayload({ reportData, reportId, status, statusTime }) {
 
 function validateReportBeforeSubmit(reportData) {
   const hasIdentifier =
-    reportData.phoneOrPaymentNumber ||
-    reportData.facebookLink ||
-    reportData.websiteLink ||
-    reportData.businessName;
+    hasText(reportData.phoneOrPaymentNumber) ||
+    hasText(reportData.facebookLink) ||
+    hasText(reportData.websiteLink) ||
+    hasText(reportData.businessName);
 
   if (!hasIdentifier) {
     return {
@@ -286,4 +286,8 @@ function validateReportBeforeSubmit(reportData) {
     isValid: true,
     status: "",
   };
+}
+
+function hasText(value) {
+  return value.trim().length > 0;
 }

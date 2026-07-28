@@ -11,7 +11,9 @@ export default function ReportIdentifiersForm({
     reportData.facebookLink,
     reportData.websiteLink,
     reportData.businessName,
-  ].filter(Boolean);
+  ]
+    .map((identifier) => identifier.trim())
+    .filter(Boolean);
 
   const hasIdentifier = identifiers.length > 0;
   return (
@@ -51,6 +53,7 @@ export default function ReportIdentifiersForm({
           label="Phone or payment number"
           placeholder="Example: 01712345678"
           icon={Phone}
+          type="tel"
           value={reportData.phoneOrPaymentNumber}
           onChange={(value) => updateReportData("phoneOrPaymentNumber", value)}
         />
@@ -59,6 +62,7 @@ export default function ReportIdentifiersForm({
           label="Facebook page/profile link"
           placeholder="Example: facebook.com/fakepage"
           icon={FaFacebookF}
+          inputMode="url"
           value={reportData.facebookLink}
           onChange={(value) => updateReportData("facebookLink", value)}
         />
@@ -67,6 +71,7 @@ export default function ReportIdentifiersForm({
           label="Website link"
           placeholder="Example: scamshop.com"
           icon={Globe}
+          inputMode="url"
           value={reportData.websiteLink}
           onChange={(value) => updateReportData("websiteLink", value)}
         />
@@ -75,6 +80,7 @@ export default function ReportIdentifiersForm({
           label="Business or shop name"
           placeholder="Example: Dream Electronics BD"
           icon={Building2}
+          type="text"
           value={reportData.businessName}
           onChange={(value) => updateReportData("businessName", value)}
         />
@@ -111,7 +117,15 @@ export function ReportIdentifiersTips() {
   );
 }
 
-function IdentifierField({ label, placeholder, icon: Icon, value, onChange }) {
+function IdentifierField({
+  label,
+  placeholder,
+  icon: Icon,
+  type = "text",
+  inputMode,
+  value,
+  onChange,
+}) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-bold text-[#06285c]">
@@ -124,8 +138,11 @@ function IdentifierField({ label, placeholder, icon: Icon, value, onChange }) {
         </span>
 
         <input
+          type={type}
+          inputMode={inputMode}
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          onBlur={() => onChange(value.trim())}
           className="min-h-12 w-full min-w-0 px-4 text-[#06285c] outline-none"
           placeholder={placeholder}
         />

@@ -25,7 +25,12 @@ export default function ReportLiveSummary({
       label: "Business",
       value: reportData.businessName,
     },
-  ].filter((identifier) => identifier.value);
+  ]
+    .map((identifier) => ({
+      ...identifier,
+      value: identifier.value.trim(),
+    }))
+    .filter((identifier) => identifier.value);
 
   const requiredFields = [
     { label: "Fraud category", complete: reportData.fraudCategory },
