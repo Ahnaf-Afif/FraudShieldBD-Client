@@ -20,6 +20,13 @@ const evidenceTypes = [
 ];
 
 const MAX_EVIDENCE_FILES = 5;
+const MAX_EVIDENCE_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_EVIDENCE_FILE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "application/pdf",
+];
 
 export default function ReportEvidenceForm({ reportData, updateReportData }) {
   const fileInputRef = useRef(null);
@@ -75,10 +82,18 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
       return;
     }
 
+    const supportedFiles = selectedFiles.filter(isSupportedEvidenceFile);
+    const unsupportedFileCount = selectedFiles.length - supportedFiles.length;
+    const sizeAllowedFiles = supportedFiles.filter(
+      (file) => file.size <= MAX_EVIDENCE_FILE_SIZE,
+    );
+    const oversizedFileCount = supportedFiles.length - sizeAllowedFiles.length;
+    const filesReadyToAdd = sizeAllowedFiles;
+
     const existingFileKeys = new Set(
       reportData.evidenceFiles.map((file) => createFileKey(file)),
     );
-    const uniqueSelectedFiles = selectedFiles.filter((file) => {
+    const uniqueSelectedFiles = filesReadyToAdd.filter((file) => {
       const fileKey = createFileKey(file);
 
       if (existingFileKeys.has(fileKey)) {
@@ -88,7 +103,8 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
       existingFileKeys.add(fileKey);
       return true;
     });
-    const duplicateFileCount = selectedFiles.length - uniqueSelectedFiles.length;
+    const duplicateFileCount =
+      filesReadyToAdd.length - uniqueSelectedFiles.length;
     const availableFileSlots =
       MAX_EVIDENCE_FILES - reportData.evidenceFiles.length;
     const acceptedFiles = uniqueSelectedFiles.slice(0, availableFileSlots);
@@ -99,6 +115,8 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
       getEvidenceSelectionMessage({
         duplicateFileCount,
         limitRejectedFileCount,
+        oversizedFileCount,
+        unsupportedFileCount,
       }),
     );
 
@@ -170,7 +188,8 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
         />
 
         <p className="mt-3 text-xs text-slate-500">
-          PNG, JPG, WEBP or PDF. Maximum {MAX_EVIDENCE_FILES} files.
+          PNG, JPG, WEBP or PDF. Maximum {MAX_EVIDENCE_FILES} files,{" "}
+          {formatFileSize(MAX_EVIDENCE_FILE_SIZE)} each.
         </p>
       </div>
 
@@ -395,11 +414,39 @@ function createFileKey(file) {
   return `${file.name}-${file.size}-${file.type}-${file.lastModified}`;
 }
 
+function isSupportedEvidenceFile(file) {
+  return ALLOWED_EVIDENCE_FILE_TYPES.includes(file.type);
+}
+
 function getEvidenceSelectionMessage({
   duplicateFileCount,
   limitRejectedFileCount,
+  oversizedFileCount,
+  unsupportedFileCount,
 }) {
   const messages = [];
+
+  if (unsupportedFileCount === 1) {
+    messages.push("1 file type is not supported.");
+  }
+
+  if (unsupportedFileCount > 1) {
+    messages.push(`${unsupportedFileCount} file types are not supported.`);
+  }
+
+  if (oversizedFileCount === 1) {
+    messages.push(
+      `1 file is larger than ${formatFileSize(MAX_EVIDENCE_FILE_SIZE)}.`,
+    );
+  }
+
+  if (oversizedFileCount > 1) {
+    messages.push(
+      `${oversizedFileCount} files are larger than ${formatFileSize(
+        MAX_EVIDENCE_FILE_SIZE,
+      )}.`,
+    );
+  }
 
   if (duplicateFileCount === 1) {
     messages.push("1 file was already selected.");
