@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { FileImage, Upload, XCircle } from "lucide-react";
+import { FileImage, Upload, X, XCircle } from "lucide-react";
 
 const evidenceTypes = [
   "Chat screenshot",
@@ -12,6 +12,8 @@ const evidenceTypes = [
   "Other evidence",
 ];
 
+const MAX_EVIDENCE_FILES = 5;
+
 export default function ReportEvidenceForm({ reportData, updateReportData }) {
   const fileInputRef = useRef(null);
 
@@ -21,8 +23,25 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
 
   function handleFileChange(event) {
     const selectedFiles = Array.from(event.target.files);
-    updateReportData("evidenceFiles", selectedFiles);
+    const nextFiles = [...reportData.evidenceFiles, ...selectedFiles].slice(
+      0,
+      MAX_EVIDENCE_FILES,
+    );
+
+    updateReportData("evidenceFiles", nextFiles);
+    event.target.value = "";
   }
+
+  function removeEvidenceFile(fileIndex) {
+    const nextFiles = reportData.evidenceFiles.filter(
+      (file, index) => index !== fileIndex,
+    );
+
+    updateReportData("evidenceFiles", nextFiles);
+  }
+
+  const selectedFileCount = reportData.evidenceFiles.length;
+  const hasReachedFileLimit = selectedFileCount >= MAX_EVIDENCE_FILES;
 
   return (
     <section className="border-b border-slate-200 p-5 sm:p-6">
@@ -65,21 +84,52 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
         />
 
         <p className="mt-3 text-xs text-slate-500">
-          PNG, JPG, WEBP or PDF. Maximum 5 files.
+          PNG, JPG, WEBP or PDF. Maximum {MAX_EVIDENCE_FILES} files.
         </p>
       </div>
 
-      {reportData.evidenceFiles.length > 0 && (
+      {selectedFileCount > 0 && (
         <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h3 className="text-sm font-black text-[#06285c]">Selected files</h3>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-sm font-black text-[#06285c]">Selected files</h3>
+
+            <p className="text-xs font-bold text-slate-500">
+              {selectedFileCount} / {MAX_EVIDENCE_FILES} files
+            </p>
+          </div>
 
           <ul className="mt-3 space-y-2 text-sm text-slate-600">
-            {reportData.evidenceFiles.map((file) => (
-              <li key={`${file.name}-${file.size}`} className="break-words">
-                {file.name}
+            {reportData.evidenceFiles.map((file, index) => (
+              <li
+                key={`${file.name}-${file.size}-${file.lastModified}`}
+                className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2"
+              >
+                <span className="min-w-0">
+                  <span className="block break-words font-bold text-[#06285c]">
+                    {file.name}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-400">
+                    {formatFileSize(file.size)}
+                  </span>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => removeEvidenceFile(index)}
+                  className="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                  aria-label={`Remove ${file.name}`}
+                >
+                  <X size={16} />
+                </button>
               </li>
             ))}
           </ul>
+
+          {hasReachedFileLimit && (
+            <p className="mt-3 rounded-xl bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-700">
+              You reached the file limit. Remove a file before adding another.
+            </p>
+          )}
         </div>
       )}
 
@@ -146,6 +196,18 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
       </div>
     </section>
   );
+}
+
+function formatFileSize(sizeInBytes) {
+  if (sizeInBytes < 1024) {
+    return `${sizeInBytes} B`;
+  }
+
+  if (sizeInBytes < 1024 * 1024) {
+    return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export function ReportEvidenceTips() {
