@@ -40,6 +40,22 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
     };
   }, [previewFiles]);
 
+  useEffect(() => {
+    function closePreviewWithEscape(event) {
+      if (event.key === "Escape") {
+        setSelectedPreviewIndex(null);
+      }
+    }
+
+    if (selectedPreview) {
+      document.addEventListener("keydown", closePreviewWithEscape);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", closePreviewWithEscape);
+    };
+  }, [selectedPreview]);
+
   function openFilePicker() {
     fileInputRef.current?.click();
   }
@@ -177,8 +193,12 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
           role="dialog"
           aria-modal="true"
           aria-label={`Preview ${selectedPreview.file.name}`}
+          onClick={() => setSelectedPreviewIndex(null)}
         >
-          <div className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div
+            className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
               <div className="min-w-0">
                 <h3 className="break-words text-sm font-black text-[#06285c]">
