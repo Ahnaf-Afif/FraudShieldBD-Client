@@ -31,6 +31,7 @@ export default function ReportReviewForm({
     reportData.confirmsHonesty;
 
   const draftButtonText = getDraftButtonText(hasSavedDraft, hasUnsavedChanges);
+  const identifierCount = getIdentifierCount(reportData);
 
   return (
     <section className="p-5 sm:p-6">
@@ -62,6 +63,31 @@ export default function ReportReviewForm({
             }
           />
         </label>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5">
+        <h3 className="font-black text-[#06285c]">Final check</h3>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <ReviewSummaryItem label="Title" value={reportData.title} />
+          <ReviewSummaryItem label="Category" value={reportData.fraudCategory} />
+          <ReviewSummaryItem
+            label="Identifiers"
+            value={formatIdentifierCount(identifierCount)}
+          />
+          <ReviewSummaryItem
+            label="Money"
+            value={formatMoneySummary(reportData)}
+          />
+          <ReviewSummaryItem
+            label="Evidence"
+            value={formatEvidenceSummary(reportData)}
+          />
+          <ReviewSummaryItem
+            label="Advice"
+            value={reportData.preventionAdvice ? "Added" : ""}
+          />
+        </div>
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -297,6 +323,68 @@ function getDraftButtonText(hasSavedDraft, hasUnsavedChanges) {
   }
 
   return "Save as Draft";
+}
+
+function getIdentifierCount(reportData) {
+  return [
+    reportData.phoneOrPaymentNumber,
+    reportData.facebookLink,
+    reportData.websiteLink,
+    reportData.businessName,
+  ].filter((identifier) => identifier.trim()).length;
+}
+
+function formatIdentifierCount(identifierCount) {
+  if (identifierCount === 0) {
+    return "";
+  }
+
+  if (identifierCount === 1) {
+    return "1 identifier";
+  }
+
+  return `${identifierCount} identifiers`;
+}
+
+function formatMoneySummary(reportData) {
+  if (!reportData.moneyStatus) {
+    return "";
+  }
+
+  if (reportData.amount) {
+    return `${reportData.moneyStatus} - BDT ${reportData.amount}`;
+  }
+
+  return reportData.moneyStatus;
+}
+
+function formatEvidenceSummary(reportData) {
+  if (!reportData.evidenceType && reportData.evidenceFiles.length === 0) {
+    return "";
+  }
+
+  if (reportData.evidenceFiles.length === 0) {
+    return reportData.evidenceType;
+  }
+
+  if (reportData.evidenceFiles.length === 1) {
+    return `${reportData.evidenceType || "Evidence"} - 1 file`;
+  }
+
+  return `${reportData.evidenceType || "Evidence"} - ${
+    reportData.evidenceFiles.length
+  } files`;
+}
+
+function ReviewSummaryItem({ label, value }) {
+  return (
+    <div className="rounded-xl bg-white px-4 py-3">
+      <p className="text-xs font-bold uppercase text-slate-400">{label}</p>
+      <p className="mt-1 break-words text-sm font-black text-[#06285c]">
+        {value || "Not added yet"}
+      </p>
+    </div>
+  );
 }
 
 function ReportIdBox({ label, reportId, statusTime, copied, onCopy }) {
