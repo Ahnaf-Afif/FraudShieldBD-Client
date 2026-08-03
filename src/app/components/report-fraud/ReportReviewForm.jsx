@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { CheckCircle2, Check, Copy, FileCheck } from "lucide-react";
 
+const MIN_PREVENTION_ADVICE_LENGTH = 20;
+
 export default function ReportReviewForm({
   reportData,
   updateReportData,
@@ -36,6 +38,12 @@ export default function ReportReviewForm({
 
   const draftButtonText = getDraftButtonText(hasSavedDraft, hasUnsavedChanges);
   const identifierCount = getIdentifierCount(reportData);
+  const preventionAdviceLength = reportData.preventionAdvice.trim().length;
+  const needsPreventionAdvice =
+    preventionAdviceLength < MIN_PREVENTION_ADVICE_LENGTH;
+  const preventionAdviceMessage = formatPreventionAdviceMessage(
+    preventionAdviceLength,
+  );
 
   return (
     <section className="p-5 sm:p-6">
@@ -57,8 +65,9 @@ export default function ReportReviewForm({
           </span>
 
           <textarea
-            required
-            minLength={20}
+            aria-describedby={
+              needsPreventionAdvice ? "prevention-advice-message" : undefined
+            }
             className="min-h-32 w-full resize-y rounded-xl border border-[#dbe7f3] bg-white p-4 leading-7 text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
             placeholder="Example: Do not send advance payment before verifying the seller. Check page reviews, call official numbers, and avoid sharing OTP or PIN."
             value={reportData.preventionAdvice}
@@ -67,6 +76,20 @@ export default function ReportReviewForm({
             }
           />
         </label>
+
+        {needsPreventionAdvice && (
+          <p
+            id="prevention-advice-message"
+            className={`mt-2 rounded-xl border px-4 py-3 text-sm font-semibold ${
+              submitStatus === "missing-prevention-advice"
+                ? "border-red-200 bg-red-50 text-red-600"
+                : "border-orange-200 bg-orange-50 text-orange-700"
+            }`}
+          >
+            Write at least {MIN_PREVENTION_ADVICE_LENGTH} characters of safety
+            advice. {preventionAdviceMessage}
+          </p>
+        )}
       </div>
 
       <div className="mt-6 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5">
@@ -89,7 +112,7 @@ export default function ReportReviewForm({
           />
           <ReviewSummaryItem
             label="Advice"
-            value={reportData.preventionAdvice ? "Added" : ""}
+            value={formatPreventionAdviceSummary(preventionAdviceLength)}
           />
         </div>
       </div>
@@ -399,6 +422,31 @@ function formatEvidenceSummary(reportData) {
   return `${reportData.evidenceType || "Evidence"} - ${
     reportData.evidenceFiles.length
   } files`;
+}
+
+function formatPreventionAdviceMessage(currentLength) {
+  const remainingCharacters = Math.max(
+    MIN_PREVENTION_ADVICE_LENGTH - currentLength,
+    0,
+  );
+
+  if (remainingCharacters === 1) {
+    return "1 more character needed.";
+  }
+
+  return `${remainingCharacters} more characters needed.`;
+}
+
+function formatPreventionAdviceSummary(currentLength) {
+  if (currentLength === 0) {
+    return "";
+  }
+
+  if (currentLength < MIN_PREVENTION_ADVICE_LENGTH) {
+    return "Too short";
+  }
+
+  return "Added";
 }
 
 function ReviewSummaryItem({ label, value }) {

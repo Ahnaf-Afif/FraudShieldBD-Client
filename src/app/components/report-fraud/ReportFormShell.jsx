@@ -13,6 +13,8 @@ import ReportReviewForm, { ReportReviewTips } from "./ReportReviewForm";
 import ReportStoryForm, { ReportStoryTips } from "./ReportStoryForm";
 import ReportLiveSummary from "./ReportLiveSummary";
 const REPORT_DRAFT_KEY = "fraudshield-report-draft";
+const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
+const MIN_PREVENTION_ADVICE_LENGTH = 20;
 
 const initialReportData = {
   fraudCategory: "",
@@ -116,6 +118,7 @@ export default function ReportFormShell() {
       statusTime: submittedAt,
     });
 
+    saveSubmittedReport(submittedReportPayload);
     console.log("Report data:", submittedReportPayload);
 
     setSubmitStatus("submitted");
@@ -252,6 +255,38 @@ function createReportPayload({ reportData, reportId, status, statusTime }) {
   return payload;
 }
 
+function saveSubmittedReport(newReport) {
+  const savedReports = getSavedSubmittedReports();
+  const reportsWithoutCurrentReport = savedReports.filter(
+    (savedReport) => savedReport.reportId !== newReport.reportId,
+  );
+
+  const updatedReports = [newReport, ...reportsWithoutCurrentReport];
+
+  localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(updatedReports));
+}
+
+function getSavedSubmittedReports() {
+  const savedReports = localStorage.getItem(REPORT_SUBMISSIONS_KEY);
+
+  if (!savedReports) {
+    return [];
+  }
+
+  try {
+    const parsedReports = JSON.parse(savedReports);
+
+    if (!Array.isArray(parsedReports)) {
+      return [];
+    }
+
+    return parsedReports;
+  } catch (error) {
+    console.error("Could not load submitted reports:", error);
+    return [];
+  }
+}
+
 function validateReportBeforeSubmit(reportData) {
   const hasIdentifier =
     hasText(reportData.phoneOrPaymentNumber) ||
@@ -282,6 +317,16 @@ function validateReportBeforeSubmit(reportData) {
       status: "missing-payment-method",
     };
   }
+
+  if (
+    reportData.preventionAdvice.trim().length < MIN_PREVENTION_ADVICE_LENGTH
+  ) {
+    return {
+      isValid: false,
+      status: "missing-prevention-advice",
+    };
+  }
+
   return {
     isValid: true,
     status: "",

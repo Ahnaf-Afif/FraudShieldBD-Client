@@ -248,5 +248,9 @@ function getStatusLabel(submitStatus, hasSavedDraft, hasUnsavedChanges) {
     return "Needs payment method";
   }
 
+  if (submitStatus === "missing-prevention-advice") {
+    return "Needs safety advice";
+  }
+
   return "In progress";
 }
