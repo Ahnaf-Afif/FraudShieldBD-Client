@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   MessageCircle,
@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 
 const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
+const INITIAL_VISIBLE_REPORTS = 3;
+const REPORTS_PER_LOAD = 3;
+const FEED_REPEAT_COUNT = 8;
 
 const sampleReports = [
   {
@@ -67,6 +70,10 @@ const filters = [
 export default function HomeNewsFeed() {
   const [reports, setReports] = useState(sampleReports);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [visibleReportCount, setVisibleReportCount] = useState(
+    INITIAL_VISIBLE_REPORTS,
+  );
+  const loadMoreRef = useRef(null);
 
   useEffect(() => {
     const savedReports = getSubmittedReportsFromBrowser();
@@ -78,10 +85,48 @@ export default function HomeNewsFeed() {
     setReports(savedReports.map(normalizeSubmittedReport));
   }, []);
 
-  const visibleReports =
+  const filteredReports =
     activeFilter === "All"
       ? reports
       : reports.filter((report) => report.fraudCategory === activeFilter);
+  const feedReports = createScrollableFeedReports(filteredReports);
+  const visibleReports = feedReports.slice(0, visibleReportCount);
+  const hasMoreReports = visibleReportCount < feedReports.length;
+
+  useEffect(() => {
+    setVisibleReportCount(INITIAL_VISIBLE_REPORTS);
+  }, [activeFilter, reports]);
+
+  useEffect(() => {
+    const loadMoreElement = loadMoreRef.current;
+
+    if (!loadMoreElement || !hasMoreReports) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+
+        if (!firstEntry.isIntersecting) {
+          return;
+        }
+
+        setVisibleReportCount((currentCount) =>
+          Math.min(currentCount + REPORTS_PER_LOAD, feedReports.length),
+        );
+      },
+      {
+        rootMargin: "240px",
+      },
+    );
+
+    observer.observe(loadMoreElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [feedReports.length, hasMoreReports]);
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
@@ -119,9 +164,18 @@ export default function HomeNewsFeed() {
 
       <div className="space-y-4">
         {visibleReports.map((report) => (
-          <HomeReportPost key={report.reportId} report={report} />
+          <HomeReportPost key={report.feedId} report={report} />
         ))}
       </div>
+
+      {hasMoreReports && (
+        <div
+          ref={loadMoreRef}
+          className="mt-6 rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-bold text-slate-500"
+        >
+          Loading more reports...
+        </div>
+      )}
     </section>
   );
 }
@@ -223,6 +277,28 @@ function getSubmittedReportsFromBrowser() {
     console.error("Could not load home feed reports:", error);
     return [];
   }
+}
+
+function createScrollableFeedReports(filteredReports) {
+  if (filteredReports.length === 0) {
+    return [];
+  }
+
+  return Array.from({ length: FEED_REPEAT_COUNT }).flatMap((_, loopIndex) =>
+    filteredReports.map((report) => ({
+      ...report,
+      feedId: `${report.reportId}-${loopIndex}`,
+      submittedAt: formatFeedTime(report.submittedAt, loopIndex),
+    })),
+  );
+}
+
+function formatFeedTime(submittedAt, loopIndex) {
+  if (loopIndex === 0) {
+    return submittedAt || "Recently";
+  }
+
+  return `${loopIndex + 1} days ago`;
 }
 
 function normalizeSubmittedReport(report) {
