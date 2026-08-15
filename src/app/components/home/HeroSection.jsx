@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { CheckCircle2, Search, ShieldCheck } from "lucide-react";
 import SearchBox from "./SearchBox";
 
@@ -30,15 +31,21 @@ export default function HeroSection() {
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row">
-              <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#009879] px-5 py-3 text-sm font-bold text-white sm:px-6 sm:text-base">
+              <Link
+                href="#home-search"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#009879] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#007f66] active:bg-slate-400 sm:px-6 sm:text-base"
+              >
                 <Search size={20} />
                 Search Now
-              </button>
+              </Link>
 
-              <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#06285c] px-5 py-3 text-sm font-bold text-white sm:px-6 sm:text-base">
+              <Link
+                href="/report-fraud"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#06285c] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#041d44] active:bg-slate-400 sm:px-6 sm:text-base"
+              >
                 <ShieldCheck size={20} />
                 Report a Fraud
-              </button>
+              </Link>
             </div>
 
             <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium text-slate-600 sm:mt-6">

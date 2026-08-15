@@ -34,7 +34,7 @@ export default function SearchBox() {
   }
 
   return (
-    <div className="bg-[#002b63] px-6 py-5 md:px-10">
+    <div id="home-search" className="scroll-mt-24 bg-[#002b63] px-6 py-5 md:px-10">
       <form
         onSubmit={submitSearch}
         className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-lg lg:flex-row"

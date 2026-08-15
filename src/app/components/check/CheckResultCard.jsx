@@ -148,7 +148,7 @@ export default function CheckResultCard() {
             </Link>
 
             <Link
-              href="/reports"
+              href={`/reports?q=${encodeURIComponent(searchQuery)}`}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
             >
               Browse Reports
