@@ -1,37 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# FraudShield BD Client
 
-## Getting Started
+FraudShield BD is a community safety MVP for reporting scams, checking suspicious identifiers, browsing approved reports, and tracking personal report/watchlist activity.
 
-First, run the development server:
+## Current Status
+
+This repo is currently the Next.js client MVP. Most data is still stored in browser localStorage so the product flow can be tested before the backend is connected.
+
+Completed client flows:
+
+- Home community newsfeed
+- Check Before You Pay
+- Browse Reports with filters and CSV export
+- Report Fraud form with draft saving
+- Report detail pages
+- My Reports, Watchlist, Notifications, Profile
+- Local demo login/register
+- Local MVP settings, backup, restore and reset controls
+- Roadmap/status page
+
+## Run Locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open:
+
+```bash
+http://localhost:3000
+```
+
+## Useful Scripts
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
+npm run start
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## MVP Data
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+The frontend MVP stores demo data in browser localStorage. Use `/settings` to export, import, clear activity, or clear all local MVP data.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Backend Plan
 
-## Learn More
+Backend work will be separate from this client and should start only after confirming credentials and hosting decisions.
 
-To learn more about Next.js, take a look at the following resources:
+Planned stack:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Better Auth for authentication
+- MongoDB Atlas for database
+- Cloudinary for evidence file storage
+- Express/Node server as a separate backend
+- Client/server deployed separately
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+See:
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# FraudShieldBD-Client
+- `docs/backend-readiness.md`
+- `.env.example`
