@@ -5,6 +5,8 @@ export const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
 export const REPORT_REACTIONS_KEY = "fraudshield-report-reactions";
 export const REPORT_COMMENTS_KEY = "fraudshield-report-comments";
 export const REPORT_DRAFT_KEY = "fraudshield-report-draft";
+export const RECENTLY_VIEWED_REPORTS_KEY = "fraudshield-recently-viewed-reports";
+const MAX_RECENTLY_VIEWED_REPORTS = 5;
 
 export const demoReports = [
   {
@@ -172,6 +174,48 @@ export function getReportByIdFromBrowser(reportId) {
     getAllReportsForBrowser().find((report) => report.reportId === reportId) ||
     null
   );
+}
+
+export function getRecentlyViewedReportsFromBrowser() {
+  const allReports = getAllReportsForBrowser();
+  const savedViews = readJsonArray(RECENTLY_VIEWED_REPORTS_KEY);
+
+  return savedViews
+    .filter((view) => view && view.reportId)
+    .map((view) => {
+      const currentReport = allReports.find(
+        (report) => report.reportId === view.reportId,
+      );
+
+      if (!currentReport) {
+        return null;
+      }
+
+      return {
+        ...currentReport,
+        viewedAt: view.viewedAt || "Recently viewed",
+      };
+    })
+    .filter(Boolean);
+}
+
+export function saveRecentlyViewedReport(report) {
+  if (!isValidReportShape(report)) {
+    return;
+  }
+
+  const savedViews = readJsonArray(RECENTLY_VIEWED_REPORTS_KEY).filter(
+    (view) => view && view.reportId !== report.reportId,
+  );
+  const nextViews = [
+    {
+      reportId: report.reportId,
+      viewedAt: new Date().toLocaleString(),
+    },
+    ...savedViews,
+  ].slice(0, MAX_RECENTLY_VIEWED_REPORTS);
+
+  localStorage.setItem(RECENTLY_VIEWED_REPORTS_KEY, JSON.stringify(nextViews));
 }
 
 export function saveSubmittedReport(newReport) {

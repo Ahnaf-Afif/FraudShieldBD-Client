@@ -27,6 +27,7 @@ import {
   getAllReportsForBrowser,
   getEntityType,
   getPrimaryIdentifier,
+  getRecentlyViewedReportsFromBrowser,
   getRiskRank,
   getRiskStyle,
   maskIdentifier,
@@ -71,11 +72,13 @@ export default function ReportsExplorer() {
   const [shareStatus, setShareStatus] = useState("");
   const [exportStatus, setExportStatus] = useState("");
   const [hasLoadedUrlFilters, setHasLoadedUrlFilters] = useState(false);
+  const [recentlyViewedReports, setRecentlyViewedReports] = useState([]);
 
   useEffect(() => {
     const browserReports = getAllReportsForBrowser();
 
     setReports(browserReports);
+    setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
     setFilterPresets(getSavedFilterPresets());
     applyUrlFilters();
     setHasLoadedUrlFilters(true);
@@ -424,6 +427,8 @@ export default function ReportsExplorer() {
             onExportReports={exportFilteredReports}
           />
 
+          <RecentlyViewedPanel reports={recentlyViewedReports} />
+
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 text-center">
             <h2 className="font-black text-[#06285c]">Have you been scammed?</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -576,6 +581,52 @@ export default function ReportsExplorer() {
         </section>
       </section>
     </>
+  );
+}
+
+function RecentlyViewedPanel({ reports }) {
+  if (reports.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
+        <Clock size={18} />
+        Recently viewed
+      </h2>
+
+      <div className="mt-4 space-y-3">
+        {reports.map((report) => (
+          <Link
+            key={report.reportId}
+            href={`/reports/${report.reportId}`}
+            className="block rounded-xl border border-slate-100 bg-slate-50 p-3 transition hover:border-[#009879] hover:bg-[#f0fbf7]"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="line-clamp-2 text-sm font-black text-[#06285c]">
+                  {report.title}
+                </p>
+                <p className="mt-1 break-words text-xs font-semibold text-slate-500">
+                  {maskIdentifier(getPrimaryIdentifier(report))}
+                </p>
+              </div>
+              <span
+                className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${getRiskStyle(
+                  report.riskLevel,
+                )}`}
+              >
+                {report.riskLevel}
+              </span>
+            </div>
+            <p className="mt-2 text-xs font-semibold text-slate-400">
+              Viewed {report.viewedAt}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 

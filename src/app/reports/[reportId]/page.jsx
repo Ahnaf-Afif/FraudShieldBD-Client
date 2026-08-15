@@ -36,6 +36,7 @@ import {
   getSavedReportComments,
   getSavedReportReactions,
   maskIdentifier,
+  saveRecentlyViewedReport,
   saveReportComments,
   saveReportReactions,
 } from "../../lib/reportFeedData";
@@ -73,6 +74,11 @@ export default function ReportDetailsPage() {
 
     setAllReports(browserReports);
     setReport(matchedReport || null);
+
+    if (matchedReport) {
+      saveRecentlyViewedReport(matchedReport);
+    }
+
     setIsWatched(
       matchedReport
         ? isIdentifierWatched(getPrimaryIdentifier(matchedReport))
