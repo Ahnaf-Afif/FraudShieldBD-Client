@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Eye,
@@ -12,6 +13,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
+import { getDemoSession, saveDemoSession } from "../../lib/demoSession";
 
 const trustPoints = [
   "Report scams and track review status",
@@ -21,7 +23,9 @@ const trustPoints = [
 
 export default function AuthPageShell({ mode }) {
   const isRegisterMode = mode === "register";
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [existingSession, setExistingSession] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,6 +34,10 @@ export default function AuthPageShell({ mode }) {
     agreeToTerms: false,
   });
   const [formStatus, setFormStatus] = useState("");
+
+  useEffect(() => {
+    setExistingSession(getDemoSession());
+  }, []);
 
   function updateField(fieldName, value) {
     setFormStatus("");
@@ -62,7 +70,16 @@ export default function AuthPageShell({ mode }) {
       return;
     }
 
+    saveDemoSession({
+      name: formData.name,
+      email: formData.email,
+      role: formData.role,
+    });
     setFormStatus(isRegisterMode ? "register-ready" : "login-ready");
+
+    setTimeout(() => {
+      router.push("/");
+    }, 700);
   }
 
   return (
@@ -145,6 +162,32 @@ export default function AuthPageShell({ mode }) {
                 : "Continue checking reports, comments, drafts and watchlists."}
             </p>
           </div>
+
+          {existingSession && (
+            <div className="mt-5 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-4">
+              <p className="text-sm font-black text-[#06285c]">
+                Signed in as {existingSession.name}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                You can return to the feed or submit a report using this demo
+                session.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <Link
+                  href="/"
+                  className="inline-flex justify-center rounded-xl bg-[#009879] px-4 py-2.5 text-sm font-black text-white"
+                >
+                  Go to Feed
+                </Link>
+                <Link
+                  href="/report-fraud"
+                  className="inline-flex justify-center rounded-xl border border-[#bfe8dc] bg-white px-4 py-2.5 text-sm font-black text-[#009879]"
+                >
+                  Report Fraud
+                </Link>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-4">
             {isRegisterMode && (
@@ -287,9 +330,9 @@ function AuthStatusMessage({ status, mode }) {
     "short-password": "Password should be at least 8 characters.",
     "missing-terms": "Please agree to the community safety guidelines.",
     "login-ready":
-      "Frontend login validation is ready. Backend authentication will connect here later.",
+      "Logged in for this MVP demo. Redirecting to the feed...",
     "register-ready":
-      "Frontend registration validation is ready. Backend account creation will connect here later.",
+      "Account created for this MVP demo. Redirecting to the feed...",
   };
   const isSuccess = status === "login-ready" || status === "register-ready";
 

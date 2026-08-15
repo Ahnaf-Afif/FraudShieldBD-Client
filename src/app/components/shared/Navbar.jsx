@@ -1,10 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { LogOut, Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  clearDemoSession,
+  DEMO_SESSION_UPDATED_EVENT,
+  getDemoSession,
+  getInitials,
+} from "../../lib/demoSession";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -15,7 +21,24 @@ const navLinks = [
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [demoUser, setDemoUser] = useState(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    function updateDemoUser() {
+      setDemoUser(getDemoSession());
+    }
+
+    updateDemoUser();
+    window.addEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
+    window.addEventListener("storage", updateDemoUser);
+
+    return () => {
+      window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
+      window.removeEventListener("storage", updateDemoUser);
+    };
+  }, []);
+
   function isActive(href) {
     return pathname === href;
   }
@@ -26,6 +49,11 @@ export default function Navbar() {
 
   function closeMenu() {
     setIsMenuOpen(false);
+  }
+
+  function handleLogout() {
+    clearDemoSession();
+    closeMenu();
   }
 
   return (
@@ -64,27 +92,33 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <Link
-            href="/login"
-            className={`rounded-xl border px-5 py-2.5 text-sm font-bold transition ${
-              isActive("/login")
-                ? "border-[#06285c] bg-[#06285c] text-white"
-                : "border-[#0b63f6] text-[#0b63f6] hover:bg-[#eef6ff]"
-            }`}
-          >
-            Login
-          </Link>
+          {demoUser ? (
+            <DesktopUserMenu user={demoUser} onLogout={handleLogout} />
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className={`rounded-xl border px-5 py-2.5 text-sm font-bold transition ${
+                  isActive("/login")
+                    ? "border-[#06285c] bg-[#06285c] text-white"
+                    : "border-[#0b63f6] text-[#0b63f6] hover:bg-[#eef6ff]"
+                }`}
+              >
+                Login
+              </Link>
 
-          <Link
-            href="/register"
-            className={`rounded-xl px-5 py-2.5 text-sm font-bold transition ${
-              isActive("/register")
-                ? "bg-[#06285c] text-white"
-                : "bg-[#009879] text-white hover:bg-[#007f66]"
-            }`}
-          >
-            Register
-          </Link>
+              <Link
+                href="/register"
+                className={`rounded-xl px-5 py-2.5 text-sm font-bold transition ${
+                  isActive("/register")
+                    ? "bg-[#06285c] text-white"
+                    : "bg-[#009879] text-white hover:bg-[#007f66]"
+                }`}
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -115,33 +149,99 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Link
-              href="/login"
-              onClick={closeMenu}
-              className={`rounded-xl border px-5 py-3 text-center text-sm font-bold ${
-                isActive("/login")
-                  ? "border-[#06285c] bg-[#06285c] text-white"
-                  : "border-[#0b63f6] text-[#0b63f6]"
-              }`}
-            >
-              Login
-            </Link>
+          {demoUser ? (
+            <MobileUserMenu user={demoUser} onLogout={handleLogout} />
+          ) : (
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <Link
+                href="/login"
+                onClick={closeMenu}
+                className={`rounded-xl border px-5 py-3 text-center text-sm font-bold ${
+                  isActive("/login")
+                    ? "border-[#06285c] bg-[#06285c] text-white"
+                    : "border-[#0b63f6] text-[#0b63f6]"
+                }`}
+              >
+                Login
+              </Link>
 
-            <Link
-              href="/register"
-              onClick={closeMenu}
-              className={`rounded-xl px-5 py-3 text-center text-sm font-bold ${
-                isActive("/register")
-                  ? "bg-[#06285c] text-white"
-                  : "bg-[#009879] text-white"
-              }`}
-            >
-              Register
-            </Link>
-          </div>
+              <Link
+                href="/register"
+                onClick={closeMenu}
+                className={`rounded-xl px-5 py-3 text-center text-sm font-bold ${
+                  isActive("/register")
+                    ? "bg-[#06285c] text-white"
+                    : "bg-[#009879] text-white"
+                }`}
+              >
+                Register
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </header>
+  );
+}
+
+function DesktopUserMenu({ user, onLogout }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-2">
+        <UserAvatar user={user} />
+        <div>
+          <p className="max-w-32 truncate text-sm font-black text-[#06285c]">
+            {user.name}
+          </p>
+          <p className="max-w-32 truncate text-xs font-semibold text-slate-500">
+            {user.role}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onLogout}
+        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+        aria-label="Logout"
+      >
+        <LogOut size={19} />
+      </button>
+    </div>
+  );
+}
+
+function MobileUserMenu({ user, onLogout }) {
+  return (
+    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-center gap-3">
+        <UserAvatar user={user} />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-black text-[#06285c]">
+            {user.name}
+          </p>
+          <p className="truncate text-xs font-semibold text-slate-500">
+            {user.email}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onLogout}
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-white text-sm font-black text-red-500"
+      >
+        <LogOut size={17} />
+        Logout
+      </button>
+    </div>
+  );
+}
+
+function UserAvatar({ user }) {
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#009879] text-sm font-black text-white">
+      {getInitials(user.name || user.email)}
+    </div>
   );
 }
