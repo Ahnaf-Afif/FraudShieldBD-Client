@@ -1,6 +1,13 @@
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Check, Copy, FileCheck } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Check,
+  Copy,
+  FileCheck,
+  ListChecks,
+} from "lucide-react";
 
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
 
@@ -44,6 +51,17 @@ export default function ReportReviewForm({
     preventionAdviceLength < MIN_PREVENTION_ADVICE_LENGTH;
   const preventionAdviceMessage = formatPreventionAdviceMessage(
     preventionAdviceLength,
+  );
+  const readinessItems = createReadinessItems(reportData);
+  const completedReadinessItems = readinessItems.filter(
+    (item) => item.isComplete,
+  ).length;
+  const totalReadinessItems = readinessItems.length;
+  const reportCompletionPercent = Math.round(
+    (completedReadinessItems / totalReadinessItems) * 100,
+  );
+  const missingReadinessItems = readinessItems.filter(
+    (item) => !item.isComplete,
   );
   const isReportSubmitted = submitStatus === "submitted";
   const isDraftStatus =
@@ -121,6 +139,61 @@ export default function ReportReviewForm({
             value={formatPreventionAdviceSummary(preventionAdviceLength)}
           />
         </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+              <ListChecks size={22} />
+            </div>
+            <div>
+              <h3 className="font-black text-[#06285c]">Report readiness</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                {completedReadinessItems} of {totalReadinessItems} required
+                parts completed
+              </p>
+            </div>
+          </div>
+
+          <span className="inline-flex w-fit rounded-full bg-slate-50 px-3 py-1 text-sm font-black text-[#06285c]">
+            {reportCompletionPercent}%
+          </span>
+        </div>
+
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-[#009879] transition-all"
+            style={{ width: `${reportCompletionPercent}%` }}
+          />
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {readinessItems.map((item) => (
+            <ReadinessItem key={item.label} item={item} />
+          ))}
+        </div>
+
+        {missingReadinessItems.length > 0 && (
+          <div className="mt-5 rounded-2xl border border-orange-200 bg-orange-50 p-4">
+            <div className="flex gap-3">
+              <AlertCircle
+                size={20}
+                className="mt-0.5 shrink-0 text-orange-600"
+              />
+              <div>
+                <p className="font-black text-[#06285c]">
+                  Finish these before submitting
+                </p>
+                <ul className="mt-2 space-y-1 text-sm font-semibold leading-6 text-orange-800">
+                  {missingReadinessItems.map((item) => (
+                    <li key={item.label}>{item.label}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -311,6 +384,42 @@ export default function ReportReviewForm({
             </p>
           )}
         </div>
+      )}
+
+      {submitStatus === "missing-basic-details" && (
+        <ValidationMessage
+          title="Basic incident details are required"
+          text="Please complete category, platform, date, location and title before submitting."
+          href="#report-category"
+          action="Go to Category"
+        />
+      )}
+
+      {submitStatus === "missing-story" && (
+        <ValidationMessage
+          title="Story needs more detail"
+          text="Please write at least 20 characters explaining what happened."
+          href="#report-story"
+          action="Go to Story"
+        />
+      )}
+
+      {submitStatus === "missing-identifier" && (
+        <ValidationMessage
+          title="At least one identifier is required"
+          text="Please add a phone number, payment number, Facebook page, website or business name."
+          href="#report-identifiers"
+          action="Go to Identifiers"
+        />
+      )}
+
+      {submitStatus === "missing-evidence" && (
+        <ValidationMessage
+          title="Evidence context is required"
+          text="Please add an evidence type, upload files, or describe the evidence you have."
+          href="#report-evidence"
+          action="Go to Evidence"
+        />
       )}
 
       {submitStatus === "missing-amount" && (
@@ -555,6 +664,53 @@ function ReviewSummaryItem({ label, value }) {
   );
 }
 
+function ValidationMessage({ title, text, href, action }) {
+  return (
+    <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5">
+      <h3 className="font-black text-[#06285c]">{title}</h3>
+
+      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+
+      <a
+        href={href}
+        className="mt-4 inline-flex rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700"
+      >
+        {action}
+      </a>
+    </div>
+  );
+}
+
+function ReadinessItem({ item }) {
+  const Icon = item.isComplete ? CheckCircle2 : AlertCircle;
+
+  return (
+    <a
+      href={item.href}
+      className={`rounded-2xl border p-4 transition ${
+        item.isComplete
+          ? "border-[#bfe8dc] bg-[#f0fbf7]"
+          : "border-orange-200 bg-orange-50 hover:border-orange-300"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <Icon
+          size={20}
+          className={`mt-0.5 shrink-0 ${
+            item.isComplete ? "text-[#009879]" : "text-orange-600"
+          }`}
+        />
+        <div>
+          <p className="font-black text-[#06285c]">{item.label}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            {item.description}
+          </p>
+        </div>
+      </div>
+    </a>
+  );
+}
+
 function ReportIdBox({ label, reportId, statusTime, copied, onCopy }) {
   return (
     <div className="mt-3 flex flex-col gap-3 rounded-xl bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -607,4 +763,76 @@ function NextStep({ title, text }) {
       </div>
     </div>
   );
+}
+
+function createReadinessItems(reportData) {
+  const identifierCount = getIdentifierCount(reportData);
+  const preventionAdviceLength = reportData.preventionAdvice.trim().length;
+
+  return [
+    {
+      label: "Basic incident details",
+      description: "Category, platform, incident date, location and title.",
+      href: "#report-category",
+      isComplete:
+        hasText(reportData.fraudCategory) &&
+        hasText(reportData.platform) &&
+        hasText(reportData.incidentDate) &&
+        hasText(reportData.location) &&
+        hasText(reportData.title),
+    },
+    {
+      label: "Story description",
+      description: "A clear explanation of what happened.",
+      href: "#report-story",
+      isComplete: reportData.story.trim().length >= 20,
+    },
+    {
+      label: "Financial details",
+      description: "Money status and payment method when money was involved.",
+      href: "#report-financial",
+      isComplete: isFinancialSectionReady(reportData),
+    },
+    {
+      label: "At least one identifier",
+      description: "Phone, payment number, page, website or business name.",
+      href: "#report-identifiers",
+      isComplete: identifierCount > 0,
+    },
+    {
+      label: "Evidence context",
+      description: "Evidence type, files or written evidence details.",
+      href: "#report-evidence",
+      isComplete:
+        hasText(reportData.evidenceType) ||
+        hasText(reportData.evidenceDetails) ||
+        reportData.evidenceFiles.length > 0,
+    },
+    {
+      label: "Safety advice",
+      description: "At least 20 characters explaining how others can avoid it.",
+      href: "#report-review",
+      isComplete: preventionAdviceLength >= MIN_PREVENTION_ADVICE_LENGTH,
+    },
+  ];
+}
+
+function isFinancialSectionReady(reportData) {
+  if (!hasText(reportData.moneyStatus)) {
+    return false;
+  }
+
+  if (reportData.moneyStatus === "Yes, I lost money") {
+    return hasText(reportData.amount) && hasText(reportData.paymentMethod);
+  }
+
+  if (reportData.moneyStatus === "No, but they asked for money") {
+    return hasText(reportData.paymentMethod);
+  }
+
+  return true;
+}
+
+function hasText(value) {
+  return String(value || "").trim().length > 0;
 }

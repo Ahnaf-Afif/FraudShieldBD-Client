@@ -381,6 +381,27 @@ function createReporterDetails(reportData, demoUser) {
 }
 
 function validateReportBeforeSubmit(reportData) {
+  const missingBasicDetails =
+    !hasText(reportData.fraudCategory) ||
+    !hasText(reportData.platform) ||
+    !hasText(reportData.incidentDate) ||
+    !hasText(reportData.location) ||
+    !hasText(reportData.title);
+
+  if (missingBasicDetails) {
+    return {
+      isValid: false,
+      status: "missing-basic-details",
+    };
+  }
+
+  if (reportData.story.trim().length < 20) {
+    return {
+      isValid: false,
+      status: "missing-story",
+    };
+  }
+
   const hasIdentifier =
     hasText(reportData.phoneOrPaymentNumber) ||
     hasText(reportData.facebookLink) ||
@@ -391,6 +412,17 @@ function validateReportBeforeSubmit(reportData) {
     return {
       isValid: false,
       status: "missing-identifier",
+    };
+  }
+
+  if (
+    !hasText(reportData.evidenceType) &&
+    !hasText(reportData.evidenceDetails) &&
+    reportData.evidenceFiles.length === 0
+  ) {
+    return {
+      isValid: false,
+      status: "missing-evidence",
     };
   }
 
