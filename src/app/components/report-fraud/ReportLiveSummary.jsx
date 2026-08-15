@@ -276,7 +276,7 @@ function getStatusLabel(submitStatus, hasSavedDraft, hasUnsavedChanges) {
     return "Submitted";
   }
 
-  if (submitStatus === "draft") {
+  if (submitStatus === "draft" || submitStatus === "draft-auto-saved") {
     return "Draft saved";
   }
 

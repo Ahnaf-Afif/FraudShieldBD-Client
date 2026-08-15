@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReportCategoryForm, { ReportCategoryTips } from "./ReportCategoryForm";
 import ReportEvidenceForm, { ReportEvidenceTips } from "./ReportEvidenceForm";
 import ReportFinancialForm, {
@@ -23,6 +23,7 @@ import {
 } from "../../lib/demoSession";
 
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
+const AUTO_SAVE_DELAY = 900;
 
 const initialReportData = {
   fraudCategory: "",
@@ -62,6 +63,7 @@ export default function ReportFormShell() {
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [demoUser, setDemoUser] = useState(null);
+  const didLoadInitialData = useRef(false);
 
   useEffect(() => {
     function updateDemoUser() {
@@ -94,6 +96,7 @@ export default function ReportFormShell() {
         setHasUnsavedChanges(true);
       }
 
+      didLoadInitialData.current = true;
       return;
     }
 
@@ -115,8 +118,29 @@ export default function ReportFormShell() {
       console.error("Could not load report draft:", error);
       localStorage.removeItem(REPORT_DRAFT_KEY);
       setHasSavedDraft(false);
+    } finally {
+      didLoadInitialData.current = true;
     }
   }, []);
+
+  useEffect(() => {
+    if (
+      !didLoadInitialData.current ||
+      !hasUnsavedChanges ||
+      submitStatus === "submitted" ||
+      !hasReportProgress(reportData)
+    ) {
+      return;
+    }
+
+    const autoSaveTimer = setTimeout(() => {
+      saveDraftToBrowser("draft-auto-saved");
+    }, AUTO_SAVE_DELAY);
+
+    return () => {
+      clearTimeout(autoSaveTimer);
+    };
+  }, [hasUnsavedChanges, reportData, submitStatus]);
 
   function updateReportData(fieldName, value) {
     setSubmitStatus("");
@@ -161,7 +185,7 @@ export default function ReportFormShell() {
     setSubmitStatus("submitted");
   }
 
-  function handleSaveDraft() {
+  function saveDraftToBrowser(nextSubmitStatus) {
     const draftReportId = reportId || createReportId();
     const savedAt = new Date().toLocaleString();
 
@@ -181,7 +205,11 @@ export default function ReportFormShell() {
     setHasUnsavedChanges(false);
 
     console.log("Draft data:", draftData);
-    setSubmitStatus("draft");
+    setSubmitStatus(nextSubmitStatus);
+  }
+
+  function handleSaveDraft() {
+    saveDraftToBrowser("draft");
   }
 
   function handleResetForm() {
@@ -385,6 +413,29 @@ function validateReportBeforeSubmit(reportData) {
 
 function hasText(value) {
   return value.trim().length > 0;
+}
+
+function hasReportProgress(reportData) {
+  return [
+    reportData.fraudCategory,
+    reportData.platform,
+    reportData.incidentDate,
+    reportData.location,
+    reportData.title,
+    reportData.story,
+    reportData.contactMethod,
+    reportData.promisedItem,
+    reportData.moneyStatus,
+    reportData.amount,
+    reportData.paymentMethod,
+    reportData.phoneOrPaymentNumber,
+    reportData.facebookLink,
+    reportData.websiteLink,
+    reportData.businessName,
+    reportData.evidenceType,
+    reportData.evidenceDetails,
+    reportData.preventionAdvice,
+  ].some((value) => String(value || "").trim().length > 0);
 }
 
 function createIdentifierPrefill(identifier) {

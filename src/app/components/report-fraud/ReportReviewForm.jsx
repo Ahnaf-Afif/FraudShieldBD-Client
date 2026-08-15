@@ -206,13 +206,17 @@ export default function ReportReviewForm({
         </div>
       )}
 
-      {submitStatus === "draft" && (
+      {(submitStatus === "draft" || submitStatus === "draft-auto-saved") && (
         <div className="mt-6 rounded-2xl border border-[#bfdbfe] bg-[#eff6ff] p-5">
-          <h3 className="font-black text-[#06285c]">Draft saved</h3>
+          <h3 className="font-black text-[#06285c]">
+            {submitStatus === "draft-auto-saved"
+              ? "Draft auto-saved"
+              : "Draft saved"}
+          </h3>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Your progress has been saved in this browser. You can come back and
-            continue this report later.
+            Your progress has been saved in this browser. You can come back
+            and continue this report later.
           </p>
 
           {reportId && (
@@ -291,11 +295,11 @@ export default function ReportReviewForm({
 
       {hasSavedDraft && hasUnsavedChanges && (
         <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-5">
-          <h3 className="font-black text-[#06285c]">Unsaved changes</h3>
+          <h3 className="font-black text-[#06285c]">Auto-saving changes</h3>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            You changed this report after saving the draft. Save again to update
-            the browser draft.
+            You changed this report after saving the draft. We will update the
+            browser draft automatically in a moment.
           </p>
         </div>
       )}
