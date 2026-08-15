@@ -109,6 +109,13 @@ export function getAllReportsForBrowser() {
   return [...submittedReports, ...demoReports];
 }
 
+export function getReportByIdFromBrowser(reportId) {
+  return (
+    getAllReportsForBrowser().find((report) => report.reportId === reportId) ||
+    null
+  );
+}
+
 export function saveSubmittedReport(newReport) {
   const savedReports = getSubmittedReportsFromBrowser();
   const reportsWithoutCurrentReport = savedReports.filter(

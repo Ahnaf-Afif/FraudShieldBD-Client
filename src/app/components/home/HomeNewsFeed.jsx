@@ -23,7 +23,12 @@ import {
   saveReportComments,
   saveReportReactions,
 } from "../../lib/reportFeedData";
-import { createDemoAuthor, getDemoSession } from "../../lib/demoSession";
+import {
+  createDemoAuthor,
+  DEMO_SESSION_UPDATED_EVENT,
+  getDemoSession,
+} from "../../lib/demoSession";
+import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -53,14 +58,25 @@ export default function HomeNewsFeed() {
   );
   const loadMoreRef = useRef(null);
 
-  useEffect(() => {
+  function refreshFeedState() {
     setReports(getAllReportsForBrowser());
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
-  }, []);
-
-  useEffect(() => {
     setReportReactions(getSavedReportReactions());
     setReportComments(getSavedReportComments());
+  }
+
+  useEffect(() => {
+    refreshFeedState();
+
+    window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
+    window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
+    window.addEventListener("storage", refreshFeedState);
+
+    return () => {
+      window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
+      window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
+      window.removeEventListener("storage", refreshFeedState);
+    };
   }, []);
 
   const categoryFilteredReports =

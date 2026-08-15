@@ -26,6 +26,7 @@ import {
 import Navbar from "../../components/shared/Navbar";
 import {
   getAllReportsForBrowser,
+  getReportByIdFromBrowser,
   getPrimaryIdentifier,
   getRiskStyle,
   getSavedReportComments,
@@ -34,7 +35,12 @@ import {
   saveReportComments,
   saveReportReactions,
 } from "../../lib/reportFeedData";
-import { createDemoAuthor, getDemoSession } from "../../lib/demoSession";
+import {
+  createDemoAuthor,
+  DEMO_SESSION_UPDATED_EVENT,
+  getDemoSession,
+} from "../../lib/demoSession";
+import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import {
   addToWatchlist,
   isIdentifierWatched,
@@ -54,11 +60,9 @@ export default function ReportDetailsPage() {
   const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
   const [isWatched, setIsWatched] = useState(false);
 
-  useEffect(() => {
+  function refreshReportDetails() {
     const browserReports = getAllReportsForBrowser();
-    const matchedReport = browserReports.find(
-      (currentReport) => currentReport.reportId === reportId,
-    );
+    const matchedReport = getReportByIdFromBrowser(reportId);
 
     setAllReports(browserReports);
     setReport(matchedReport || null);
@@ -73,6 +77,20 @@ export default function ReportDetailsPage() {
     setComments(getSavedReportComments()[reportId] || []);
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
     setIsLoading(false);
+  }
+
+  useEffect(() => {
+    refreshReportDetails();
+
+    window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshReportDetails);
+    window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshReportDetails);
+    window.addEventListener("storage", refreshReportDetails);
+
+    return () => {
+      window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshReportDetails);
+      window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshReportDetails);
+      window.removeEventListener("storage", refreshReportDetails);
+    };
   }, [reportId]);
 
   if (isLoading) {
