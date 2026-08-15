@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Eye,
   FileText,
+  ListChecks,
   LogOut,
   Menu,
   Search,
@@ -40,6 +41,7 @@ const accountLinks = [
   { label: "My Reports", href: "/my-reports", icon: FileText },
   { label: "Watchlist", href: "/watchlist", icon: Eye },
   { label: "Notifications", href: "/notifications", icon: Bell },
+  { label: "MVP Roadmap", href: "/roadmap", icon: ListChecks },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -432,6 +434,14 @@ function MobileUserMenu({ user, unreadCount, onLogout }) {
       >
         <Settings size={17} />
         Settings
+      </Link>
+
+      <Link
+        href="/roadmap"
+        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-black text-[#06285c]"
+      >
+        <ListChecks size={17} />
+        MVP Roadmap
       </Link>
 
       <button
