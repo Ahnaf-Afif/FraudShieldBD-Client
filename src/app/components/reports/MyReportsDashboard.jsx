@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ChevronRight,
   Clock,
+  ExternalLink,
   FileText,
   PencilLine,
   Search,
@@ -27,7 +28,10 @@ import {
   DEMO_SESSION_UPDATED_EVENT,
   getDemoSession,
 } from "../../lib/demoSession";
-import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
+import {
+  LOCAL_DATA_UPDATED_EVENT,
+  notifyLocalDataUpdated,
+} from "../../lib/localDataEvents";
 import { removeWatchlistItemsByReportId } from "../../lib/watchlistData";
 import AuthRequiredState from "../shared/AuthRequiredState";
 
@@ -70,7 +74,7 @@ export default function MyReportsDashboard() {
   function discardDraft() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setDraftReport(null);
-    window.dispatchEvent(new Event(LOCAL_DATA_UPDATED_EVENT));
+    notifyLocalDataUpdated();
   }
 
   function removeSubmittedReport(reportId) {
@@ -143,6 +147,9 @@ export default function MyReportsDashboard() {
   ).length;
   const draftCount =
     draftReport && isOwnedByUser(draftReport, demoUser) ? 1 : 0;
+  const latestSubmittedReport = submittedReports.find((report) =>
+    isOwnedByUser(report, demoUser),
+  );
   const hasActiveFilters =
     activeTab !== "All" || riskFilter !== "All Risk Levels" || searchValue.trim();
 
@@ -203,6 +210,36 @@ export default function MyReportsDashboard() {
             >
               Start New Report
             </Link>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="font-black text-[#06285c]">Latest activity</h2>
+
+            <div className="mt-4 space-y-3">
+              {draftCount > 0 && (
+                <ActivityLink
+                  href="/report-fraud"
+                  label="Draft waiting"
+                  value={draftReport.savedAt || "Saved recently"}
+                />
+              )}
+
+              {latestSubmittedReport && (
+                <ActivityLink
+                  href={`/reports/${latestSubmittedReport.reportId}`}
+                  label="Latest submitted"
+                  value={
+                    latestSubmittedReport.submittedAt || "Submitted recently"
+                  }
+                />
+              )}
+
+              {draftCount === 0 && !latestSubmittedReport && (
+                <p className="text-sm leading-6 text-slate-500">
+                  Your draft and submitted report activity will appear here.
+                </p>
+              )}
+            </div>
           </div>
         </aside>
 
@@ -323,6 +360,18 @@ function DashboardStat({ label, value, icon }) {
   );
 }
 
+function ActivityLink({ href, label, value }) {
+  return (
+    <Link
+      href={href}
+      className="block rounded-xl bg-slate-50 p-3 transition hover:bg-[#f0fbf7]"
+    >
+      <p className="text-sm font-black text-[#06285c]">{label}</p>
+      <p className="mt-1 text-xs font-semibold text-slate-500">{value}</p>
+    </Link>
+  );
+}
+
 function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
   const isDraft = report.dashboardStatus === "Draft";
   const riskStyle = getRiskStyle(report.riskLevel);
@@ -375,26 +424,39 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
         </div>
       </Link>
 
-      {isDraft && (
-        <button
-          type="button"
-          onClick={onDiscardDraft}
-          className="mt-4 rounded-xl border border-red-200 px-4 py-2 text-sm font-black text-red-500 transition hover:bg-red-50"
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Link
+          href={href}
+          className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-black transition ${
+            isDraft
+              ? "bg-[#0b63f6] text-white hover:bg-[#084fc5]"
+              : "bg-[#009879] text-white hover:bg-[#007f66]"
+          }`}
         >
-          Discard Draft
-        </button>
-      )}
+          {isDraft ? <PencilLine size={15} /> : <ExternalLink size={15} />}
+          {isDraft ? "Continue Editing" : "View Public Report"}
+        </Link>
 
-      {!isDraft && (
-        <button
-          type="button"
-          onClick={() => onDeleteSubmitted(report.reportId)}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-black text-red-500 transition hover:bg-red-50"
-        >
-          <Trash2 size={15} />
-          Delete Local Copy
-        </button>
-      )}
+        {isDraft ? (
+          <button
+            type="button"
+            onClick={onDiscardDraft}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-black text-red-500 transition hover:bg-red-50"
+          >
+            <Trash2 size={15} />
+            Discard Draft
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onDeleteSubmitted(report.reportId)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-black text-red-500 transition hover:bg-red-50"
+          >
+            <Trash2 size={15} />
+            Delete Local Copy
+          </button>
+        )}
+      </div>
     </div>
   );
 }
