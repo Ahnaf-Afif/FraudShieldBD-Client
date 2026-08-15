@@ -8,11 +8,15 @@ import {
   Clock,
   FileText,
   PencilLine,
+  Search,
   ShieldCheck,
+  Trash2,
   UserRound,
+  X,
 } from "lucide-react";
 import {
   REPORT_DRAFT_KEY,
+  deleteSubmittedReport,
   getPrimaryIdentifier,
   getRiskStyle,
   getSavedReportDraftFromBrowser,
@@ -23,12 +27,15 @@ import {
 import { getDemoSession } from "../../lib/demoSession";
 
 const tabs = ["All", "Submitted", "Draft"];
+const riskFilters = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
 
 export default function MyReportsDashboard() {
   const [demoUser, setDemoUser] = useState(null);
   const [submittedReports, setSubmittedReports] = useState([]);
   const [draftReport, setDraftReport] = useState(null);
   const [activeTab, setActiveTab] = useState("All");
+  const [searchValue, setSearchValue] = useState("");
+  const [riskFilter, setRiskFilter] = useState("All Risk Levels");
 
   useEffect(() => {
     setDemoUser(getDemoSession());
@@ -45,6 +52,11 @@ export default function MyReportsDashboard() {
   function discardDraft() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setDraftReport(null);
+  }
+
+  function removeSubmittedReport(reportId) {
+    deleteSubmittedReport(reportId);
+    loadReports();
   }
 
   const visibleReports = useMemo(() => {
@@ -70,12 +82,24 @@ export default function MyReportsDashboard() {
         : []),
     ];
 
-    if (activeTab === "All") {
-      return items;
-    }
-
-    return items.filter((report) => report.dashboardStatus === activeTab);
-  }, [activeTab, demoUser, draftReport, submittedReports]);
+    return items
+      .filter((report) =>
+        activeTab === "All" ? true : report.dashboardStatus === activeTab,
+      )
+      .filter((report) =>
+        riskFilter === "All Risk Levels" || report.dashboardStatus === "Draft"
+          ? true
+          : report.riskLevel === riskFilter,
+      )
+      .filter((report) => reportMatchesSearch(report, searchValue));
+  }, [
+    activeTab,
+    demoUser,
+    draftReport,
+    riskFilter,
+    searchValue,
+    submittedReports,
+  ]);
 
   if (!demoUser) {
     return <SignedOutState />;
@@ -86,6 +110,14 @@ export default function MyReportsDashboard() {
   ).length;
   const draftCount =
     draftReport && isOwnedByUser(draftReport, demoUser) ? 1 : 0;
+  const hasActiveFilters =
+    activeTab !== "All" || riskFilter !== "All Risk Levels" || searchValue.trim();
+
+  function clearFilters() {
+    setActiveTab("All");
+    setRiskFilter("All Risk Levels");
+    setSearchValue("");
+  }
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -177,6 +209,53 @@ export default function MyReportsDashboard() {
                 </button>
               ))}
             </div>
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_180px_auto]">
+              <label className="flex min-h-12 items-center gap-3 rounded-xl border border-slate-200 px-4 focus-within:border-[#009879] focus-within:ring-4 focus-within:ring-[#009879]/10">
+                <Search size={18} className="shrink-0 text-slate-400" />
+                <input
+                  value={searchValue}
+                  onChange={(event) => setSearchValue(event.target.value)}
+                  placeholder="Search your reports..."
+                  className="w-full min-w-0 text-sm font-semibold text-[#06285c] outline-none"
+                />
+                {searchValue && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchValue("")}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-[#06285c]"
+                    aria-label="Clear report search"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </label>
+
+              <select
+                value={riskFilter}
+                onChange={(event) => setRiskFilter(event.target.value)}
+                className="min-h-12 rounded-xl border border-slate-200 px-4 text-sm font-black text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+              >
+                {riskFilters.map((filter) => (
+                  <option key={filter}>{filter}</option>
+                ))}
+              </select>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="min-h-12 rounded-xl border border-[#bfe8dc] px-4 text-sm font-black text-[#009879] transition hover:bg-[#f0fbf7]"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <p className="mt-3 text-sm font-semibold text-slate-500">
+              Showing {visibleReports.length} report
+              {visibleReports.length === 1 ? "" : "s"} from this account
+            </p>
           </div>
 
           {visibleReports.length === 0 ? (
@@ -188,6 +267,7 @@ export default function MyReportsDashboard() {
                   key={`${report.dashboardStatus}-${report.reportId}`}
                   report={report}
                   onDiscardDraft={discardDraft}
+                  onDeleteSubmitted={removeSubmittedReport}
                 />
               ))}
             </div>
@@ -210,7 +290,7 @@ function DashboardStat({ label, value, icon }) {
   );
 }
 
-function MyReportRow({ report, onDiscardDraft }) {
+function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
   const isDraft = report.dashboardStatus === "Draft";
   const riskStyle = getRiskStyle(report.riskLevel);
   const identifier = getPrimaryIdentifier(report);
@@ -269,6 +349,17 @@ function MyReportRow({ report, onDiscardDraft }) {
           className="mt-4 rounded-xl border border-red-200 px-4 py-2 text-sm font-black text-red-500 transition hover:bg-red-50"
         >
           Discard Draft
+        </button>
+      )}
+
+      {!isDraft && (
+        <button
+          type="button"
+          onClick={() => onDeleteSubmitted(report.reportId)}
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-black text-red-500 transition hover:bg-red-50"
+        >
+          <Trash2 size={15} />
+          Delete Local Copy
         </button>
       )}
     </div>
@@ -332,4 +423,28 @@ function SignedOutState() {
 
 function isOwnedByUser(report, user) {
   return report.ownerEmail === user.email || report.reporterEmail === user.email;
+}
+
+function reportMatchesSearch(report, searchValue) {
+  const cleanSearch = searchValue.trim().toLowerCase();
+
+  if (!cleanSearch) {
+    return true;
+  }
+
+  return [
+    report.title,
+    report.fraudCategory,
+    report.location,
+    report.story,
+    report.phoneOrPaymentNumber,
+    report.facebookLink,
+    report.websiteLink,
+    report.businessName,
+    report.reportId,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .includes(cleanSearch);
 }

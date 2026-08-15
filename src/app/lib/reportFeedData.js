@@ -117,6 +117,15 @@ export function saveSubmittedReport(newReport) {
   localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(updatedReports));
 }
 
+export function deleteSubmittedReport(reportId) {
+  const savedReports = getSubmittedReportsFromBrowser();
+  const remainingReports = savedReports.filter(
+    (savedReport) => savedReport.reportId !== reportId,
+  );
+
+  localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(remainingReports));
+}
+
 export function searchReports(reports, query) {
   const cleanQuery = query.trim().toLowerCase();
   const queryDigits = getDigitsOnly(cleanQuery);
