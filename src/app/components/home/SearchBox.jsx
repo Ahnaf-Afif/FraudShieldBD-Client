@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { saveRecentSearch } from "../../lib/recentSearches";
 
 const examples = [
   "01712345678",
@@ -24,6 +25,7 @@ export default function SearchBox() {
       return;
     }
 
+    saveRecentSearch(cleanSearchValue);
     router.push(`/check?q=${encodeURIComponent(cleanSearchValue)}`);
   }
 

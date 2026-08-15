@@ -3,6 +3,12 @@
 import { Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  clearRecentSearches,
+  getRecentSearchesFromBrowser,
+  RECENT_SEARCHES_UPDATED_EVENT,
+  saveRecentSearch,
+} from "../../lib/recentSearches";
 
 const examples = [
   "01712345678",
@@ -14,6 +20,7 @@ const examples = [
 export default function CheckSearchPanel() {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
+  const [recentSearches, setRecentSearches] = useState([]);
 
   useEffect(() => {
     const queryValue = new URLSearchParams(window.location.search).get("q");
@@ -21,6 +28,24 @@ export default function CheckSearchPanel() {
     if (queryValue) {
       setSearchValue(queryValue);
     }
+  }, []);
+
+  useEffect(() => {
+    function updateRecentSearches() {
+      setRecentSearches(getRecentSearchesFromBrowser());
+    }
+
+    updateRecentSearches();
+    window.addEventListener(RECENT_SEARCHES_UPDATED_EVENT, updateRecentSearches);
+    window.addEventListener("storage", updateRecentSearches);
+
+    return () => {
+      window.removeEventListener(
+        RECENT_SEARCHES_UPDATED_EVENT,
+        updateRecentSearches,
+      );
+      window.removeEventListener("storage", updateRecentSearches);
+    };
   }, []);
 
   function submitSearch(event) {
@@ -35,6 +60,7 @@ export default function CheckSearchPanel() {
       return;
     }
 
+    saveRecentSearch(cleanSearchValue);
     router.push(`/check?q=${encodeURIComponent(cleanSearchValue)}`);
 
     setTimeout(() => {
@@ -102,6 +128,34 @@ export default function CheckSearchPanel() {
             </button>
           ))}
         </div>
+
+        {recentSearches.length > 0 && (
+          <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-white">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-sm font-black">Recent searches</h2>
+              <button
+                type="button"
+                onClick={clearRecentSearches}
+                className="text-xs font-black text-white/75 transition hover:text-white"
+              >
+                Clear
+              </button>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {recentSearches.map((recentSearch) => (
+                <button
+                  key={recentSearch}
+                  type="button"
+                  onClick={() => handleExampleClick(recentSearch)}
+                  className="rounded-full bg-white px-4 py-2 text-xs font-black text-[#06285c] transition hover:bg-[#f0fbf7] hover:text-[#009879]"
+                >
+                  {recentSearch}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
