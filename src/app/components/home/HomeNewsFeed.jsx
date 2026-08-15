@@ -4,27 +4,28 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
+  FilePlus2,
   MessageCircle,
+  Search,
   Share2,
   ShieldAlert,
   ThumbsUp,
 } from "lucide-react";
 import {
   demoReports,
+  getAllReportsForBrowser,
   getPrimaryIdentifier,
   getRiskStyle,
   getSavedReportComments,
   getSavedReportReactions,
-  getSubmittedReportsFromBrowser,
   maskIdentifier,
-  normalizeSubmittedReport,
   saveReportComments,
   saveReportReactions,
 } from "../../lib/reportFeedData";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
-const FEED_REPEAT_COUNT = 8;
+const FEED_REPEAT_COUNT = 20;
 
 const filters = [
   "All",
@@ -48,13 +49,7 @@ export default function HomeNewsFeed() {
   const loadMoreRef = useRef(null);
 
   useEffect(() => {
-    const savedReports = getSubmittedReportsFromBrowser();
-
-    if (savedReports.length === 0) {
-      return;
-    }
-
-    setReports(savedReports.map(normalizeSubmittedReport));
+    setReports(getAllReportsForBrowser());
   }, []);
 
   useEffect(() => {
@@ -69,6 +64,13 @@ export default function HomeNewsFeed() {
   const feedReports = createScrollableFeedReports(filteredReports);
   const visibleReports = feedReports.slice(0, visibleReportCount);
   const hasMoreReports = visibleReportCount < feedReports.length;
+  const filterOptions = filters.map((filter) => ({
+    label: filter,
+    count:
+      filter === "All"
+        ? reports.length
+        : reports.filter((report) => report.fraudCategory === filter).length,
+  }));
 
   useEffect(() => {
     setVisibleReportCount(INITIAL_VISIBLE_REPORTS);
@@ -186,6 +188,8 @@ export default function HomeNewsFeed() {
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <HomeFeedComposer />
+
       <div className="mb-5">
         <p className="text-sm font-black uppercase tracking-wide text-[#009879]">
           Community Feed
@@ -202,39 +206,44 @@ export default function HomeNewsFeed() {
       </div>
 
       <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
-        {filters.map((filter) => (
+        {filterOptions.map((filter) => (
           <button
-            key={filter}
+            key={filter.label}
             type="button"
-            onClick={() => setActiveFilter(filter)}
+            onClick={() => setActiveFilter(filter.label)}
             className={`shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition ${
-              activeFilter === filter
+              activeFilter === filter.label
                 ? "border-[#009879] bg-[#009879] text-white"
                 : "border-slate-200 bg-white text-[#06285c] hover:border-[#009879] hover:text-[#009879]"
             }`}
           >
-            {filter}
+            {filter.label}
+            <span className="ml-2 text-xs opacity-70">{filter.count}</span>
           </button>
         ))}
       </div>
 
       <div className="space-y-4">
-        {visibleReports.map((report) => (
-          <HomeReportPost
-            key={report.feedId}
-            report={report}
-            reaction={reportReactions[report.reportId]}
-            comments={reportComments[report.reportId] || []}
-            commentDraft={commentDrafts[report.reportId] || ""}
-            commentsOpen={activeCommentReportId === report.reportId}
-            copied={copiedReportId === report.reportId}
-            onLike={toggleReportLike}
-            onToggleComments={toggleCommentBox}
-            onCommentChange={updateCommentDraft}
-            onCommentSubmit={submitComment}
-            onShare={copyReportLink}
-          />
-        ))}
+        {visibleReports.length === 0 ? (
+          <EmptyFeedState activeFilter={activeFilter} />
+        ) : (
+          visibleReports.map((report) => (
+            <HomeReportPost
+              key={report.feedId}
+              report={report}
+              reaction={reportReactions[report.reportId]}
+              comments={reportComments[report.reportId] || []}
+              commentDraft={commentDrafts[report.reportId] || ""}
+              commentsOpen={activeCommentReportId === report.reportId}
+              copied={copiedReportId === report.reportId}
+              onLike={toggleReportLike}
+              onToggleComments={toggleCommentBox}
+              onCommentChange={updateCommentDraft}
+              onCommentSubmit={submitComment}
+              onShare={copyReportLink}
+            />
+          ))
+        )}
       </div>
 
       {hasMoreReports && (
@@ -245,7 +254,76 @@ export default function HomeNewsFeed() {
           Loading more reports...
         </div>
       )}
+
+      {!hasMoreReports && visibleReports.length > 0 && (
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-bold text-slate-500">
+          You are caught up for now.
+        </div>
+      )}
     </section>
+  );
+}
+
+function HomeFeedComposer() {
+  return (
+    <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+          <ShieldAlert size={23} />
+        </div>
+
+        <Link
+          href="/report-fraud"
+          className="flex min-h-12 flex-1 items-center rounded-full bg-slate-50 px-4 text-sm font-semibold text-slate-500 transition hover:bg-[#f0fbf7] hover:text-[#009879]"
+        >
+          Seen a suspicious number, page, website or business?
+        </Link>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+        <Link
+          href="/report-fraud"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        >
+          <FilePlus2 size={18} />
+          Report Fraud
+        </Link>
+
+        <Link
+          href="/check"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        >
+          <Search size={18} />
+          Check First
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function EmptyFeedState({ activeFilter }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+        <ShieldAlert size={28} />
+      </div>
+
+      <h3 className="mt-4 text-xl font-black text-[#06285c]">
+        No {activeFilter.toLowerCase()} reports yet
+      </h3>
+
+      <p className="mx-auto mt-2 max-w-md leading-7 text-slate-600">
+        When the community submits reports in this category, they will appear
+        here.
+      </p>
+
+      <Link
+        href="/report-fraud"
+        className="mt-4 inline-flex rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
+      >
+        Submit a Report
+      </Link>
+    </div>
   );
 }
 
