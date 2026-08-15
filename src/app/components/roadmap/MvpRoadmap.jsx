@@ -5,6 +5,8 @@ import {
   Cloud,
   Database,
   KeyRound,
+  LockKeyhole,
+  Server,
   ShieldCheck,
   UploadCloud,
 } from "lucide-react";
@@ -47,6 +49,45 @@ const skippedForMvp = [
   "Real-time notifications",
   "Payment or subscription features",
   "Advanced abuse detection",
+];
+
+const backendCredentialGroups = [
+  {
+    title: "Better Auth",
+    text: "Used for real login, register, session handling and protected user actions.",
+    envVars: ["BETTER_AUTH_SECRET", "BETTER_AUTH_URL"],
+    icon: LockKeyhole,
+  },
+  {
+    title: "MongoDB Atlas",
+    text: "Stores users, reports, comments, watchlist items, notifications and moderation status.",
+    envVars: ["MONGODB_URI"],
+    icon: Database,
+  },
+  {
+    title: "Cloudinary",
+    text: "Stores evidence screenshots/files. MongoDB stores only secure URLs and metadata.",
+    envVars: [
+      "CLOUDINARY_CLOUD_NAME",
+      "CLOUDINARY_API_KEY",
+      "CLOUDINARY_API_SECRET",
+    ],
+    icon: UploadCloud,
+  },
+  {
+    title: "Client API URL",
+    text: "Lets the Next.js client call the separate Express/Node server.",
+    envVars: ["NEXT_PUBLIC_API_URL"],
+    icon: Server,
+  },
+];
+
+const hostingPlan = [
+  "Client: Vercel or another frontend host with Next.js support",
+  "Server: Render, Railway, Fly.io or VPS depending on uptime needs",
+  "Database: MongoDB Atlas production cluster",
+  "Storage: Cloudinary production account",
+  "Secrets: never committed, only stored in hosting environment variables",
 ];
 
 export default function MvpRoadmap() {
@@ -144,6 +185,29 @@ export default function MvpRoadmap() {
             </div>
           </div>
         </div>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+          <RoadmapPanel title="Backend credentials needed">
+            <div className="grid gap-3">
+              {backendCredentialGroups.map((group) => (
+                <CredentialCard key={group.title} group={group} />
+              ))}
+            </div>
+          </RoadmapPanel>
+
+          <RoadmapPanel title="Practical hosting plan">
+            <div className="space-y-3">
+              {hostingPlan.map((item) => (
+                <RoadmapListItem
+                  key={item}
+                  icon={<CheckCircle2 size={18} />}
+                  text={item}
+                  tone="done"
+                />
+              ))}
+            </div>
+          </RoadmapPanel>
+        </div>
       </div>
     </section>
   );
@@ -188,6 +252,34 @@ function UpcomingCard({ item }) {
         <div>
           <h3 className="font-black text-[#06285c]">{item.title}</h3>
           <p className="mt-1 text-sm leading-6 text-slate-600">{item.text}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CredentialCard({ group }) {
+  const Icon = group.icon;
+
+  return (
+    <div className="rounded-xl bg-slate-50 p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#009879]">
+          <Icon size={20} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-black text-[#06285c]">{group.title}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{group.text}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {group.envVars.map((envVar) => (
+              <span
+                key={envVar}
+                className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#06285c]"
+              >
+                {envVar}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>
