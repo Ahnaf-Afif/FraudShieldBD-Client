@@ -2,6 +2,7 @@ import { getRecentSearchesFromBrowser } from "./recentSearches";
 import {
   getAllReportsForBrowser,
   getPrimaryIdentifier,
+  getRecentlyViewedReportsFromBrowser,
   getSavedReportDraftFromBrowser,
   getSubmittedReportsFromBrowser,
   maskIdentifier,
@@ -19,6 +20,7 @@ export const defaultNotificationPreferences = {
   Report: true,
   Draft: true,
   Watchlist: true,
+  Viewed: true,
   Search: true,
   Alert: true,
 };
@@ -29,6 +31,7 @@ export function getNotificationsForBrowser(demoUser) {
   );
   const draftReport = getSavedReportDraftFromBrowser();
   const watchlistItems = getWatchlistFromBrowser();
+  const recentlyViewedReports = getRecentlyViewedReportsFromBrowser();
   const recentSearches = getRecentSearchesFromBrowser();
   const allReports = getAllReportsForBrowser();
   const readNotifications = getReadNotifications();
@@ -40,6 +43,9 @@ export function getNotificationsForBrowser(demoUser) {
       : []),
     ...(preferences.Draft ? createDraftNotifications(draftReport, demoUser) : []),
     ...(preferences.Watchlist ? createWatchlistNotifications(watchlistItems) : []),
+    ...(preferences.Viewed
+      ? createRecentlyViewedNotifications(recentlyViewedReports)
+      : []),
     ...(preferences.Search ? createRecentSearchNotifications(recentSearches) : []),
     ...(preferences.Alert ? createHighRiskNotifications(allReports) : []),
   ];
@@ -165,6 +171,18 @@ function createWatchlistNotifications(items) {
     href: item.reportId ? `/reports/${item.reportId}` : "/watchlist",
     createdAt: item.addedAt || "Recently",
     tone: item.riskLevel || "Watching",
+  }));
+}
+
+function createRecentlyViewedNotifications(reports) {
+  return reports.slice(0, 3).map((report) => ({
+    id: `viewed-${report.reportId}`,
+    type: "Viewed",
+    title: "Recently viewed report",
+    message: `${report.title} is ready to review again before you take action.`,
+    href: `/reports/${report.reportId}`,
+    createdAt: report.viewedAt || "Recently viewed",
+    tone: report.riskLevel || "Viewed",
   }));
 }
 

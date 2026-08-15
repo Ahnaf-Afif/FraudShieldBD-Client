@@ -30,7 +30,15 @@ import {
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import AuthRequiredState from "../shared/AuthRequiredState";
 
-const filters = ["All", "Unread", "Report", "Watchlist", "Alert", "Search"];
+const filters = [
+  "All",
+  "Unread",
+  "Report",
+  "Watchlist",
+  "Viewed",
+  "Alert",
+  "Search",
+];
 const preferenceLabels = [
   {
     key: "Report",
@@ -46,6 +54,11 @@ const preferenceLabels = [
     key: "Watchlist",
     label: "Watchlist",
     description: "Identifiers you are watching.",
+  },
+  {
+    key: "Viewed",
+    label: "Viewed reports",
+    description: "Reports you recently opened for detail review.",
   },
   {
     key: "Search",
@@ -187,6 +200,14 @@ export default function NotificationsDashboard() {
                 value={
                   notifications.filter(
                     (notification) => notification.type === "Watchlist",
+                  ).length
+                }
+              />
+              <NotificationStat
+                label="Viewed"
+                value={
+                  notifications.filter(
+                    (notification) => notification.type === "Viewed",
                   ).length
                 }
               />
@@ -511,6 +532,10 @@ function getNotificationIcon(type) {
 
   if (type === "Search") {
     return Search;
+  }
+
+  if (type === "Viewed") {
+    return Clock;
   }
 
   if (type === "Draft") {
