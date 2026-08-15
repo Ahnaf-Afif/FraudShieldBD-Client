@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   BadgeAlert,
   Bell,
+  Clock,
   FilePlus2,
   MessageCircle,
   Search,
@@ -20,6 +21,7 @@ import {
   getDigitsOnly,
   getEntityType,
   getPrimaryIdentifier,
+  getRecentlyViewedReportsFromBrowser,
   getRiskStyle,
   getSavedReportComments,
   getSavedReportReactions,
@@ -59,6 +61,7 @@ export default function HomeNewsFeed() {
   const [activeCommentReportId, setActiveCommentReportId] = useState("");
   const [copiedReportId, setCopiedReportId] = useState("");
   const [watchedIdentifiers, setWatchedIdentifiers] = useState({});
+  const [recentlyViewedReports, setRecentlyViewedReports] = useState([]);
   const [visibleReportCount, setVisibleReportCount] = useState(
     INITIAL_VISIBLE_REPORTS,
   );
@@ -70,6 +73,7 @@ export default function HomeNewsFeed() {
     setReportReactions(getSavedReportReactions());
     setReportComments(getSavedReportComments());
     setWatchedIdentifiers(createWatchedIdentifierMap());
+    setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
   }
 
   useEffect(() => {
@@ -287,6 +291,8 @@ export default function HomeNewsFeed() {
 
       <FeedOverview stats={feedStats} trendingReport={trendingReport} />
 
+      <RecentlyViewedStrip reports={recentlyViewedReports} />
+
       <div className="mb-5">
         <p className="text-sm font-black uppercase tracking-wide text-[#009879]">
           Community Feed
@@ -425,6 +431,60 @@ export default function HomeNewsFeed() {
         </div>
       )}
     </section>
+  );
+}
+
+function RecentlyViewedStrip({ reports }) {
+  if (reports.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-wide text-[#06285c]">
+          <Clock size={17} className="text-[#009879]" />
+          Recently viewed
+        </h2>
+
+        <Link
+          href="/reports"
+          className="text-xs font-black text-[#009879] hover:text-[#007f66]"
+        >
+          Browse all
+        </Link>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto pb-1">
+        {reports.map((report) => (
+          <Link
+            key={report.reportId}
+            href={`/reports/${report.reportId}`}
+            className="w-64 shrink-0 rounded-xl border border-slate-100 bg-slate-50 p-3 transition hover:border-[#009879] hover:bg-[#f0fbf7]"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <p className="line-clamp-2 text-sm font-black leading-5 text-[#06285c]">
+                {report.title}
+              </p>
+              <span
+                className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${getRiskStyle(
+                  report.riskLevel,
+                )}`}
+              >
+                {report.riskLevel}
+              </span>
+            </div>
+
+            <p className="mt-2 break-words text-xs font-semibold text-slate-500">
+              {maskIdentifier(getPrimaryIdentifier(report))}
+            </p>
+            <p className="mt-1 text-xs font-semibold text-slate-400">
+              Viewed {report.viewedAt}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 
