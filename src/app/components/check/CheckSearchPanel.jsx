@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { AlertCircle, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -21,6 +21,7 @@ export default function CheckSearchPanel() {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [recentSearches, setRecentSearches] = useState([]);
+  const [searchError, setSearchError] = useState("");
 
   useEffect(() => {
     const queryValue = new URLSearchParams(window.location.search).get("q");
@@ -57,9 +58,16 @@ export default function CheckSearchPanel() {
     const cleanSearchValue = value.trim();
 
     if (!cleanSearchValue) {
+      setSearchError("Type a phone number, page, website or business name first.");
       return;
     }
 
+    if (cleanSearchValue.length < 3) {
+      setSearchError("Search must be at least 3 characters.");
+      return;
+    }
+
+    setSearchError("");
     saveRecentSearch(cleanSearchValue);
     router.push(`/check?q=${encodeURIComponent(cleanSearchValue)}`);
 
@@ -70,11 +78,13 @@ export default function CheckSearchPanel() {
 
   function handleExampleClick(example) {
     setSearchValue(example);
+    setSearchError("");
     runSearch(example);
   }
 
   function clearSearch() {
     setSearchValue("");
+    setSearchError("");
   }
 
   return (
@@ -89,7 +99,10 @@ export default function CheckSearchPanel() {
 
             <input
               value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
+              onChange={(event) => {
+                setSearchValue(event.target.value);
+                setSearchError("");
+              }}
               className="w-full min-w-0 border-none text-base text-[#06285c] outline-none"
               placeholder="Search phone number, payment number, Facebook page, website or business name..."
             />
@@ -113,6 +126,13 @@ export default function CheckSearchPanel() {
             Search Now
           </button>
         </form>
+
+        {searchError && (
+          <p className="mt-3 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-red-600">
+            <AlertCircle size={17} />
+            {searchError}
+          </p>
+        )}
 
         <div className="mt-4 flex flex-wrap gap-3 text-sm text-white">
           <span>Try searching:</span>

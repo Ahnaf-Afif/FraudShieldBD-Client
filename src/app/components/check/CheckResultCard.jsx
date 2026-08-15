@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
+  BadgeAlert,
+  BadgeCheck,
   Clock,
   Copy,
   Eye,
@@ -13,6 +15,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import {
@@ -34,6 +37,7 @@ export default function CheckResultCard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [matchedReports, setMatchedReports] = useState([]);
   const [copiedReportId, setCopiedReportId] = useState("");
+  const [copiedIdentifier, setCopiedIdentifier] = useState(false);
   const [watchedIdentifier, setWatchedIdentifier] = useState("");
 
   useEffect(() => {
@@ -51,7 +55,7 @@ export default function CheckResultCard() {
       const primaryReport = reports[0];
 
       if (!primaryReport) {
-        setWatchedIdentifier("");
+        setWatchedIdentifier(isIdentifierWatched(queryValue) ? queryValue : "");
         return;
       }
 
@@ -83,6 +87,32 @@ export default function CheckResultCard() {
     setTimeout(() => {
       setCopiedReportId("");
     }, 1600);
+  }
+
+  async function copyIdentifier(identifier) {
+    await navigator.clipboard.writeText(identifier);
+    setCopiedIdentifier(true);
+
+    setTimeout(() => {
+      setCopiedIdentifier(false);
+    }, 1600);
+  }
+
+  function toggleWatchSearchQuery() {
+    if (isIdentifierWatched(searchQuery)) {
+      removeFromWatchlist(searchQuery);
+      setWatchedIdentifier("");
+      return;
+    }
+
+    addToWatchlist({
+      identifier: searchQuery,
+      type: detectIdentifierType(searchQuery),
+      riskLevel: "Unknown",
+      reportId: "",
+      title: "Watched search with no matching report yet",
+    });
+    setWatchedIdentifier(searchQuery);
   }
 
   function toggleWatchIdentifier(report) {
@@ -139,6 +169,19 @@ export default function CheckResultCard() {
           </p>
 
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={toggleWatchSearchQuery}
+              className={`inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-black transition ${
+                watchedIdentifier
+                  ? "border-[#009879] bg-[#f0fbf7] text-[#009879]"
+                  : "border-slate-200 text-[#06285c] hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+              }`}
+            >
+              <Eye size={18} />
+              {watchedIdentifier ? "Watching This Search" : "Watch This Search"}
+            </button>
+
             <Link
               href={`/report-fraud?identifier=${encodeURIComponent(searchQuery)}`}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
@@ -167,6 +210,9 @@ export default function CheckResultCard() {
     (total, report) => total + (report.reportsCount || 1),
     0,
   );
+  const riskScore = calculateRiskScore(matchedReports);
+  const riskSummary = getRiskSummary(mainReport.riskLevel, matchedReports.length);
+  const matchBreakdown = createMatchBreakdown(matchedReports);
 
   return (
     <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1.5fr_0.8fr]">
@@ -179,6 +225,15 @@ export default function CheckResultCard() {
 
             <div className={`mt-4 rounded-xl px-5 py-2 font-black ${riskStyle}`}>
               {mainReport.riskLevel}
+            </div>
+
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center shadow-sm">
+              <p className="text-xs font-black uppercase text-slate-400">
+                Risk score
+              </p>
+              <p className="mt-1 text-3xl font-black text-[#06285c]">
+                {riskScore}/100
+              </p>
             </div>
           </div>
 
@@ -205,8 +260,7 @@ export default function CheckResultCard() {
             <div className="mt-5 rounded-xl bg-red-50 p-4 text-red-700">
               <p className="flex gap-3 font-semibold">
                 <AlertTriangle className="shrink-0" size={20} />
-                This search matches community reports for suspicious or
-                fraudulent activity.
+                {riskSummary}
               </p>
 
               <p className="mt-2 text-sm text-red-600">
@@ -236,6 +290,15 @@ export default function CheckResultCard() {
 
               <button
                 type="button"
+                onClick={() => copyIdentifier(identifier)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+              >
+                <Copy size={17} />
+                {copiedIdentifier ? "Copied Identifier" : "Copy Identifier"}
+              </button>
+
+              <button
+                type="button"
                 onClick={() => toggleWatchIdentifier(mainReport)}
                 className={`inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-black transition ${
                   watchedIdentifier
@@ -258,6 +321,12 @@ export default function CheckResultCard() {
             value={mainReport.submittedAt || "Recently"}
           />
           <InfoItem label="Common Category" value={mainReport.fraudCategory} />
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {matchBreakdown.map((item) => (
+            <RiskSignal key={item.label} item={item} />
+          ))}
         </div>
       </div>
 
@@ -282,6 +351,15 @@ export default function CheckResultCard() {
             title="Call official support"
             text="If in doubt, call the company’s official support number to verify information."
           />
+        </div>
+
+        <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+          <h3 className="font-black text-[#06285c]">Why this result matters</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            FraudShield checks the identifier against local community reports.
+            More reports, higher risk labels and repeated categories make the
+            warning stronger.
+          </p>
         </div>
       </aside>
     </section>
@@ -310,4 +388,114 @@ function SafetyTip({ icon: Icon, title, text }) {
       </div>
     </div>
   );
+}
+
+function RiskSignal({ item }) {
+  const Icon = item.icon;
+
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <div className="flex items-center gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-full ${item.bg}`}>
+          <Icon size={19} className={item.color} />
+        </div>
+        <div>
+          <p className="text-xs font-black uppercase text-slate-400">
+            {item.label}
+          </p>
+          <p className="font-black text-[#06285c]">{item.value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function calculateRiskScore(reports) {
+  const highestRiskRank = reports.reduce(
+    (highestRank, report) => Math.max(highestRank, getRiskRank(report.riskLevel)),
+    0,
+  );
+  const reportVolume = reports.reduce(
+    (total, report) => total + (report.reportsCount || 1),
+    0,
+  );
+  const categoryCount = new Set(
+    reports.map((report) => report.fraudCategory).filter(Boolean),
+  ).size;
+  const score =
+    highestRiskRank * 24 +
+    Math.min(reportVolume * 2, 20) +
+    Math.min(reports.length * 5, 15) +
+    Math.min(categoryCount * 4, 12);
+
+  return Math.min(score, 100);
+}
+
+function getRiskSummary(riskLevel, matchCount) {
+  if (riskLevel === "High Risk") {
+    return `This search matches ${matchCount} high-priority community warning${
+      matchCount === 1 ? "" : "s"
+    }. Treat it as unsafe until verified through official channels.`;
+  }
+
+  if (riskLevel === "Medium Risk") {
+    return `This search has suspicious community activity. Verify carefully before sending money or sharing private information.`;
+  }
+
+  return `This search has a low-risk match, but you should still verify identity before paying.`;
+}
+
+function createMatchBreakdown(reports) {
+  const highRiskCount = reports.filter(
+    (report) => report.riskLevel === "High Risk",
+  ).length;
+  const totalReports = reports.reduce(
+    (total, report) => total + (report.reportsCount || 1),
+    0,
+  );
+  const locations = new Set(
+    reports.map((report) => report.location || "Bangladesh"),
+  );
+
+  return [
+    {
+      label: "High risk matches",
+      value: highRiskCount,
+      icon: BadgeAlert,
+      color: "text-red-500",
+      bg: "bg-red-50",
+    },
+    {
+      label: "Report volume",
+      value: totalReports,
+      icon: TrendingUp,
+      color: "text-orange-500",
+      bg: "bg-orange-50",
+    },
+    {
+      label: "Locations",
+      value: locations.size,
+      icon: BadgeCheck,
+      color: "text-[#009879]",
+      bg: "bg-[#e9f8f4]",
+    },
+  ];
+}
+
+function detectIdentifierType(value) {
+  const cleanValue = String(value || "").trim().toLowerCase();
+
+  if (/^\+?\d[\d\s-]{5,}$/.test(cleanValue) || cleanValue.includes("bkash")) {
+    return "Phone or Payment Number";
+  }
+
+  if (cleanValue.includes("facebook.com") || cleanValue.includes("fb.com")) {
+    return "Facebook Page";
+  }
+
+  if (cleanValue.includes(".") || cleanValue.startsWith("http")) {
+    return "Website";
+  }
+
+  return "Business";
 }
