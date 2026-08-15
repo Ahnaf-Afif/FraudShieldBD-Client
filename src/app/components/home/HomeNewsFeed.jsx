@@ -17,6 +17,7 @@ import {
 import {
   demoReports,
   getAllReportsForBrowser,
+  getDigitsOnly,
   getEntityType,
   getPrimaryIdentifier,
   getRiskStyle,
@@ -107,6 +108,7 @@ export default function HomeNewsFeed() {
     () => sortFeedReports(searchedReports, sortMode),
     [searchedReports, sortMode],
   );
+  const searchInsightReport = filteredReports[0] || null;
   const trendingReport = filteredReports[0] || reports[0] || null;
   const feedReports = useMemo(
     () => createScrollableFeedReports(filteredReports),
@@ -351,6 +353,14 @@ export default function HomeNewsFeed() {
         </div>
       </div>
 
+      {feedSearch.trim() && (
+        <FeedSearchInsight
+          query={feedSearch}
+          matchedReport={searchInsightReport}
+          matchCount={filteredReports.length}
+        />
+      )}
+
       <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
         {filterOptions.map((filter) => (
           <button
@@ -415,6 +425,64 @@ export default function HomeNewsFeed() {
         </div>
       )}
     </section>
+  );
+}
+
+function FeedSearchInsight({ query, matchedReport, matchCount }) {
+  const cleanQuery = query.trim();
+
+  if (!matchedReport) {
+    return (
+      <div className="mb-5 rounded-2xl border border-orange-100 bg-orange-50 p-4 shadow-sm">
+        <p className="text-sm font-black text-orange-800">
+          No feed posts matched "{cleanQuery}".
+        </p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Link
+            href={`/check?q=${encodeURIComponent(cleanQuery)}`}
+            className="inline-flex justify-center rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-black text-orange-700 transition hover:border-orange-300 hover:bg-orange-100"
+          >
+            Check This Identifier
+          </Link>
+          <Link
+            href="/report-fraud"
+            className="inline-flex justify-center rounded-xl bg-[#009879] px-4 py-2 text-sm font-black text-white transition hover:bg-[#007f66]"
+          >
+            Report It
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-5 rounded-2xl border border-[#bfe7dc] bg-[#f0fbf7] p-4 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-wide text-[#009879]">
+            Best match
+          </p>
+          <Link
+            href={`/reports/${matchedReport.reportId}`}
+            className="mt-1 block break-words text-base font-black text-[#06285c] transition hover:text-[#009879]"
+          >
+            {matchedReport.title}
+          </Link>
+          <p className="mt-1 text-sm font-semibold text-slate-600">
+            {matchCount} result{matchCount === 1 ? "" : "s"} found for "
+            {cleanQuery}" •{" "}
+            {maskIdentifier(getPrimaryIdentifier(matchedReport))}
+          </p>
+        </div>
+
+        <Link
+          href={`/reports/${matchedReport.reportId}`}
+          className="inline-flex shrink-0 justify-center rounded-xl bg-[#009879] px-4 py-2 text-sm font-black text-white transition hover:bg-[#007f66]"
+        >
+          View Details
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -861,6 +929,11 @@ function formatFeedTime(submittedAt, loopIndex) {
 
 function reportMatchesFeedSearch(report, searchValue) {
   const cleanSearch = searchValue.trim().toLowerCase();
+  const searchDigits = getDigitsOnly(cleanSearch);
+  const searchTokens = cleanSearch
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3);
 
   if (!cleanSearch) {
     return true;
@@ -881,8 +954,15 @@ function reportMatchesFeedSearch(report, searchValue) {
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
+  const searchableDigits = getDigitsOnly(searchableText);
+  const directTextMatch = searchableText.includes(cleanSearch);
+  const digitMatch =
+    searchDigits.length >= 5 && searchableDigits.includes(searchDigits);
+  const tokenMatch =
+    searchTokens.length > 0 &&
+    searchTokens.every((token) => searchableText.includes(token));
 
-  return searchableText.includes(cleanSearch);
+  return directTextMatch || digitMatch || tokenMatch;
 }
 
 function sortFeedReports(reports, sortMode) {
