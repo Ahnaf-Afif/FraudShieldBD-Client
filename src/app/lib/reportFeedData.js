@@ -1,6 +1,7 @@
 export const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
 export const REPORT_REACTIONS_KEY = "fraudshield-report-reactions";
 export const REPORT_COMMENTS_KEY = "fraudshield-report-comments";
+export const REPORT_DRAFT_KEY = "fraudshield-report-draft";
 
 export const demoReports = [
   {
@@ -74,6 +75,27 @@ export function getSubmittedReportsFromBrowser() {
   } catch (error) {
     console.error("Could not load submitted reports:", error);
     return [];
+  }
+}
+
+export function getSavedReportDraftFromBrowser() {
+  const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
+
+  if (!savedDraft) {
+    return null;
+  }
+
+  try {
+    const parsedDraft = JSON.parse(savedDraft);
+
+    if (!parsedDraft || !parsedDraft.reportId) {
+      return null;
+    }
+
+    return normalizeSubmittedReport(parsedDraft);
+  } catch (error) {
+    console.error("Could not load report draft:", error);
+    return null;
   }
 }
 
@@ -210,6 +232,9 @@ export function normalizeSubmittedReport(report) {
     reportsCount: report.reportsCount || 1,
     reporterName: report.reporterName || "Community member",
     reporterRole: report.reporterRole || "Reporter",
+    reporterEmail: report.reporterEmail || "",
+    ownerName: report.ownerName || report.reporterName || "",
+    ownerEmail: report.ownerEmail || report.reporterEmail || "",
     isAnonymous: Boolean(report.isAnonymous),
   };
 }

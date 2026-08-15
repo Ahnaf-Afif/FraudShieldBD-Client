@@ -13,6 +13,7 @@ import ReportReviewForm, { ReportReviewTips } from "./ReportReviewForm";
 import ReportStoryForm, { ReportStoryTips } from "./ReportStoryForm";
 import ReportLiveSummary from "./ReportLiveSummary";
 import {
+  REPORT_DRAFT_KEY,
   estimateReportRiskLevel,
   saveSubmittedReport,
 } from "../../lib/reportFeedData";
@@ -21,7 +22,6 @@ import {
   getDemoSession,
 } from "../../lib/demoSession";
 
-const REPORT_DRAFT_KEY = "fraudshield-report-draft";
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
 
 const initialReportData = {
@@ -310,6 +310,8 @@ function createReporterDetails(reportData, demoUser) {
       reporterName: "Anonymous reporter",
       reporterEmail: "",
       reporterRole: "Hidden",
+      ownerName: demoUser?.name || "",
+      ownerEmail: demoUser?.email || "",
       isAnonymous: true,
     };
   }
@@ -319,6 +321,8 @@ function createReporterDetails(reportData, demoUser) {
       reporterName: demoUser.name,
       reporterEmail: demoUser.email,
       reporterRole: demoUser.role,
+      ownerName: demoUser.name,
+      ownerEmail: demoUser.email,
       isAnonymous: false,
     };
   }
@@ -327,6 +331,8 @@ function createReporterDetails(reportData, demoUser) {
     reporterName: "Guest reporter",
     reporterEmail: "",
     reporterRole: "Guest",
+    ownerName: "",
+    ownerEmail: "",
     isAnonymous: false,
   };
 }

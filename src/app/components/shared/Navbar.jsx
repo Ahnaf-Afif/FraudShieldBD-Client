@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { LogOut, Menu, X } from "lucide-react";
+import { FileText, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -187,7 +187,10 @@ export default function Navbar() {
 function DesktopUserMenu({ user, onLogout }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-2">
+      <Link
+        href="/my-reports"
+        className="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-2 transition hover:border-[#009879] hover:bg-[#f0fbf7]"
+      >
         <UserAvatar user={user} />
         <div>
           <p className="max-w-32 truncate text-sm font-black text-[#06285c]">
@@ -197,7 +200,7 @@ function DesktopUserMenu({ user, onLogout }) {
             {user.role}
           </p>
         </div>
-      </div>
+      </Link>
 
       <button
         type="button"
@@ -225,6 +228,14 @@ function MobileUserMenu({ user, onLogout }) {
           </p>
         </div>
       </div>
+
+      <Link
+        href="/my-reports"
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#009879] text-sm font-black text-white"
+      >
+        <FileText size={17} />
+        My Reports
+      </Link>
 
       <button
         type="button"
