@@ -8,6 +8,8 @@ import {
   BookmarkPlus,
   ChevronRight,
   Clock,
+  Copy,
+  Download,
   FileText,
   Filter,
   LayoutGrid,
@@ -66,6 +68,9 @@ export default function ReportsExplorer() {
   const [filterPresets, setFilterPresets] = useState([]);
   const [presetName, setPresetName] = useState("");
   const [presetStatus, setPresetStatus] = useState("");
+  const [shareStatus, setShareStatus] = useState("");
+  const [exportStatus, setExportStatus] = useState("");
+  const [hasLoadedUrlFilters, setHasLoadedUrlFilters] = useState(false);
 
   useEffect(() => {
     const browserReports = getAllReportsForBrowser();
@@ -73,7 +78,33 @@ export default function ReportsExplorer() {
     setReports(browserReports);
     setFilterPresets(getSavedFilterPresets());
     applyUrlFilters();
+    setHasLoadedUrlFilters(true);
   }, []);
+
+  useEffect(() => {
+    if (!hasLoadedUrlFilters) {
+      return;
+    }
+
+    const nextUrl = createFilterUrl({
+      searchValue,
+      categoryFilter,
+      riskFilter,
+      identifierFilter,
+      locationFilter,
+      sortMode,
+    });
+
+    window.history.replaceState(null, "", nextUrl);
+  }, [
+    categoryFilter,
+    hasLoadedUrlFilters,
+    identifierFilter,
+    locationFilter,
+    riskFilter,
+    searchValue,
+    sortMode,
+  ]);
 
   const filteredReports = useMemo(() => {
     const searchedReports = searchValue.trim()
@@ -143,6 +174,7 @@ export default function ReportsExplorer() {
     locationFilter,
     sortMode,
   });
+  const highestRiskMatch = getHighestRiskReport(filteredReports);
 
   function clearFilters() {
     setSearchValue("");
@@ -152,6 +184,8 @@ export default function ReportsExplorer() {
     setLocationFilter("All Locations");
     setSortMode("Newest First");
     setPresetStatus("");
+    setShareStatus("");
+    setExportStatus("");
   }
 
   function removeFilter(filterKey) {
@@ -180,6 +214,8 @@ export default function ReportsExplorer() {
     }
 
     setPresetStatus("");
+    setShareStatus("");
+    setExportStatus("");
   }
 
   function applyUrlFilters() {
@@ -191,6 +227,49 @@ export default function ReportsExplorer() {
     setIdentifierFilter(searchParams.get("type") || "All Identifier Types");
     setLocationFilter(searchParams.get("location") || "All Locations");
     setSortMode(searchParams.get("sort") || "Newest First");
+  }
+
+  async function copyFilterLink() {
+    const filterUrl = `${window.location.origin}${createFilterUrl({
+      searchValue,
+      categoryFilter,
+      riskFilter,
+      identifierFilter,
+      locationFilter,
+      sortMode,
+    })}`;
+
+    await navigator.clipboard.writeText(filterUrl);
+    setShareStatus("copied");
+
+    setTimeout(() => {
+      setShareStatus("");
+    }, 1800);
+  }
+
+  function exportFilteredReports() {
+    if (filteredReports.length === 0) {
+      setExportStatus("empty");
+      return;
+    }
+
+    const csvContent = createReportsCsv(filteredReports);
+    const csvBlob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8",
+    });
+    const downloadUrl = URL.createObjectURL(csvBlob);
+    const downloadLink = document.createElement("a");
+
+    downloadLink.href = downloadUrl;
+    downloadLink.download = `fraudshield-reports-${Date.now()}.csv`;
+    downloadLink.click();
+
+    URL.revokeObjectURL(downloadUrl);
+    setExportStatus("downloaded");
+
+    setTimeout(() => {
+      setExportStatus("");
+    }, 1800);
   }
 
   function saveCurrentPreset() {
@@ -335,6 +414,16 @@ export default function ReportsExplorer() {
             onDeletePreset={deletePreset}
           />
 
+          <InvestigationPanel
+            highestRiskMatch={highestRiskMatch}
+            filteredCount={filteredReports.length}
+            totalCount={reports.length}
+            shareStatus={shareStatus}
+            exportStatus={exportStatus}
+            onCopyFilterLink={copyFilterLink}
+            onExportReports={exportFilteredReports}
+          />
+
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 text-center">
             <h2 className="font-black text-[#06285c]">Have you been scammed?</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -464,13 +553,24 @@ export default function ReportsExplorer() {
                 reports
               </p>
 
-              <Link
-                href="/report-fraud"
-                className="inline-flex items-center gap-2 font-black text-[#009879]"
-              >
-                Submit missing report
-                <ChevronRight size={16} />
-              </Link>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={copyFilterLink}
+                  className="inline-flex items-center gap-2 font-black text-[#06285c] transition hover:text-[#009879]"
+                >
+                  <Copy size={16} />
+                  Copy filter link
+                </button>
+                <span className="hidden text-slate-300 sm:inline">•</span>
+                <Link
+                  href="/report-fraud"
+                  className="inline-flex items-center gap-2 font-black text-[#009879]"
+                >
+                  Submit missing report
+                  <ChevronRight size={16} />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -692,6 +792,98 @@ function SavedFiltersPanel({
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+function InvestigationPanel({
+  highestRiskMatch,
+  filteredCount,
+  totalCount,
+  shareStatus,
+  exportStatus,
+  onCopyFilterLink,
+  onExportReports,
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
+        <ShieldAlert size={18} />
+        Investigation tools
+      </h2>
+
+      <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+        <p className="text-xs font-black uppercase text-slate-400">
+          Highest risk match
+        </p>
+        {highestRiskMatch ? (
+          <>
+            <Link
+              href={`/reports/${highestRiskMatch.reportId}`}
+              className="mt-2 block text-sm font-black leading-6 text-[#06285c] transition hover:text-[#009879]"
+            >
+              {highestRiskMatch.title}
+            </Link>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-black ${getRiskStyle(
+                  highestRiskMatch.riskLevel,
+                )}`}
+              >
+                {highestRiskMatch.riskLevel}
+              </span>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#06285c]">
+                {highestRiskMatch.reportsCount || 1} reports
+              </span>
+            </div>
+          </>
+        ) : (
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            No matching report is visible with the current filters.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        <button
+          type="button"
+          onClick={onCopyFilterLink}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        >
+          <Copy size={17} />
+          Copy Search Link
+        </button>
+        <button
+          type="button"
+          onClick={onExportReports}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#06285c] px-4 text-sm font-black text-white transition hover:bg-[#041b3f]"
+        >
+          <Download size={17} />
+          Export Visible Reports
+        </button>
+      </div>
+
+      <p className="mt-3 text-xs font-semibold text-slate-500">
+        {filteredCount} of {totalCount} reports are included.
+      </p>
+
+      {shareStatus === "copied" && (
+        <p className="mt-3 text-sm font-black text-[#009879]">
+          Filter link copied.
+        </p>
+      )}
+
+      {exportStatus === "downloaded" && (
+        <p className="mt-3 text-sm font-black text-[#009879]">
+          CSV export started.
+        </p>
+      )}
+
+      {exportStatus === "empty" && (
+        <p className="mt-3 text-sm font-black text-red-500">
+          No visible reports to export.
+        </p>
       )}
     </div>
   );
@@ -1052,4 +1244,93 @@ function formatPresetSummary(preset) {
   ]
     .filter(Boolean)
     .join(" • ");
+}
+
+function getHighestRiskReport(reports) {
+  return [...reports].sort((firstReport, secondReport) => {
+    const riskDifference =
+      getRiskRank(secondReport.riskLevel) - getRiskRank(firstReport.riskLevel);
+
+    if (riskDifference !== 0) {
+      return riskDifference;
+    }
+
+    return (secondReport.reportsCount || 1) - (firstReport.reportsCount || 1);
+  })[0];
+}
+
+function createFilterUrl({
+  searchValue,
+  categoryFilter,
+  riskFilter,
+  identifierFilter,
+  locationFilter,
+  sortMode,
+}) {
+  const searchParams = new URLSearchParams();
+
+  if (searchValue.trim()) {
+    searchParams.set("q", searchValue.trim());
+  }
+
+  if (categoryFilter !== "All Categories") {
+    searchParams.set("category", categoryFilter);
+  }
+
+  if (riskFilter !== "All Risk Levels") {
+    searchParams.set("risk", riskFilter);
+  }
+
+  if (identifierFilter !== "All Identifier Types") {
+    searchParams.set("type", identifierFilter);
+  }
+
+  if (locationFilter !== "All Locations") {
+    searchParams.set("location", locationFilter);
+  }
+
+  if (sortMode !== "Newest First") {
+    searchParams.set("sort", sortMode);
+  }
+
+  const queryString = searchParams.toString();
+
+  return queryString ? `/reports?${queryString}` : "/reports";
+}
+
+function createReportsCsv(reports) {
+  const rows = reports.map((report) => [
+    report.reportId,
+    report.title,
+    report.fraudCategory,
+    getEntityType(report),
+    getPrimaryIdentifier(report),
+    report.riskLevel,
+    report.location || "Bangladesh",
+    report.reportsCount || 1,
+    report.submittedAt || "Recently",
+    report.preventionAdvice || "",
+  ]);
+
+  return [
+    [
+      "Report ID",
+      "Title",
+      "Category",
+      "Identifier Type",
+      "Identifier",
+      "Risk Level",
+      "Location",
+      "Reports Count",
+      "Submitted",
+      "Safety Advice",
+    ],
+    ...rows,
+  ]
+    .map((row) => row.map(escapeCsvValue).join(","))
+    .join("\n");
+}
+
+function escapeCsvValue(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
