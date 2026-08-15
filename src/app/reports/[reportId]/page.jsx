@@ -7,9 +7,11 @@ import {
   AlertTriangle,
   ArrowLeft,
   Calendar,
+  CheckCircle2,
   ClipboardCheck,
   Copy,
   CreditCard,
+  Clock3,
   Eye,
   ExternalLink,
   FileText,
@@ -20,6 +22,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   ThumbsUp,
+  Upload,
   UserRound,
   Users,
 } from "lucide-react";
@@ -351,6 +354,8 @@ export default function ReportDetailsPage() {
               </div>
             </section>
 
+            <EvidenceFilesPanel report={report} />
+
             <section className="mt-6 rounded-2xl border border-orange-100 bg-orange-50 p-5">
               <div className="flex gap-3">
                 <AlertTriangle
@@ -458,6 +463,8 @@ export default function ReportDetailsPage() {
 
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
             <DetailRiskCard report={report} />
+
+            <ReportStatusCard report={report} />
 
             <button
               type="button"
@@ -606,6 +613,85 @@ function DetailRiskCard({ report }) {
   );
 }
 
+function ReportStatusCard({ report }) {
+  const timelineItems = createReportTimeline(report);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+          <CheckCircle2 size={25} />
+        </div>
+
+        <div>
+          <p className="text-sm font-bold text-slate-500">Public status</p>
+          <p className="font-black text-[#06285c]">
+            {formatReportStatus(report.status)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-4">
+        {timelineItems.map((item) => (
+          <div key={item.label} className="flex gap-3">
+            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[#009879]">
+              {item.icon}
+            </div>
+            <div>
+              <p className="text-sm font-black text-[#06285c]">{item.label}</p>
+              <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                {item.time}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EvidenceFilesPanel({ report }) {
+  const fileSummaries = report.evidenceFileSummaries || [];
+
+  if (fileSummaries.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="mt-6 rounded-2xl border border-slate-200 p-5">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eef6ff] text-[#0b63f6]">
+          <Upload size={21} />
+        </div>
+
+        <div>
+          <h2 className="font-black text-[#06285c]">Evidence files</h2>
+          <p className="mt-1 text-sm font-semibold text-slate-500">
+            File previews stay in the browser during upload. This report keeps
+            the file metadata for review.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {fileSummaries.map((file) => (
+          <div
+            key={`${file.name}-${file.size}-${file.lastModified}`}
+            className="rounded-xl bg-slate-50 p-4"
+          >
+            <p className="break-words text-sm font-black text-[#06285c]">
+              {file.name}
+            </p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">
+              {formatFileSize(file.size)} • {formatFileType(file.type)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function RiskFact({ label, value }) {
   return (
     <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3">
@@ -708,11 +794,80 @@ function formatMoneyAmount(report) {
 }
 
 function formatEvidenceSummary(report) {
+  const fileCount = report.evidenceFileSummaries?.length || 0;
+
   if (report.evidenceType) {
-    return `${report.evidenceType} was reported. Uploaded file previews are not stored in this local MVP after browser refresh.`;
+    const fileText =
+      fileCount > 0
+        ? ` ${fileCount} evidence file${fileCount === 1 ? "" : "s"} were attached.`
+        : "";
+
+    return `${report.evidenceType} was reported.${fileText} Uploaded file previews are not stored in this local MVP after browser refresh.`;
   }
 
   return "No evidence type was added. Treat this report as community-submitted information and verify before taking action.";
+}
+
+function formatReportStatus(status) {
+  if (status === "submitted") {
+    return "Published warning";
+  }
+
+  if (status === "draft") {
+    return "Draft report";
+  }
+
+  return "Community report";
+}
+
+function createReportTimeline(report) {
+  const submittedTime = report.submittedAt || report.savedAt || "Recently";
+
+  return [
+    {
+      label: "Report submitted",
+      time: submittedTime,
+      icon: <FileText size={15} />,
+    },
+    {
+      label: "Risk estimated",
+      time: report.riskLevel || "Pending",
+      icon: <ShieldCheck size={15} />,
+    },
+    {
+      label: "Visible in community feed",
+      time: report.status === "submitted" ? "Now public" : "Not published yet",
+      icon: <Clock3 size={15} />,
+    },
+  ];
+}
+
+function formatFileSize(sizeInBytes) {
+  if (!sizeInBytes) {
+    return "Unknown size";
+  }
+
+  if (sizeInBytes < 1024) {
+    return `${sizeInBytes} B`;
+  }
+
+  if (sizeInBytes < 1024 * 1024) {
+    return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatFileType(type) {
+  if (!type) {
+    return "Unknown type";
+  }
+
+  if (type === "application/pdf") {
+    return "PDF";
+  }
+
+  return type.replace("image/", "").toUpperCase();
 }
 
 function getRelatedReports(reports, currentReport) {

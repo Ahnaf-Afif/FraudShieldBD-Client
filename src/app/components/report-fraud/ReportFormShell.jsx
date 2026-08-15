@@ -321,6 +321,7 @@ function createReportPayload({
     reportId,
     status,
     evidenceFiles: [],
+    evidenceFileSummaries: createEvidenceFileSummaries(reportData.evidenceFiles),
     ...reporter,
   };
 
@@ -335,6 +336,15 @@ function createReportPayload({
   }
 
   return payload;
+}
+
+function createEvidenceFileSummaries(files) {
+  return files.map((file) => ({
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    lastModified: file.lastModified,
+  }));
 }
 
 function createReporterDetails(reportData, demoUser) {
