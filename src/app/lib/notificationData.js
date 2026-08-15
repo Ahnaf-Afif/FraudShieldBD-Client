@@ -8,9 +8,19 @@ import {
   normalizeSubmittedReport,
 } from "./reportFeedData";
 import { getWatchlistFromBrowser } from "./watchlistData";
+import { notifyLocalDataUpdated } from "./localDataEvents";
 
 export const NOTIFICATION_READ_KEY = "fraudshield-read-notifications";
+export const NOTIFICATION_PREFS_KEY = "fraudshield-notification-preferences";
 export const NOTIFICATION_UPDATED_EVENT = "fraudshield-notifications-updated";
+
+export const defaultNotificationPreferences = {
+  Report: true,
+  Draft: true,
+  Watchlist: true,
+  Search: true,
+  Alert: true,
+};
 
 export function getNotificationsForBrowser(demoUser) {
   const submittedReports = getSubmittedReportsFromBrowser().map(
@@ -21,13 +31,16 @@ export function getNotificationsForBrowser(demoUser) {
   const recentSearches = getRecentSearchesFromBrowser();
   const allReports = getAllReportsForBrowser();
   const readNotifications = getReadNotifications();
+  const preferences = getNotificationPreferences();
 
   const notifications = [
-    ...createSubmittedReportNotifications(submittedReports, demoUser),
-    ...createDraftNotifications(draftReport, demoUser),
-    ...createWatchlistNotifications(watchlistItems),
-    ...createRecentSearchNotifications(recentSearches),
-    ...createHighRiskNotifications(allReports),
+    ...(preferences.Report
+      ? createSubmittedReportNotifications(submittedReports, demoUser)
+      : []),
+    ...(preferences.Draft ? createDraftNotifications(draftReport, demoUser) : []),
+    ...(preferences.Watchlist ? createWatchlistNotifications(watchlistItems) : []),
+    ...(preferences.Search ? createRecentSearchNotifications(recentSearches) : []),
+    ...(preferences.Alert ? createHighRiskNotifications(allReports) : []),
   ];
 
   return notifications.map((notification) => ({
@@ -75,6 +88,42 @@ export function markAllNotificationsAsRead(notifications) {
 export function clearReadNotifications() {
   localStorage.removeItem(NOTIFICATION_READ_KEY);
   window.dispatchEvent(new Event(NOTIFICATION_UPDATED_EVENT));
+}
+
+export function getNotificationPreferences() {
+  const savedPreferences = localStorage.getItem(NOTIFICATION_PREFS_KEY);
+
+  if (!savedPreferences) {
+    return defaultNotificationPreferences;
+  }
+
+  try {
+    const parsedPreferences = JSON.parse(savedPreferences);
+
+    if (!parsedPreferences || Array.isArray(parsedPreferences)) {
+      return defaultNotificationPreferences;
+    }
+
+    return {
+      ...defaultNotificationPreferences,
+      ...parsedPreferences,
+    };
+  } catch (error) {
+    console.error("Could not load notification preferences:", error);
+    return defaultNotificationPreferences;
+  }
+}
+
+export function saveNotificationPreferences(preferences) {
+  localStorage.setItem(
+    NOTIFICATION_PREFS_KEY,
+    JSON.stringify({
+      ...defaultNotificationPreferences,
+      ...preferences,
+    }),
+  );
+  window.dispatchEvent(new Event(NOTIFICATION_UPDATED_EVENT));
+  notifyLocalDataUpdated();
 }
 
 function getReadNotifications() {

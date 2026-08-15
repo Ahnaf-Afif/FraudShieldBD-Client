@@ -15,25 +15,57 @@ import {
 import { getDemoSession } from "../../lib/demoSession";
 import {
   clearReadNotifications,
+  defaultNotificationPreferences,
+  getNotificationPreferences,
   getNotificationsForBrowser,
   markAllNotificationsAsRead,
   markNotificationAsRead,
   NOTIFICATION_UPDATED_EVENT,
+  saveNotificationPreferences,
 } from "../../lib/notificationData";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 
 const filters = ["All", "Unread", "Report", "Watchlist", "Alert", "Search"];
+const preferenceLabels = [
+  {
+    key: "Report",
+    label: "My reports",
+    description: "Submitted reports saved to your account.",
+  },
+  {
+    key: "Draft",
+    label: "Drafts",
+    description: "Saved or auto-saved report drafts.",
+  },
+  {
+    key: "Watchlist",
+    label: "Watchlist",
+    description: "Identifiers you are watching.",
+  },
+  {
+    key: "Search",
+    label: "Recent checks",
+    description: "Recent Check Before You Pay searches.",
+  },
+  {
+    key: "Alert",
+    label: "High-risk alerts",
+    description: "High-risk reports from the community feed.",
+  },
+];
 
 export default function NotificationsDashboard() {
   const [demoUser, setDemoUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [preferences, setPreferences] = useState(defaultNotificationPreferences);
 
   useEffect(() => {
     function loadNotifications() {
       const currentUser = getDemoSession();
 
       setDemoUser(currentUser);
+      setPreferences(getNotificationPreferences());
       setNotifications(getNotificationsForBrowser(currentUser));
     }
 
@@ -77,6 +109,17 @@ export default function NotificationsDashboard() {
     setNotifications(getNotificationsForBrowser(demoUser));
   }
 
+  function updatePreference(preferenceKey, checked) {
+    const nextPreferences = {
+      ...preferences,
+      [preferenceKey]: checked,
+    };
+
+    saveNotificationPreferences(nextPreferences);
+    setPreferences(nextPreferences);
+    setNotifications(getNotificationsForBrowser(demoUser));
+  }
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
@@ -114,6 +157,22 @@ export default function NotificationsDashboard() {
               These are generated from browser data. Backend notifications will
               replace this later.
             </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="font-black text-[#06285c]">
+              Notification preferences
+            </h2>
+            <div className="mt-4 space-y-4">
+              {preferenceLabels.map((preference) => (
+                <NotificationPreference
+                  key={preference.key}
+                  preference={preference}
+                  checked={preferences[preference.key]}
+                  onChange={updatePreference}
+                />
+              ))}
+            </div>
           </div>
         </aside>
 
@@ -190,6 +249,28 @@ function NotificationStat({ label, value }) {
       <p className="text-sm font-bold text-slate-500">{label}</p>
       <p className="font-black text-[#06285c]">{value}</p>
     </div>
+  );
+}
+
+function NotificationPreference({ preference, checked, onChange }) {
+  return (
+    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl bg-slate-50 p-3">
+      <span>
+        <span className="block text-sm font-black text-[#06285c]">
+          {preference.label}
+        </span>
+        <span className="mt-1 block text-xs leading-5 text-slate-500">
+          {preference.description}
+        </span>
+      </span>
+
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(preference.key, event.target.checked)}
+        className="mt-1 h-5 w-5 shrink-0 accent-[#009879]"
+      />
+    </label>
   );
 }
 
