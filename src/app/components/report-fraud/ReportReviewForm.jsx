@@ -45,6 +45,11 @@ export default function ReportReviewForm({
   const preventionAdviceMessage = formatPreventionAdviceMessage(
     preventionAdviceLength,
   );
+  const isReportSubmitted = submitStatus === "submitted";
+  const isDraftStatus =
+    submitStatus === "draft" ||
+    submitStatus === "draft-auto-saved" ||
+    submitStatus === "draft-loaded";
 
   return (
     <section id="report-review" className="scroll-mt-24 p-5 sm:p-6">
@@ -197,6 +202,13 @@ export default function ReportReviewForm({
             )}
 
             <Link
+              href="/my-reports"
+              className="inline-flex justify-center rounded-xl border border-[#bfe8dc] bg-white px-5 py-3 text-sm font-black text-[#009879] transition hover:bg-[#f0fbf7] active:bg-slate-300"
+            >
+              My Reports
+            </Link>
+
+            <Link
               href="/"
               className="inline-flex justify-center rounded-xl border border-[#bfe8dc] bg-white px-5 py-3 text-sm font-black text-[#009879] transition hover:bg-[#f0fbf7] active:bg-slate-300"
             >
@@ -228,6 +240,22 @@ export default function ReportReviewForm({
               onCopy={copyReportId}
             />
           )}
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/my-reports"
+              className="inline-flex justify-center rounded-xl bg-[#0b63f6] px-5 py-3 text-sm font-black text-white transition hover:bg-[#084fc5] active:bg-slate-400"
+            >
+              View Drafts
+            </Link>
+
+            <Link
+              href="/"
+              className="inline-flex justify-center rounded-xl border border-[#bfdbfe] bg-white px-5 py-3 text-sm font-black text-[#0b63f6] transition hover:bg-[#eff6ff] active:bg-slate-300"
+            >
+              Back to Feed
+            </Link>
+          </div>
         </div>
       )}
 
@@ -249,6 +277,22 @@ export default function ReportReviewForm({
               onCopy={copyReportId}
             />
           )}
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/my-reports"
+              className="inline-flex justify-center rounded-xl bg-[#0b63f6] px-5 py-3 text-sm font-black text-white transition hover:bg-[#084fc5] active:bg-slate-400"
+            >
+              View Draft
+            </Link>
+
+            <a
+              href="#report-category"
+              className="inline-flex justify-center rounded-xl border border-[#bfdbfe] bg-white px-5 py-3 text-sm font-black text-[#0b63f6] transition hover:bg-[#eff6ff] active:bg-slate-300"
+            >
+              Continue Editing
+            </a>
+          </div>
         </div>
       )}
 
@@ -277,6 +321,13 @@ export default function ReportReviewForm({
             You selected that money was lost. Please add the amount in the
             Financial Info section before submitting.
           </p>
+
+          <a
+            href="#report-financial"
+            className="mt-4 inline-flex rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700"
+          >
+            Go to Financial Info
+          </a>
         </div>
       )}
 
@@ -290,6 +341,13 @@ export default function ReportReviewForm({
             Please select the payment method in the Financial Info section
             before submitting.
           </p>
+
+          <a
+            href="#report-financial"
+            className="mt-4 inline-flex rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700"
+          >
+            Go to Financial Info
+          </a>
         </div>
       )}
 
@@ -330,23 +388,37 @@ export default function ReportReviewForm({
         <button
           type="button"
           onClick={onSaveDraft}
-          className="rounded-xl border border-slate-200 px-6 py-3 font-bold text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] active:bg-slate-300 active:text-slate-600"
+          disabled={isReportSubmitted}
+          className="rounded-xl border border-slate-200 px-6 py-3 font-bold text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] active:bg-slate-300 active:text-slate-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:hover:bg-slate-100"
         >
-          {draftButtonText}
+          {isReportSubmitted ? "Report Submitted" : draftButtonText}
         </button>
 
         <button
           type="submit"
-          disabled={!canSubmitReport}
+          disabled={!canSubmitReport || isReportSubmitted}
           className="rounded-xl bg-[#009879] px-6 py-3 font-bold text-white transition hover:bg-[#007f66] active:bg-slate-400 active:text-slate-100 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:bg-slate-300"
         >
-          Submit Report
+          {isReportSubmitted ? "Submitted" : "Submit Report"}
         </button>
       </div>
 
-      {!canSubmitReport && (
+      {isReportSubmitted && (
+        <p className="mt-3 text-sm font-semibold text-[#009879]">
+          This report is saved locally. Start a new report if you want to submit
+          another case.
+        </p>
+      )}
+
+      {!canSubmitReport && !isReportSubmitted && (
         <p className="mt-3 text-sm font-semibold text-slate-500">
           Complete all {totalConfirmations} confirmations to enable submit.
+        </p>
+      )}
+
+      {isDraftStatus && !isReportSubmitted && (
+        <p className="mt-3 text-sm font-semibold text-slate-500">
+          Drafts stay in this browser until you submit or discard them.
         </p>
       )}
     </section>
