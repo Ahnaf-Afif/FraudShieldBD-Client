@@ -10,6 +10,7 @@ import {
   Share2,
   ShieldAlert,
   ThumbsUp,
+  X,
 } from "lucide-react";
 import {
   demoReports,
@@ -39,6 +40,8 @@ const filters = [
 export default function HomeNewsFeed() {
   const [reports, setReports] = useState(demoReports);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [feedSearch, setFeedSearch] = useState("");
+  const [sortMode, setSortMode] = useState("Latest");
   const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
   const [reportReactions, setReportReactions] = useState({});
   const [reportComments, setReportComments] = useState({});
@@ -60,13 +63,18 @@ export default function HomeNewsFeed() {
     setReportComments(getSavedReportComments());
   }, []);
 
-  const filteredReports =
+  const categoryFilteredReports =
     activeFilter === "All"
       ? reports
       : reports.filter((report) => report.fraudCategory === activeFilter);
+  const searchedReports = categoryFilteredReports.filter((report) =>
+    reportMatchesFeedSearch(report, feedSearch),
+  );
+  const filteredReports = sortFeedReports(searchedReports, sortMode);
   const feedReports = createScrollableFeedReports(filteredReports);
   const visibleReports = feedReports.slice(0, visibleReportCount);
   const hasMoreReports = visibleReportCount < feedReports.length;
+  const hasActiveFeedFilters = activeFilter !== "All" || feedSearch.trim();
   const filterOptions = filters.map((filter) => ({
     label: filter,
     count:
@@ -77,7 +85,7 @@ export default function HomeNewsFeed() {
 
   useEffect(() => {
     setVisibleReportCount(INITIAL_VISIBLE_REPORTS);
-  }, [activeFilter, reports]);
+  }, [activeFilter, feedSearch, reports, sortMode]);
 
   useEffect(() => {
     const loadMoreElement = loadMoreRef.current;
@@ -193,6 +201,12 @@ export default function HomeNewsFeed() {
     }));
   }
 
+  function clearFeedFilters() {
+    setActiveFilter("All");
+    setFeedSearch("");
+    setSortMode("Latest");
+  }
+
   return (
     <section
       id="community-feed"
@@ -213,6 +227,57 @@ export default function HomeNewsFeed() {
           Latest reports shared by the community so people can check before
           they pay.
         </p>
+      </div>
+
+      <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+          <label className="flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-4 focus-within:ring-4 focus-within:ring-[#009879]/10">
+            <Search size={18} className="shrink-0 text-slate-400" />
+            <input
+              value={feedSearch}
+              onChange={(event) => setFeedSearch(event.target.value)}
+              placeholder="Search reports by title, number, page, location..."
+              className="w-full min-w-0 bg-transparent text-sm font-semibold text-[#06285c] outline-none"
+            />
+            {feedSearch && (
+              <button
+                type="button"
+                onClick={() => setFeedSearch("")}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-white hover:text-[#06285c]"
+                aria-label="Clear feed search"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </label>
+
+          <select
+            value={sortMode}
+            onChange={(event) => setSortMode(event.target.value)}
+            className="min-h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+          >
+            <option>Latest</option>
+            <option>Highest Risk</option>
+            <option>Most Reports</option>
+          </select>
+        </div>
+
+        <div className="mt-3 flex flex-col gap-2 text-sm font-semibold text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            Showing {filteredReports.length} matching report
+            {filteredReports.length === 1 ? "" : "s"}
+          </p>
+
+          {hasActiveFeedFilters && (
+            <button
+              type="button"
+              onClick={clearFeedFilters}
+              className="text-left font-black text-[#009879] hover:text-[#007f66] sm:text-right"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
@@ -556,4 +621,63 @@ function formatFeedTime(submittedAt, loopIndex) {
   }
 
   return `${loopIndex + 1} days ago`;
+}
+
+function reportMatchesFeedSearch(report, searchValue) {
+  const cleanSearch = searchValue.trim().toLowerCase();
+
+  if (!cleanSearch) {
+    return true;
+  }
+
+  const searchableText = [
+    report.title,
+    report.fraudCategory,
+    report.location,
+    report.story,
+    report.preventionAdvice,
+    report.phoneOrPaymentNumber,
+    report.facebookLink,
+    report.websiteLink,
+    report.businessName,
+    report.reporterName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return searchableText.includes(cleanSearch);
+}
+
+function sortFeedReports(reports, sortMode) {
+  const sortedReports = [...reports];
+
+  if (sortMode === "Highest Risk") {
+    return sortedReports.sort(
+      (firstReport, secondReport) =>
+        getRiskSortValue(secondReport.riskLevel) -
+        getRiskSortValue(firstReport.riskLevel),
+    );
+  }
+
+  if (sortMode === "Most Reports") {
+    return sortedReports.sort(
+      (firstReport, secondReport) =>
+        (secondReport.reportsCount || 1) - (firstReport.reportsCount || 1),
+    );
+  }
+
+  return sortedReports;
+}
+
+function getRiskSortValue(riskLevel) {
+  if (riskLevel === "High Risk") {
+    return 3;
+  }
+
+  if (riskLevel === "Medium Risk") {
+    return 2;
+  }
+
+  return 1;
 }
