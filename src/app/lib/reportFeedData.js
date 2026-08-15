@@ -58,6 +58,91 @@ export const demoReports = [
     reporterRole: "Verified reporter",
     isAnonymous: false,
   },
+  {
+    reportId: "FR-DEMO-004",
+    title: "Fake courier delivery fee message",
+    fraudCategory: "Mobile Financial",
+    location: "Rajshahi",
+    story:
+      "A text message claimed a parcel was waiting and asked for a small delivery fee through a mobile payment number. The tracking link was not from the courier company.",
+    preventionAdvice:
+      "Open the courier company's official website or app instead of tapping payment links from SMS messages.",
+    phoneOrPaymentNumber: "01688551234",
+    riskLevel: "Medium Risk",
+    submittedAt: "1 day ago",
+    reportsCount: 9,
+    reporterName: "Nusrat Jahan",
+    reporterRole: "Verified reporter",
+    isAnonymous: false,
+  },
+  {
+    reportId: "FR-DEMO-005",
+    title: "Online job asked for training payment",
+    fraudCategory: "Job Scam",
+    location: "Khulna",
+    story:
+      "The page advertised part-time work and promised daily earnings. Before sharing any real job details, they asked for a training and registration payment.",
+    preventionAdvice:
+      "Be careful with jobs that ask for money before interview, contract, or official company verification.",
+    facebookLink: "facebook.com/dreamjobsbd",
+    riskLevel: "High Risk",
+    submittedAt: "1 day ago",
+    reportsCount: 15,
+    reporterName: "Community member",
+    reporterRole: "Verified reporter",
+    isAnonymous: false,
+  },
+  {
+    reportId: "FR-DEMO-006",
+    title: "Prize winner call requested OTP",
+    fraudCategory: "Lottery",
+    location: "Barishal",
+    story:
+      "A caller said the user won a campaign prize and needed an OTP to confirm identity. The caller became aggressive when the OTP was refused.",
+    preventionAdvice:
+      "Never share OTP, PIN, or verification codes. Real support teams will not ask for secret codes by phone.",
+    phoneOrPaymentNumber: "01345678901",
+    riskLevel: "High Risk",
+    submittedAt: "2 days ago",
+    reportsCount: 21,
+    reporterName: "Anonymous reporter",
+    reporterRole: "Hidden",
+    isAnonymous: true,
+  },
+  {
+    reportId: "FR-DEMO-007",
+    title: "Shopping website copied a known brand",
+    fraudCategory: "Website",
+    location: "Dhaka",
+    story:
+      "The website used a familiar brand name and discount banner, but the domain was different. It asked customers to pay before order confirmation.",
+    preventionAdvice:
+      "Check the website domain carefully, search for real customer reviews, and avoid paying before verifying the store.",
+    websiteLink: "bestofferbd.store",
+    riskLevel: "Medium Risk",
+    submittedAt: "3 days ago",
+    reportsCount: 13,
+    reporterName: "Ahsan Kabir",
+    reporterRole: "Top contributor",
+    isAnonymous: false,
+  },
+  {
+    reportId: "FR-DEMO-008",
+    title: "Business page used copied product photos",
+    fraudCategory: "E-commerce",
+    location: "Rangpur",
+    story:
+      "A seller posted copied product photos and offered a big discount for full advance payment. The same photos appeared on multiple unrelated pages.",
+    preventionAdvice:
+      "Reverse-search product photos when possible and choose cash on delivery or verified marketplaces for expensive purchases.",
+    businessName: "Trendy Gadget BD",
+    riskLevel: "Low Risk",
+    submittedAt: "4 days ago",
+    reportsCount: 6,
+    reporterName: "Community member",
+    reporterRole: "Reporter",
+    isAnonymous: false,
+  },
 ];
 
 export function getSubmittedReportsFromBrowser() {
