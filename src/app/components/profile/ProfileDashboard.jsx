@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  Award,
   Bell,
   CheckCircle2,
+  Circle,
   FileText,
   PencilLine,
   ShieldCheck,
+  Star,
   UserRound,
 } from "lucide-react";
 import {
@@ -17,6 +20,8 @@ import {
   updateDemoSession,
 } from "../../lib/demoSession";
 import {
+  getSavedReportComments,
+  getSavedReportReactions,
   getSavedReportDraftFromBrowser,
   getSubmittedReportsFromBrowser,
   normalizeSubmittedReport,
@@ -35,7 +40,12 @@ const roleOptions = [
 
 export default function ProfileDashboard() {
   const [demoUser, setDemoUser] = useState(null);
-  const [formData, setFormData] = useState({ name: "", role: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    role: "",
+    location: "",
+    bio: "",
+  });
   const [saveStatus, setSaveStatus] = useState("");
 
   useEffect(() => {
@@ -46,6 +56,8 @@ export default function ProfileDashboard() {
       setFormData({
         name: currentUser?.name || "",
         role: currentUser?.role || "Community Member",
+        location: currentUser?.location || "",
+        bio: currentUser?.bio || "",
       });
     }
 
@@ -62,6 +74,18 @@ export default function ProfileDashboard() {
   }, []);
 
   const activityStats = useMemo(() => createProfileStats(demoUser), [demoUser]);
+  const profileCompletion = useMemo(
+    () => calculateProfileCompletion(demoUser),
+    [demoUser],
+  );
+  const trustScore = useMemo(
+    () => calculateTrustScore(activityStats, profileCompletion),
+    [activityStats, profileCompletion],
+  );
+  const verificationItems = useMemo(
+    () => createVerificationItems(demoUser, activityStats),
+    [demoUser, activityStats],
+  );
 
   function updateField(fieldName, value) {
     setSaveStatus("");
@@ -74,9 +98,16 @@ export default function ProfileDashboard() {
   function saveProfile(event) {
     event.preventDefault();
 
+    if (!formData.name.trim()) {
+      setSaveStatus("name-error");
+      return;
+    }
+
     const nextSession = updateDemoSession({
       name: formData.name.trim(),
       role: formData.role,
+      location: formData.location.trim(),
+      bio: formData.bio.trim(),
     });
 
     setDemoUser(nextSession);
@@ -112,7 +143,30 @@ export default function ProfileDashboard() {
               {demoUser.role}
             </span>
 
-            <div className="mt-5 rounded-xl bg-slate-50 p-3 text-left">
+            <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-left">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Trust score
+                  </p>
+                  <p className="mt-1 text-3xl font-black text-[#06285c]">
+                    {trustScore}%
+                  </p>
+                </div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+                  <ShieldCheck size={28} />
+                </div>
+              </div>
+
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
+                <div
+                  className="h-full rounded-full bg-[#009879]"
+                  style={{ width: `${trustScore}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-xl bg-slate-50 p-3 text-left">
               <p className="text-xs font-black uppercase text-slate-400">
                 Signed in
               </p>
@@ -120,6 +174,25 @@ export default function ProfileDashboard() {
                 {demoUser.signedInAt || "Current session"}
               </p>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="font-black text-[#06285c]">Profile completion</h2>
+              <span className="text-sm font-black text-[#009879]">
+                {profileCompletion}%
+              </span>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-[#009879]"
+                style={{ width: `${profileCompletion}%` }}
+              />
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              A complete profile helps moderators understand who is reporting
+              and makes community reports easier to trust.
+            </p>
           </div>
 
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm">
@@ -160,6 +233,12 @@ export default function ProfileDashboard() {
                 />
               </label>
 
+              {saveStatus === "name-error" && (
+                <p className="-mt-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+                  Display name is required.
+                </p>
+              )}
+
               <label>
                 <span className="mb-2 block text-sm font-bold text-[#06285c]">
                   Role label
@@ -173,6 +252,37 @@ export default function ProfileDashboard() {
                     <option key={role}>{role}</option>
                   ))}
                 </select>
+              </label>
+
+              <label>
+                <span className="mb-2 block text-sm font-bold text-[#06285c]">
+                  Location
+                </span>
+                <input
+                  value={formData.location}
+                  onChange={(event) =>
+                    updateField("location", event.target.value)
+                  }
+                  className="min-h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+                  placeholder="Example: Dhaka, Bangladesh"
+                />
+              </label>
+
+              <label>
+                <span className="mb-2 block text-sm font-bold text-[#06285c]">
+                  Short bio
+                </span>
+                <textarea
+                  value={formData.bio}
+                  onChange={(event) => updateField("bio", event.target.value)}
+                  rows={4}
+                  maxLength={180}
+                  className="w-full resize-y rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold leading-6 text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+                  placeholder="Tell the community why you report scams."
+                />
+                <span className="mt-2 block text-right text-xs font-bold text-slate-400">
+                  {formData.bio.length}/180
+                </span>
               </label>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -219,6 +329,56 @@ export default function ProfileDashboard() {
               href="/notifications"
             />
           </div>
+
+          <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+                  <Award size={22} />
+                </div>
+                <div>
+                  <p className="text-sm font-black uppercase tracking-wide text-[#009879]">
+                    Trust progress
+                  </p>
+                  <h2 className="text-2xl font-black text-[#06285c]">
+                    How your score is built
+                  </h2>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3">
+                {verificationItems.map((item) => (
+                  <VerificationItem key={item.label} item={item} />
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#fff7e8] text-orange-500">
+                <Star size={22} />
+              </div>
+              <h2 className="mt-4 text-2xl font-black text-[#06285c]">
+                Next best action
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {getNextProfileAction(demoUser, activityStats)}
+              </p>
+              <div className="mt-5 grid gap-3">
+                <Link
+                  href="/report-fraud"
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#009879] px-4 text-sm font-black text-white transition hover:bg-[#007f66]"
+                >
+                  Report a Fraud
+                </Link>
+                <Link
+                  href="/check"
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-4 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+                >
+                  Check an Identifier
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -240,6 +400,27 @@ function ProfileStat({ icon, label, value, href }) {
   );
 }
 
+function VerificationItem({ item }) {
+  const Icon = item.isComplete ? CheckCircle2 : Circle;
+
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
+      <Icon
+        size={21}
+        className={`mt-0.5 shrink-0 ${
+          item.isComplete ? "text-[#009879]" : "text-slate-300"
+        }`}
+      />
+      <div>
+        <p className="font-black text-[#06285c]">{item.label}</p>
+        <p className="mt-1 text-sm leading-6 text-slate-600">
+          {item.description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function createProfileStats(demoUser) {
   if (!demoUser) {
     return {
@@ -247,6 +428,8 @@ function createProfileStats(demoUser) {
       drafts: 0,
       watchlistItems: 0,
       unreadNotifications: 0,
+      commentsReceived: 0,
+      helpfulVotes: 0,
     };
   }
 
@@ -254,13 +437,92 @@ function createProfileStats(demoUser) {
     .map(normalizeSubmittedReport)
     .filter((report) => isOwnedByUser(report, demoUser));
   const draftReport = getSavedReportDraftFromBrowser();
+  const savedComments = getSavedReportComments();
+  const savedReactions = getSavedReportReactions();
+  const ownedReportIds = submittedReports.map((report) => report.reportId);
 
   return {
     submittedReports: submittedReports.length,
     drafts: draftReport && isOwnedByUser(draftReport, demoUser) ? 1 : 0,
     watchlistItems: getWatchlistFromBrowser().length,
     unreadNotifications: getUnreadNotificationCount(demoUser),
+    commentsReceived: ownedReportIds.reduce(
+      (totalComments, reportId) =>
+        totalComments + (savedComments[reportId] || []).length,
+      0,
+    ),
+    helpfulVotes: ownedReportIds.reduce(
+      (totalVotes, reportId) =>
+        totalVotes + (savedReactions[reportId]?.likes || 0),
+      0,
+    ),
   };
+}
+
+function calculateProfileCompletion(user) {
+  if (!user) {
+    return 0;
+  }
+
+  const fields = [user.name, user.email, user.role, user.location, user.bio];
+  const completedFields = fields.filter((field) => String(field || "").trim());
+
+  return Math.round((completedFields.length / fields.length) * 100);
+}
+
+function calculateTrustScore(stats, completion) {
+  const score =
+    35 +
+    Math.min(stats.submittedReports * 10, 25) +
+    Math.min(stats.watchlistItems * 4, 12) +
+    Math.min(stats.commentsReceived * 3, 9) +
+    Math.min(stats.helpfulVotes * 2, 8) +
+    Math.round(completion * 0.11);
+
+  return Math.min(score, 100);
+}
+
+function createVerificationItems(user, stats) {
+  return [
+    {
+      label: "Account email exists",
+      description: user?.email
+        ? `${user.email} is attached to this local profile.`
+        : "Login or register to attach an email.",
+      isComplete: Boolean(user?.email),
+    },
+    {
+      label: "Profile details added",
+      description: "Name, role, location and bio make the profile easier to trust.",
+      isComplete: calculateProfileCompletion(user) >= 80,
+    },
+    {
+      label: "First report submitted",
+      description: "Submitting reports is the main way this community stays useful.",
+      isComplete: stats.submittedReports > 0,
+    },
+    {
+      label: "Watchlist started",
+      description: "Watching identifiers helps you track risky numbers, pages and sites.",
+      isComplete: stats.watchlistItems > 0,
+    },
+  ];
+}
+
+function getNextProfileAction(user, stats) {
+  if (!user?.location || !user?.bio) {
+    return "Complete your location and bio so this profile feels more credible to other users.";
+  }
+
+  if (stats.submittedReports === 0) {
+    return "Submit your first fraud report so your profile starts building real safety activity.";
+  }
+
+  if (stats.watchlistItems === 0) {
+    return "Add suspicious identifiers to your watchlist so you can monitor them later.";
+  }
+
+  return "Keep checking identifiers and sharing useful reports. Your profile is ready for the MVP flow.";
 }
 
 function isOwnedByUser(report, user) {
