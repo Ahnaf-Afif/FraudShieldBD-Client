@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 const examples = [
@@ -8,30 +12,62 @@ const examples = [
 ];
 
 export default function SearchBox() {
+  const router = useRouter();
+  const [searchValue, setSearchValue] = useState("");
+
+  function submitSearch(event) {
+    event.preventDefault();
+
+    const cleanSearchValue = searchValue.trim();
+
+    if (!cleanSearchValue) {
+      return;
+    }
+
+    router.push(`/check?q=${encodeURIComponent(cleanSearchValue)}`);
+  }
+
+  function useExample(example) {
+    setSearchValue(example);
+  }
+
   return (
     <div className="bg-[#002b63] px-6 py-5 md:px-10">
-      <div className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-lg lg:flex-row">
+      <form
+        onSubmit={submitSearch}
+        className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-lg lg:flex-row"
+      >
         <div className="flex flex-1 items-center gap-3 px-3">
           <Search className="text-slate-400" size={24} />
 
           <input
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
             className="w-full border-none text-base text-[#06285c] outline-none"
             placeholder="Search phone number, payment number, Facebook page, website or business name..."
           />
         </div>
 
-        <button className="rounded-xl bg-[#009879] px-8 py-3 font-bold text-white">
+        <button
+          type="submit"
+          className="rounded-xl bg-[#009879] px-8 py-3 font-bold text-white transition hover:bg-[#007f66] active:bg-slate-400"
+        >
           Search Now
         </button>
-      </div>
+      </form>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm text-white">
         <span className="mt-1">Try searching:</span>
 
         {examples.map((example) => (
-          <span key={example} className="rounded-full bg-white/15 px-4 py-1">
+          <button
+            key={example}
+            type="button"
+            onClick={() => useExample(example)}
+            className="rounded-full bg-white/15 px-4 py-1 transition hover:bg-white/25"
+          >
             {example}
-          </span>
+          </button>
         ))}
       </div>
     </div>

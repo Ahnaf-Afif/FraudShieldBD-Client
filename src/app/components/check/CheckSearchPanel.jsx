@@ -1,7 +1,8 @@
 "use client";
 
 import { Search, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const examples = [
   "01712345678",
@@ -11,7 +12,28 @@ const examples = [
 ];
 
 export default function CheckSearchPanel() {
+  const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
+
+  useEffect(() => {
+    const queryValue = new URLSearchParams(window.location.search).get("q");
+
+    if (queryValue) {
+      setSearchValue(queryValue);
+    }
+  }, []);
+
+  function submitSearch(event) {
+    event.preventDefault();
+
+    const cleanSearchValue = searchValue.trim();
+
+    if (!cleanSearchValue) {
+      return;
+    }
+
+    router.push(`/check?q=${encodeURIComponent(cleanSearchValue)}`);
+  }
 
   function handleExampleClick(example) {
     setSearchValue(example);
@@ -24,7 +46,10 @@ export default function CheckSearchPanel() {
   return (
     <section className="bg-[#002b63] px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-5xl">
-        <div className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-lg lg:flex-row">
+        <form
+          onSubmit={submitSearch}
+          className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-lg lg:flex-row"
+        >
           <div className="flex min-h-14 flex-1 items-center gap-3 px-3">
             <Search className="shrink-0 text-slate-400" size={24} />
 
@@ -46,10 +71,13 @@ export default function CheckSearchPanel() {
             )}
           </div>
 
-          <button className="rounded-xl bg-[#009879] px-8 py-3 font-bold text-white">
+          <button
+            type="submit"
+            className="rounded-xl bg-[#009879] px-8 py-3 font-bold text-white transition hover:bg-[#007f66] active:bg-slate-400"
+          >
             Search Now
           </button>
-        </div>
+        </form>
 
         <div className="mt-4 flex flex-wrap gap-3 text-sm text-white">
           <span>Try searching:</span>
