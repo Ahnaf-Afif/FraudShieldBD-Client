@@ -7,16 +7,20 @@ import {
   AlertTriangle,
   ArrowLeft,
   Calendar,
+  ClipboardCheck,
   Copy,
+  CreditCard,
   Eye,
   ExternalLink,
   FileText,
+  Lock,
   MessageCircle,
   MapPin,
   Share2,
   ShieldAlert,
   ShieldCheck,
   ThumbsUp,
+  UserRound,
   Users,
 } from "lucide-react";
 import Navbar from "../../components/shared/Navbar";
@@ -59,7 +63,9 @@ export default function ReportDetailsPage() {
     setAllReports(browserReports);
     setReport(matchedReport || null);
     setIsWatched(
-      matchedReport ? isIdentifierWatched(getPrimaryIdentifier(matchedReport)) : false,
+      matchedReport
+        ? isIdentifierWatched(getPrimaryIdentifier(matchedReport))
+        : false,
     );
     setReaction(
       getSavedReportReactions()[reportId] || { liked: false, likes: 0 },
@@ -275,6 +281,58 @@ export default function ReportDetailsPage() {
               </div>
             </section>
 
+            <section className="mt-6 grid gap-4 sm:grid-cols-2">
+              <DetailInfoPanel
+                icon={<ClipboardCheck size={20} />}
+                title="Incident details"
+                items={[
+                  ["Platform", report.platform],
+                  ["Contact method", report.contactMethod],
+                  ["Promised item", report.promisedItem],
+                  ["Incident date", report.incidentDate],
+                ]}
+              />
+
+              <DetailInfoPanel
+                icon={<CreditCard size={20} />}
+                title="Money details"
+                items={[
+                  ["Money status", report.moneyStatus],
+                  ["Amount", formatMoneyAmount(report)],
+                  ["Payment method", report.paymentMethod],
+                  ["Transaction date", report.transactionDate],
+                ]}
+              />
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-slate-200 p-5">
+              <div className="flex gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+                  <FileText size={21} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-black text-[#06285c]">
+                    Evidence summary
+                  </h2>
+                  <p className="mt-2 leading-7 text-slate-600">
+                    {formatEvidenceSummary(report)}
+                  </p>
+
+                  {report.evidenceDetails && (
+                    <div className="mt-4 rounded-xl bg-slate-50 p-4">
+                      <p className="text-xs font-black uppercase text-slate-400">
+                        Reporter notes
+                      </p>
+                      <p className="mt-2 leading-7 text-slate-700">
+                        {report.evidenceDetails}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
             <section className="mt-6 rounded-2xl border border-orange-100 bg-orange-50 p-5">
               <div className="flex gap-3">
                 <AlertTriangle
@@ -412,6 +470,11 @@ export default function ReportDetailsPage() {
               value={report.reporterName || "Community member"}
             />
             <DetailStat
+              icon={report.isAnonymous ? <Lock size={20} /> : <UserRound size={20} />}
+              label="Reporter privacy"
+              value={report.isAnonymous ? "Anonymous public report" : "Public reporter"}
+            />
+            <DetailStat
               icon={<ShieldCheck size={20} />}
               label="Status"
               value="Published warning"
@@ -461,6 +524,37 @@ function CommentAvatar({ comment }) {
   return (
     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#009879] text-xs font-black text-white">
       {comment.authorInitials || "CM"}
+    </div>
+  );
+}
+
+function DetailInfoPanel({ icon, title, items }) {
+  const visibleItems = items.map(([label, value]) => [
+    label,
+    formatDetailValue(value),
+  ]);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 p-5">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+          {icon}
+        </div>
+        <h2 className="font-black text-[#06285c]">{title}</h2>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {visibleItems.map(([label, value]) => (
+          <div key={label} className="border-t border-slate-100 pt-3 first:border-t-0 first:pt-0">
+            <p className="text-xs font-black uppercase text-slate-400">
+              {label}
+            </p>
+            <p className="mt-1 break-words text-sm font-black text-[#06285c]">
+              {value}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -577,6 +671,30 @@ function getIdentifierLabel(report) {
   }
 
   return "Unknown";
+}
+
+function formatDetailValue(value) {
+  if (!value || String(value).trim().length === 0) {
+    return "Not provided";
+  }
+
+  return value;
+}
+
+function formatMoneyAmount(report) {
+  if (!report.amount) {
+    return "";
+  }
+
+  return `BDT ${report.amount}`;
+}
+
+function formatEvidenceSummary(report) {
+  if (report.evidenceType) {
+    return `${report.evidenceType} was reported. Uploaded file previews are not stored in this local MVP after browser refresh.`;
+  }
+
+  return "No evidence type was added. Treat this report as community-submitted information and verify before taking action.";
 }
 
 function getRelatedReports(reports, currentReport) {
