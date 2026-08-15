@@ -21,6 +21,7 @@ import {
   DEMO_SESSION_UPDATED_EVENT,
   getDemoSession,
 } from "../../lib/demoSession";
+import { notifyLocalDataUpdated } from "../../lib/localDataEvents";
 
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
 const AUTO_SAVE_DELAY = 900;
@@ -166,6 +167,7 @@ export default function ReportFormShell() {
     const submittedAt = new Date().toLocaleString();
 
     localStorage.removeItem(REPORT_DRAFT_KEY);
+    notifyLocalDataUpdated();
     setHasSavedDraft(false);
     setHasUnsavedChanges(false);
     setReportId(newReportId);
@@ -201,6 +203,7 @@ export default function ReportFormShell() {
     setStatusTime(savedAt);
 
     localStorage.setItem(REPORT_DRAFT_KEY, JSON.stringify(draftData));
+    notifyLocalDataUpdated();
     setHasSavedDraft(true);
     setHasUnsavedChanges(false);
 
@@ -214,6 +217,7 @@ export default function ReportFormShell() {
 
   function handleResetForm() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
+    notifyLocalDataUpdated();
     setHasSavedDraft(false);
     setHasUnsavedChanges(false);
     setReportData(initialReportData);
@@ -224,6 +228,7 @@ export default function ReportFormShell() {
 
   function handleDiscardDraft() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
+    notifyLocalDataUpdated();
     setHasSavedDraft(false);
     setHasUnsavedChanges(true);
     setSubmitStatus("draft-discarded");

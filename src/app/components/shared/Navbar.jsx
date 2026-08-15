@@ -15,6 +15,7 @@ import {
   getUnreadNotificationCount,
   NOTIFICATION_UPDATED_EVENT,
 } from "../../lib/notificationData";
+import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -39,11 +40,13 @@ export default function Navbar() {
 
     updateDemoUser();
     window.addEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
+    window.addEventListener(LOCAL_DATA_UPDATED_EVENT, updateDemoUser);
     window.addEventListener(NOTIFICATION_UPDATED_EVENT, updateDemoUser);
     window.addEventListener("storage", updateDemoUser);
 
     return () => {
       window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
+      window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, updateDemoUser);
       window.removeEventListener(NOTIFICATION_UPDATED_EVENT, updateDemoUser);
       window.removeEventListener("storage", updateDemoUser);
     };

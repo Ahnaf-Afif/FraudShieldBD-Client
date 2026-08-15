@@ -20,6 +20,7 @@ import {
   markNotificationAsRead,
   NOTIFICATION_UPDATED_EVENT,
 } from "../../lib/notificationData";
+import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 
 const filters = ["All", "Unread", "Report", "Watchlist", "Alert", "Search"];
 
@@ -37,10 +38,12 @@ export default function NotificationsDashboard() {
     }
 
     loadNotifications();
+    window.addEventListener(LOCAL_DATA_UPDATED_EVENT, loadNotifications);
     window.addEventListener(NOTIFICATION_UPDATED_EVENT, loadNotifications);
     window.addEventListener("storage", loadNotifications);
 
     return () => {
+      window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, loadNotifications);
       window.removeEventListener(NOTIFICATION_UPDATED_EVENT, loadNotifications);
       window.removeEventListener("storage", loadNotifications);
     };

@@ -1,3 +1,5 @@
+import { notifyLocalDataUpdated } from "./localDataEvents";
+
 export const WATCHLIST_KEY = "fraudshield-watchlist";
 export const WATCHLIST_UPDATED_EVENT = "fraudshield-watchlist-updated";
 
@@ -25,6 +27,7 @@ export function getWatchlistFromBrowser() {
 export function saveWatchlist(items) {
   localStorage.setItem(WATCHLIST_KEY, JSON.stringify(items));
   window.dispatchEvent(new Event(WATCHLIST_UPDATED_EVENT));
+  notifyLocalDataUpdated();
 }
 
 export function isIdentifierWatched(identifier) {

@@ -1,3 +1,5 @@
+import { notifyLocalDataUpdated } from "./localDataEvents";
+
 export const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
 export const REPORT_REACTIONS_KEY = "fraudshield-report-reactions";
 export const REPORT_COMMENTS_KEY = "fraudshield-report-comments";
@@ -115,6 +117,7 @@ export function saveSubmittedReport(newReport) {
   const updatedReports = [newReport, ...reportsWithoutCurrentReport];
 
   localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(updatedReports));
+  notifyLocalDataUpdated();
 }
 
 export function deleteSubmittedReport(reportId) {
@@ -125,6 +128,7 @@ export function deleteSubmittedReport(reportId) {
 
   localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(remainingReports));
   deleteReportEngagement(reportId);
+  notifyLocalDataUpdated();
 }
 
 export function deleteReportEngagement(reportId) {
@@ -219,6 +223,7 @@ export function getSavedReportReactions() {
 
 export function saveReportReactions(reactions) {
   localStorage.setItem(REPORT_REACTIONS_KEY, JSON.stringify(reactions));
+  notifyLocalDataUpdated();
 }
 
 export function getSavedReportComments() {
@@ -244,6 +249,7 @@ export function getSavedReportComments() {
 
 export function saveReportComments(comments) {
   localStorage.setItem(REPORT_COMMENTS_KEY, JSON.stringify(comments));
+  notifyLocalDataUpdated();
 }
 
 export function normalizeSubmittedReport(report) {
