@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import {
   AlertTriangle,
   ArrowLeft,
+  BadgeAlert,
   Calendar,
   CheckCircle2,
   ClipboardCheck,
@@ -62,6 +63,7 @@ export default function ReportDetailsPage() {
   const [allReports, setAllReports] = useState([]);
   const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
   const [isWatched, setIsWatched] = useState(false);
+  const [commentError, setCommentError] = useState("");
 
   function refreshReportDetails() {
     const browserReports = getAllReportsForBrowser();
@@ -138,6 +140,8 @@ export default function ReportDetailsPage() {
   const riskStyle = getRiskStyle(report.riskLevel);
   const identifier = getPrimaryIdentifier(report);
   const relatedReports = getRelatedReports(allReports, report).slice(0, 3);
+  const riskScore = calculateDetailRiskScore(report, relatedReports);
+  const checkIdentifierHref = `/check?q=${encodeURIComponent(identifier)}`;
 
   function toggleLike() {
     const nextLiked = !reaction.liked;
@@ -177,7 +181,8 @@ export default function ReportDetailsPage() {
   function submitComment() {
     const commentText = commentDraft.trim();
 
-    if (!commentText) {
+    if (commentText.length < 3) {
+      setCommentError("Write at least 3 characters before posting.");
       return;
     }
 
@@ -199,6 +204,7 @@ export default function ReportDetailsPage() {
     saveReportComments(updatedComments);
     setComments(nextComments);
     setCommentDraft("");
+    setCommentError("");
   }
 
   function toggleWatchIdentifier() {
@@ -445,7 +451,10 @@ export default function ReportDetailsPage() {
                   <input
                     id="detail-comment-input"
                     value={commentDraft}
-                    onChange={(event) => setCommentDraft(event.target.value)}
+                    onChange={(event) => {
+                      setCommentDraft(event.target.value);
+                      setCommentError("");
+                    }}
                     placeholder={`Comment as ${currentAuthor.name}`}
                     className="w-full min-w-0 text-sm font-semibold text-[#06285c] outline-none"
                   />
@@ -453,11 +462,18 @@ export default function ReportDetailsPage() {
                 <button
                   type="button"
                   onClick={submitComment}
-                  className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400"
+                  disabled={commentDraft.trim().length < 3}
+                  className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
                 >
                   Post
                 </button>
               </div>
+
+              {commentError && (
+                <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600">
+                  {commentError}
+                </p>
+              )}
             </section>
           </article>
 
@@ -465,6 +481,12 @@ export default function ReportDetailsPage() {
             <DetailRiskCard report={report} />
 
             <ReportStatusCard report={report} />
+
+            <DetailRiskScoreCard
+              riskScore={riskScore}
+              report={report}
+              relatedCount={relatedReports.length}
+            />
 
             <button
               type="button"
@@ -478,6 +500,14 @@ export default function ReportDetailsPage() {
               <Eye size={18} />
               {isWatched ? "Watching Identifier" : "Add to Watchlist"}
             </button>
+
+            <Link
+              href={checkIdentifierHref}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#06285c] shadow-sm transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+            >
+              <Search size={18} />
+              Check This Identifier
+            </Link>
 
             <DetailStat
               icon={<FileText size={20} />}
@@ -506,6 +536,8 @@ export default function ReportDetailsPage() {
             />
 
             <RelatedReports reports={relatedReports} />
+
+            <SafetyActionPlan report={report} />
 
             <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm">
               <h2 className="font-black text-[#06285c]">
@@ -650,6 +682,53 @@ function ReportStatusCard({ report }) {
   );
 }
 
+function DetailRiskScoreCard({ riskScore, report, relatedCount }) {
+  const riskTone =
+    report.riskLevel === "High Risk"
+      ? "text-red-500"
+      : report.riskLevel === "Medium Risk"
+        ? "text-orange-500"
+        : "text-[#009879]";
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-bold text-slate-500">Risk score</p>
+          <p className={`mt-1 text-4xl font-black ${riskTone}`}>
+            {riskScore}
+          </p>
+        </div>
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+          <BadgeAlert size={29} />
+        </div>
+      </div>
+
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+        <div
+          className={`h-full rounded-full ${
+            report.riskLevel === "High Risk"
+              ? "bg-red-500"
+              : report.riskLevel === "Medium Risk"
+                ? "bg-orange-500"
+                : "bg-[#009879]"
+          }`}
+          style={{ width: `${riskScore}%` }}
+        />
+      </div>
+
+      <div className="mt-4 space-y-3 text-sm">
+        <RiskFact label="Risk label" value={report.riskLevel} />
+        <RiskFact label="Related reports" value={String(relatedCount)} />
+        <RiskFact
+          label="Report volume"
+          value={String(report.reportsCount || 1)}
+        />
+      </div>
+    </div>
+  );
+}
+
 function EvidenceFilesPanel({ report }) {
   const fileSummaries = report.evidenceFileSummaries || [];
 
@@ -733,6 +812,30 @@ function RelatedReports({ reports }) {
             </Link>
           ))
         )}
+      </div>
+    </div>
+  );
+}
+
+function SafetyActionPlan({ report }) {
+  const actions = createSafetyActions(report);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="font-black text-[#06285c]">Action plan</h2>
+      <p className="mt-2 text-sm leading-6 text-slate-600">
+        Use these steps before sending money or sharing private information.
+      </p>
+
+      <div className="mt-4 space-y-3">
+        {actions.map((action) => (
+          <div key={action.title} className="rounded-xl bg-slate-50 p-3">
+            <p className="text-sm font-black text-[#06285c]">{action.title}</p>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              {action.text}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -885,4 +988,45 @@ function getRelatedReports(reports, currentReport) {
 
     return sameCategory || sameRisk || sameLocation;
   });
+}
+
+function calculateDetailRiskScore(report, relatedReports) {
+  const riskBase =
+    report.riskLevel === "High Risk"
+      ? 58
+      : report.riskLevel === "Medium Risk"
+        ? 38
+        : 20;
+  const reportVolumeScore = Math.min((report.reportsCount || 1) * 2, 20);
+  const relatedReportScore = Math.min(relatedReports.length * 6, 18);
+  const evidenceScore =
+    report.evidenceType ||
+    report.evidenceDetails ||
+    (report.evidenceFileSummaries || []).length > 0
+      ? 4
+      : 0;
+
+  return Math.min(
+    riskBase + reportVolumeScore + relatedReportScore + evidenceScore,
+    100,
+  );
+}
+
+function createSafetyActions(report) {
+  const identifierType = getIdentifierLabel(report);
+
+  return [
+    {
+      title: "Do not pay from this report alone",
+      text: "Treat the report as a warning signal and verify through official channels.",
+    },
+    {
+      title: `Verify the ${identifierType.toLowerCase()}`,
+      text: "Check official pages, support numbers, business registration, reviews and trusted contacts.",
+    },
+    {
+      title: "Keep proof before reporting more",
+      text: "Save screenshots, transaction IDs and conversation evidence while hiding OTP, PIN and passwords.",
+    },
+  ];
 }
