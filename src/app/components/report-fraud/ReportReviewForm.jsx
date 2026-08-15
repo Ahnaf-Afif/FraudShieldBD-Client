@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Link from "next/link";
 import { CheckCircle2, Check, Copy, FileCheck } from "lucide-react";
 
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
@@ -184,6 +185,24 @@ export default function ReportReviewForm({
               onCopy={copyReportId}
             />
           )}
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            {reportId && (
+              <Link
+                href={`/reports/${reportId}`}
+                className="inline-flex justify-center rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400"
+              >
+                View Report
+              </Link>
+            )}
+
+            <Link
+              href="/"
+              className="inline-flex justify-center rounded-xl border border-[#bfe8dc] bg-white px-5 py-3 text-sm font-black text-[#009879] transition hover:bg-[#f0fbf7] active:bg-slate-300"
+            >
+              Back to Feed
+            </Link>
+          </div>
         </div>
       )}
 

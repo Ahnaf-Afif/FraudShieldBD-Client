@@ -12,8 +12,12 @@ import ReportIdentifiersForm, {
 import ReportReviewForm, { ReportReviewTips } from "./ReportReviewForm";
 import ReportStoryForm, { ReportStoryTips } from "./ReportStoryForm";
 import ReportLiveSummary from "./ReportLiveSummary";
+import {
+  estimateReportRiskLevel,
+  saveSubmittedReport,
+} from "../../lib/reportFeedData";
+
 const REPORT_DRAFT_KEY = "fraudshield-report-draft";
-const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
 
 const initialReportData = {
@@ -250,41 +254,11 @@ function createReportPayload({ reportData, reportId, status, statusTime }) {
 
   if (status === "submitted") {
     payload.submittedAt = statusTime;
+    payload.riskLevel = estimateReportRiskLevel(reportData);
+    payload.reportsCount = 1;
   }
 
   return payload;
-}
-
-function saveSubmittedReport(newReport) {
-  const savedReports = getSavedSubmittedReports();
-  const reportsWithoutCurrentReport = savedReports.filter(
-    (savedReport) => savedReport.reportId !== newReport.reportId,
-  );
-
-  const updatedReports = [newReport, ...reportsWithoutCurrentReport];
-
-  localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(updatedReports));
-}
-
-function getSavedSubmittedReports() {
-  const savedReports = localStorage.getItem(REPORT_SUBMISSIONS_KEY);
-
-  if (!savedReports) {
-    return [];
-  }
-
-  try {
-    const parsedReports = JSON.parse(savedReports);
-
-    if (!Array.isArray(parsedReports)) {
-      return [];
-    }
-
-    return parsedReports;
-  } catch (error) {
-    console.error("Could not load submitted reports:", error);
-    return [];
-  }
 }
 
 function validateReportBeforeSubmit(reportData) {

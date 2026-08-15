@@ -76,6 +76,16 @@ export function getAllReportsForBrowser() {
   return [...submittedReports, ...demoReports];
 }
 
+export function saveSubmittedReport(newReport) {
+  const savedReports = getSubmittedReportsFromBrowser();
+  const reportsWithoutCurrentReport = savedReports.filter(
+    (savedReport) => savedReport.reportId !== newReport.reportId,
+  );
+  const updatedReports = [newReport, ...reportsWithoutCurrentReport];
+
+  localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(updatedReports));
+}
+
 export function searchReports(reports, query) {
   const cleanQuery = query.trim().toLowerCase();
 
@@ -177,7 +187,7 @@ export function saveReportComments(comments) {
 export function normalizeSubmittedReport(report) {
   return {
     ...report,
-    riskLevel: report.riskLevel || estimateRiskLevel(report),
+    riskLevel: report.riskLevel || estimateReportRiskLevel(report),
     reportsCount: report.reportsCount || 1,
   };
 }
@@ -212,7 +222,7 @@ export function maskIdentifier(identifier) {
   return `${identifier.slice(0, 5)}****${identifier.slice(-3)}`;
 }
 
-function estimateRiskLevel(report) {
+export function estimateReportRiskLevel(report) {
   if (report.moneyStatus === "Yes, I lost money") {
     return "High Risk";
   }
