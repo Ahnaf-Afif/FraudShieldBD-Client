@@ -61,6 +61,24 @@ export function getInitials(nameOrEmail) {
   return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
 }
 
+export function createDemoAuthor(session) {
+  if (!session) {
+    return {
+      name: "Guest member",
+      email: "",
+      role: "Guest",
+      initials: "G",
+    };
+  }
+
+  return {
+    name: session.name,
+    email: session.email,
+    role: session.role,
+    initials: getInitials(session.name || session.email),
+  };
+}
+
 function getNameFromEmail(email) {
   return String(email || "")
     .split("@")[0]

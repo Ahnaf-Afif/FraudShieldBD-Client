@@ -29,6 +29,7 @@ import {
   saveReportComments,
   saveReportReactions,
 } from "../../lib/reportFeedData";
+import { createDemoAuthor, getDemoSession } from "../../lib/demoSession";
 
 export default function ReportDetailsPage() {
   const { reportId } = useParams();
@@ -40,6 +41,7 @@ export default function ReportDetailsPage() {
   const [copied, setCopied] = useState(false);
   const [copiedIdentifier, setCopiedIdentifier] = useState(false);
   const [allReports, setAllReports] = useState([]);
+  const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
 
   useEffect(() => {
     const browserReports = getAllReportsForBrowser();
@@ -53,6 +55,7 @@ export default function ReportDetailsPage() {
       getSavedReportReactions()[reportId] || { liked: false, likes: 0 },
     );
     setComments(getSavedReportComments()[reportId] || []);
+    setCurrentAuthor(createDemoAuthor(getDemoSession()));
     setIsLoading(false);
   }, [reportId]);
 
@@ -145,6 +148,10 @@ export default function ReportDetailsPage() {
       id: `${report.reportId}-${Date.now()}`,
       text: commentText,
       createdAt: "Just now",
+      authorName: currentAuthor.name,
+      authorEmail: currentAuthor.email,
+      authorRole: currentAuthor.role,
+      authorInitials: currentAuthor.initials,
     };
     const nextComments = [...comments, newComment];
     const updatedComments = {
@@ -298,10 +305,18 @@ export default function ReportDetailsPage() {
                 ) : (
                   comments.map((comment) => (
                     <div key={comment.id} className="rounded-xl bg-white p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-black text-[#06285c]">
-                          Community member
-                        </p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <CommentAvatar comment={comment} />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-black text-[#06285c]">
+                              {comment.authorName || "Community member"}
+                            </p>
+                            <p className="truncate text-xs font-semibold text-slate-400">
+                              {comment.authorRole || "Member"}
+                            </p>
+                          </div>
+                        </div>
                         <p className="shrink-0 text-xs font-semibold text-slate-400">
                           {comment.createdAt}
                         </p>
@@ -315,13 +330,18 @@ export default function ReportDetailsPage() {
               </div>
 
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                <input
-                  id="detail-comment-input"
-                  value={commentDraft}
-                  onChange={(event) => setCommentDraft(event.target.value)}
-                  placeholder="Write a helpful comment..."
-                  className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
-                />
+                <div className="flex min-h-11 flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 focus-within:border-[#009879] focus-within:ring-4 focus-within:ring-[#009879]/10">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#009879] text-xs font-black text-white">
+                    {currentAuthor.initials}
+                  </div>
+                  <input
+                    id="detail-comment-input"
+                    value={commentDraft}
+                    onChange={(event) => setCommentDraft(event.target.value)}
+                    placeholder={`Comment as ${currentAuthor.name}`}
+                    className="w-full min-w-0 text-sm font-semibold text-[#06285c] outline-none"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={submitComment}
@@ -393,6 +413,14 @@ function DetailAction({ active = false, icon, label, onClick }) {
       {icon}
       {label}
     </button>
+  );
+}
+
+function CommentAvatar({ comment }) {
+  return (
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#009879] text-xs font-black text-white">
+      {comment.authorInitials || "CM"}
+    </div>
   );
 }
 

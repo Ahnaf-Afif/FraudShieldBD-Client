@@ -22,6 +22,7 @@ import {
   saveReportComments,
   saveReportReactions,
 } from "../../lib/reportFeedData";
+import { createDemoAuthor, getDemoSession } from "../../lib/demoSession";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -38,6 +39,7 @@ const filters = [
 export default function HomeNewsFeed() {
   const [reports, setReports] = useState(demoReports);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
   const [reportReactions, setReportReactions] = useState({});
   const [reportComments, setReportComments] = useState({});
   const [commentDrafts, setCommentDrafts] = useState({});
@@ -50,6 +52,7 @@ export default function HomeNewsFeed() {
 
   useEffect(() => {
     setReports(getAllReportsForBrowser());
+    setCurrentAuthor(createDemoAuthor(getDemoSession()));
   }, []);
 
   useEffect(() => {
@@ -169,6 +172,10 @@ export default function HomeNewsFeed() {
         id: `${reportId}-${Date.now()}`,
         text: commentText,
         createdAt: "Just now",
+        authorName: currentAuthor.name,
+        authorEmail: currentAuthor.email,
+        authorRole: currentAuthor.role,
+        authorInitials: currentAuthor.initials,
       };
       const updatedComments = {
         ...currentComments,
@@ -239,6 +246,7 @@ export default function HomeNewsFeed() {
               commentDraft={commentDrafts[report.reportId] || ""}
               commentsOpen={activeCommentReportId === report.reportId}
               copied={copiedReportId === report.reportId}
+              currentAuthor={currentAuthor}
               onLike={toggleReportLike}
               onToggleComments={toggleCommentBox}
               onCommentChange={updateCommentDraft}
@@ -337,6 +345,7 @@ function HomeReportPost({
   commentDraft,
   commentsOpen,
   copied,
+  currentAuthor,
   onLike,
   onToggleComments,
   onCommentChange,
@@ -436,6 +445,7 @@ function HomeReportPost({
         <CommentPanel
           comments={comments}
           draft={commentDraft}
+          currentAuthor={currentAuthor}
           onChange={(value) => onCommentChange(report.reportId, value)}
           onSubmit={() => onCommentSubmit(report.reportId)}
         />
@@ -444,7 +454,7 @@ function HomeReportPost({
   );
 }
 
-function CommentPanel({ comments, draft, onChange, onSubmit }) {
+function CommentPanel({ comments, draft, currentAuthor, onChange, onSubmit }) {
   return (
     <div className="border-t border-slate-200 bg-slate-50 p-4 sm:p-5">
       <div className="space-y-3">
@@ -455,10 +465,18 @@ function CommentPanel({ comments, draft, onChange, onSubmit }) {
         ) : (
           comments.map((comment) => (
             <div key={comment.id} className="rounded-xl bg-white p-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-black text-[#06285c]">
-                  Community member
-                </p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <CommentAvatar comment={comment} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-[#06285c]">
+                      {comment.authorName || "Community member"}
+                    </p>
+                    <p className="truncate text-xs font-semibold text-slate-400">
+                      {comment.authorRole || "Member"}
+                    </p>
+                  </div>
+                </div>
                 <p className="shrink-0 text-xs font-semibold text-slate-400">
                   {comment.createdAt}
                 </p>
@@ -472,12 +490,17 @@ function CommentPanel({ comments, draft, onChange, onSubmit }) {
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <input
-          value={draft}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder="Write a helpful comment..."
-          className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
-        />
+        <div className="flex min-h-11 flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 focus-within:border-[#009879] focus-within:ring-4 focus-within:ring-[#009879]/10">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#009879] text-xs font-black text-white">
+            {currentAuthor.initials}
+          </div>
+          <input
+            value={draft}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={`Comment as ${currentAuthor.name}`}
+            className="w-full min-w-0 text-sm font-semibold text-[#06285c] outline-none"
+          />
+        </div>
         <button
           type="button"
           onClick={onSubmit}
@@ -486,6 +509,14 @@ function CommentPanel({ comments, draft, onChange, onSubmit }) {
           Post
         </button>
       </div>
+    </div>
+  );
+}
+
+function CommentAvatar({ comment }) {
+  return (
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#009879] text-xs font-black text-white">
+      {comment.authorInitials || "CM"}
     </div>
   );
 }
