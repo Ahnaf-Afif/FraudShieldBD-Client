@@ -7,6 +7,7 @@ import {
   Bell,
   CheckCircle2,
   Circle,
+  Clock,
   FileText,
   PencilLine,
   ShieldCheck,
@@ -23,6 +24,7 @@ import {
   getSavedReportComments,
   getSavedReportReactions,
   getSavedReportDraftFromBrowser,
+  getRecentlyViewedReportsFromBrowser,
   getSubmittedReportsFromBrowser,
   normalizeSubmittedReport,
 } from "../../lib/reportFeedData";
@@ -303,7 +305,7 @@ export default function ProfileDashboard() {
             </form>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <ProfileStat
               icon={<FileText size={21} />}
               label="Submitted reports"
@@ -321,6 +323,12 @@ export default function ProfileDashboard() {
               label="Watchlist items"
               value={activityStats.watchlistItems}
               href="/watchlist"
+            />
+            <ProfileStat
+              icon={<Clock size={21} />}
+              label="Viewed reports"
+              value={activityStats.recentlyViewedReports}
+              href="/reports"
             />
             <ProfileStat
               icon={<Bell size={21} />}
@@ -427,6 +435,7 @@ function createProfileStats(demoUser) {
       submittedReports: 0,
       drafts: 0,
       watchlistItems: 0,
+      recentlyViewedReports: 0,
       unreadNotifications: 0,
       commentsReceived: 0,
       helpfulVotes: 0,
@@ -445,6 +454,7 @@ function createProfileStats(demoUser) {
     submittedReports: submittedReports.length,
     drafts: draftReport && isOwnedByUser(draftReport, demoUser) ? 1 : 0,
     watchlistItems: getWatchlistFromBrowser().length,
+    recentlyViewedReports: getRecentlyViewedReportsFromBrowser().length,
     unreadNotifications: getUnreadNotificationCount(demoUser),
     commentsReceived: ownedReportIds.reduce(
       (totalComments, reportId) =>
@@ -475,6 +485,7 @@ function calculateTrustScore(stats, completion) {
     35 +
     Math.min(stats.submittedReports * 10, 25) +
     Math.min(stats.watchlistItems * 4, 12) +
+    Math.min(stats.recentlyViewedReports * 2, 6) +
     Math.min(stats.commentsReceived * 3, 9) +
     Math.min(stats.helpfulVotes * 2, 8) +
     Math.round(completion * 0.11);
@@ -506,6 +517,11 @@ function createVerificationItems(user, stats) {
       description: "Watching identifiers helps you track risky numbers, pages and sites.",
       isComplete: stats.watchlistItems > 0,
     },
+    {
+      label: "Reports reviewed",
+      description: "Opening report details helps you compare identifiers before taking action.",
+      isComplete: stats.recentlyViewedReports > 0,
+    },
   ];
 }
 
@@ -520,6 +536,10 @@ function getNextProfileAction(user, stats) {
 
   if (stats.watchlistItems === 0) {
     return "Add suspicious identifiers to your watchlist so you can monitor them later.";
+  }
+
+  if (stats.recentlyViewedReports === 0) {
+    return "Open a few report details from the feed or Browse Reports to learn repeated scam patterns.";
   }
 
   return "Keep checking identifiers and sharing useful reports. Your profile is ready for the MVP flow.";
