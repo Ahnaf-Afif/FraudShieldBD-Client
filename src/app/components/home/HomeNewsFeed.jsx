@@ -586,6 +586,7 @@ function HomeReportPost({
   const liked = reaction?.liked || false;
   const likes = reaction?.likes || 0;
   const commentCount = comments.length;
+  const latestComment = comments[comments.length - 1] || null;
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -645,9 +646,16 @@ function HomeReportPost({
         </div>
       </Link>
 
-      <div className="flex items-center gap-4 border-t border-slate-100 px-4 py-2 text-xs font-bold text-slate-500 sm:px-5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-100 px-4 py-2 text-xs font-bold text-slate-500 sm:px-5">
         <span>{likes} likes</span>
-        <span>{commentCount} comments</span>
+        <button
+          type="button"
+          onClick={() => onToggleComments(report.reportId)}
+          className="transition hover:text-[#009879]"
+        >
+          {commentCount} comments
+        </button>
+        {watched && <span className="text-[#009879]">Watching</span>}
       </div>
 
       <div className="grid grid-cols-2 border-t border-slate-200 text-sm font-bold text-slate-600 sm:grid-cols-4">
@@ -687,6 +695,26 @@ function HomeReportPost({
           onSubmit={() => onCommentSubmit(report.reportId)}
         />
       )}
+
+      {!commentsOpen && latestComment && (
+        <button
+          type="button"
+          onClick={() => onToggleComments(report.reportId)}
+          className="block w-full border-t border-slate-100 bg-slate-50 px-4 py-3 text-left transition hover:bg-[#f0fbf7] sm:px-5"
+        >
+          <div className="flex items-start gap-2">
+            <CommentAvatar comment={latestComment} />
+            <div className="min-w-0">
+              <p className="text-xs font-black text-[#06285c]">
+                Latest comment
+              </p>
+              <p className="mt-1 line-clamp-2 break-words text-sm leading-6 text-slate-600">
+                {latestComment.text}
+              </p>
+            </div>
+          </div>
+        </button>
+      )}
     </article>
   );
 }
@@ -699,6 +727,12 @@ function CommentPanel({
   onChange,
   onSubmit,
 }) {
+  const cleanDraftLength = draft.trim().length;
+  const missingCharacterCount = Math.max(
+    MIN_COMMENT_LENGTH - cleanDraftLength,
+    0,
+  );
+
   return (
     <div className="border-t border-slate-200 bg-slate-50 p-4 sm:p-5">
       <div className="space-y-3">
@@ -748,12 +782,19 @@ function CommentPanel({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={draft.trim().length < MIN_COMMENT_LENGTH}
-          className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400"
+          disabled={cleanDraftLength < MIN_COMMENT_LENGTH}
+          className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           Post
         </button>
       </div>
+
+      {cleanDraftLength > 0 && cleanDraftLength < MIN_COMMENT_LENGTH && (
+        <p className="mt-2 rounded-xl bg-orange-50 px-3 py-2 text-sm font-bold text-orange-700">
+          Write {missingCharacterCount} more character
+          {missingCharacterCount === 1 ? "" : "s"} to post.
+        </p>
+      )}
 
       {error && (
         <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600">
