@@ -9,6 +9,8 @@ import {
   Clock,
   FileText,
   Filter,
+  LayoutGrid,
+  List,
   MapPin,
   Search,
   ShieldAlert,
@@ -54,7 +56,10 @@ export default function ReportsExplorer() {
   const [identifierFilter, setIdentifierFilter] = useState(
     "All Identifier Types",
   );
+  const [locationFilter, setLocationFilter] = useState("All Locations");
   const [sortMode, setSortMode] = useState("Newest First");
+  const [viewMode, setViewMode] = useState("List");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     setReports(getAllReportsForBrowser());
@@ -81,6 +86,11 @@ export default function ReportsExplorer() {
           ? true
           : getEntityType(report) === identifierFilter,
       )
+      .filter((report) =>
+        locationFilter === "All Locations"
+          ? true
+          : (report.location || "Bangladesh") === locationFilter,
+      )
       .sort((firstReport, secondReport) => {
         if (sortMode === "Most Reports") {
           return (
@@ -101,6 +111,7 @@ export default function ReportsExplorer() {
   }, [
     categoryFilter,
     identifierFilter,
+    locationFilter,
     reports,
     riskFilter,
     searchValue,
@@ -111,12 +122,15 @@ export default function ReportsExplorer() {
   const categoryCounts = createCountMap(reports, "fraudCategory");
   const riskCounts = createCountMap(reports, "riskLevel");
   const identifierCounts = createIdentifierCountMap(reports);
+  const locationCounts = createLocationCountMap(reports);
   const dynamicCategoryOptions = createCategoryOptions(reports);
+  const locationOptions = createLocationOptions(reports);
   const activeFilters = createActiveFilters({
     searchValue,
     categoryFilter,
     riskFilter,
     identifierFilter,
+    locationFilter,
     sortMode,
   });
 
@@ -125,6 +139,7 @@ export default function ReportsExplorer() {
     setCategoryFilter("All Categories");
     setRiskFilter("All Risk Levels");
     setIdentifierFilter("All Identifier Types");
+    setLocationFilter("All Locations");
     setSortMode("Newest First");
   }
 
@@ -143,6 +158,10 @@ export default function ReportsExplorer() {
 
     if (filterKey === "identifier") {
       setIdentifierFilter("All Identifier Types");
+    }
+
+    if (filterKey === "location") {
+      setLocationFilter("All Locations");
     }
 
     if (filterKey === "sort") {
@@ -187,46 +206,33 @@ export default function ReportsExplorer() {
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[280px_1fr]">
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
-                <SlidersHorizontal size={18} />
-                Filters
-              </h2>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-sm font-bold text-[#0b63f6] transition hover:text-[#009879]"
-              >
-                Clear All
-              </button>
-            </div>
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-[#06285c] shadow-sm lg:hidden"
+          >
+            <SlidersHorizontal size={18} />
+            {mobileFiltersOpen ? "Hide filters" : "Show filters"}
+          </button>
 
-            <FilterGroup
-              title="Category"
-              value={categoryFilter}
-              options={dynamicCategoryOptions}
-              counts={categoryCounts}
-              totalCount={reports.length}
-              onChange={setCategoryFilter}
-            />
-
-            <FilterGroup
-              title="Risk Level"
-              value={riskFilter}
-              options={riskOptions}
-              counts={riskCounts}
-              totalCount={reports.length}
-              onChange={setRiskFilter}
-            />
-
-            <FilterGroup
-              title="Identifier Type"
-              value={identifierFilter}
-              options={identifierOptions}
-              counts={identifierCounts}
-              totalCount={reports.length}
-              onChange={setIdentifierFilter}
+          <div className={`${mobileFiltersOpen ? "block" : "hidden"} lg:block`}>
+            <FiltersPanel
+              reports={reports}
+              categoryFilter={categoryFilter}
+              riskFilter={riskFilter}
+              identifierFilter={identifierFilter}
+              locationFilter={locationFilter}
+              dynamicCategoryOptions={dynamicCategoryOptions}
+              categoryCounts={categoryCounts}
+              riskCounts={riskCounts}
+              identifierCounts={identifierCounts}
+              locationOptions={locationOptions}
+              locationCounts={locationCounts}
+              onCategoryChange={setCategoryFilter}
+              onRiskChange={setRiskFilter}
+              onIdentifierChange={setIdentifierFilter}
+              onLocationChange={setLocationFilter}
+              onClearFilters={clearFilters}
             />
           </div>
 
@@ -265,7 +271,7 @@ export default function ReportsExplorer() {
         <section className="min-w-0">
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 p-4">
-              <div className="grid gap-3 lg:grid-cols-[1fr_180px_160px]">
+              <div className="grid gap-3 xl:grid-cols-[1fr_180px_160px_120px]">
                 <label className="flex min-h-12 min-w-0 items-center gap-3 rounded-xl border border-slate-200 px-4">
                   <Search size={19} className="shrink-0 text-slate-400" />
                   <input
@@ -299,6 +305,21 @@ export default function ReportsExplorer() {
                 <div className="flex min-h-12 items-center justify-center rounded-xl bg-[#06285c] px-5 text-sm font-bold text-white">
                   {filteredReports.length} shown
                 </div>
+
+                <div className="grid min-h-12 grid-cols-2 overflow-hidden rounded-xl border border-slate-200">
+                  <ViewModeButton
+                    label="List"
+                    icon={List}
+                    active={viewMode === "List"}
+                    onClick={() => setViewMode("List")}
+                  />
+                  <ViewModeButton
+                    label="Grid"
+                    icon={LayoutGrid}
+                    active={viewMode === "Grid"}
+                    onClick={() => setViewMode("Grid")}
+                  />
+                </div>
               </div>
 
               {activeFilters.length > 0 && (
@@ -320,6 +341,12 @@ export default function ReportsExplorer() {
 
             {filteredReports.length === 0 ? (
               <EmptyReportsState onClear={clearFilters} />
+            ) : viewMode === "Grid" ? (
+              <div className="grid gap-4 p-4 md:grid-cols-2">
+                {filteredReports.map((report) => (
+                  <ReportCard key={report.reportId} report={report} />
+                ))}
+              </div>
             ) : (
               <div className="divide-y divide-slate-200">
                 {filteredReports.map((report) => (
@@ -375,6 +402,79 @@ function StatCard({ label, value, icon: Icon, color, bg }) {
   );
 }
 
+function FiltersPanel({
+  reports,
+  categoryFilter,
+  riskFilter,
+  identifierFilter,
+  locationFilter,
+  dynamicCategoryOptions,
+  categoryCounts,
+  riskCounts,
+  identifierCounts,
+  locationOptions,
+  locationCounts,
+  onCategoryChange,
+  onRiskChange,
+  onIdentifierChange,
+  onLocationChange,
+  onClearFilters,
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
+          <SlidersHorizontal size={18} />
+          Filters
+        </h2>
+        <button
+          type="button"
+          onClick={onClearFilters}
+          className="text-sm font-bold text-[#0b63f6] transition hover:text-[#009879]"
+        >
+          Clear All
+        </button>
+      </div>
+
+      <FilterGroup
+        title="Category"
+        value={categoryFilter}
+        options={dynamicCategoryOptions}
+        counts={categoryCounts}
+        totalCount={reports.length}
+        onChange={onCategoryChange}
+      />
+
+      <FilterGroup
+        title="Risk Level"
+        value={riskFilter}
+        options={riskOptions}
+        counts={riskCounts}
+        totalCount={reports.length}
+        onChange={onRiskChange}
+      />
+
+      <FilterGroup
+        title="Identifier Type"
+        value={identifierFilter}
+        options={identifierOptions}
+        counts={identifierCounts}
+        totalCount={reports.length}
+        onChange={onIdentifierChange}
+      />
+
+      <FilterGroup
+        title="Location"
+        value={locationFilter}
+        options={locationOptions}
+        counts={locationCounts}
+        totalCount={reports.length}
+        onChange={onLocationChange}
+      />
+    </div>
+  );
+}
+
 function FilterGroup({ title, value, options, counts, totalCount, onChange }) {
   return (
     <div className="border-t border-slate-200 py-5 first:border-t-0 first:pt-0">
@@ -402,6 +502,24 @@ function FilterGroup({ title, value, options, counts, totalCount, onChange }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function ViewModeButton({ label, icon: Icon, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center justify-center gap-2 text-sm font-black transition ${
+        active
+          ? "bg-[#009879] text-white"
+          : "bg-white text-[#06285c] hover:bg-[#f0fbf7] hover:text-[#009879]"
+      }`}
+      aria-label={`${label} view`}
+    >
+      <Icon size={17} />
+      <span className="hidden sm:inline xl:hidden">{label}</span>
+    </button>
   );
 }
 
@@ -487,6 +605,65 @@ function ReportRow({ report }) {
   );
 }
 
+function ReportCard({ report }) {
+  const identifier = getPrimaryIdentifier(report);
+  const riskStyle = getRiskStyle(report.riskLevel);
+  const identifierType = getEntityType(report);
+
+  return (
+    <Link
+      href={`/reports/${report.reportId}`}
+      className="flex min-w-0 flex-col rounded-2xl border border-slate-200 p-4 transition hover:-translate-y-0.5 hover:border-[#009879] hover:shadow-md"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+          <ShieldAlert size={24} />
+        </div>
+        <span
+          className={`rounded-lg px-2.5 py-1 text-xs font-bold ${riskStyle}`}
+        >
+          {report.riskLevel}
+        </span>
+      </div>
+
+      <h2 className="mt-4 line-clamp-2 text-lg font-black leading-snug text-[#06285c]">
+        {report.title}
+      </h2>
+
+      <p className="mt-2 text-sm font-semibold text-[#009879]">
+        {report.fraudCategory} • {identifierType}
+      </p>
+
+      <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
+        {report.story}
+      </p>
+
+      <div className="mt-4 rounded-xl bg-slate-50 p-3">
+        <p className="text-xs font-black uppercase text-slate-400">
+          Identifier
+        </p>
+        <p className="mt-1 break-words text-sm font-black text-[#06285c]">
+          {maskIdentifier(identifier)}
+        </p>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3 border-t border-slate-100 pt-4 text-xs font-semibold text-slate-500">
+        <span className="inline-flex items-center gap-1">
+          <MapPin size={14} />
+          {report.location || "Bangladesh"}
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Clock size={14} />
+          {report.submittedAt || "Recently"}
+        </span>
+        <span className="ml-auto font-black text-red-500">
+          {report.reportsCount || 1} reports
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 function EmptyReportsState({ onClear }) {
   return (
     <div className="p-8 text-center">
@@ -546,6 +723,17 @@ function createIdentifierCountMap(reports) {
   }, {});
 }
 
+function createLocationCountMap(reports) {
+  return reports.reduce((countMap, report) => {
+    const location = report.location || "Bangladesh";
+
+    return {
+      ...countMap,
+      [location]: (countMap[location] || 0) + 1,
+    };
+  }, {});
+}
+
 function createCategoryOptions(reports) {
   const reportCategories = reports
     .map((report) => report.fraudCategory)
@@ -558,11 +746,20 @@ function createCategoryOptions(reports) {
   return ["All Categories", ...categories];
 }
 
+function createLocationOptions(reports) {
+  const locations = reports
+    .map((report) => report.location || "Bangladesh")
+    .filter(Boolean);
+
+  return ["All Locations", ...new Set(locations)];
+}
+
 function createActiveFilters({
   searchValue,
   categoryFilter,
   riskFilter,
   identifierFilter,
+  locationFilter,
   sortMode,
 }) {
   return [
@@ -588,6 +785,12 @@ function createActiveFilters({
       ? {
           key: "identifier",
           label: identifierFilter,
+        }
+      : null,
+    locationFilter !== "All Locations"
+      ? {
+          key: "location",
+          label: locationFilter,
         }
       : null,
     sortMode !== "Newest First"
