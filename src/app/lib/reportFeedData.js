@@ -68,6 +68,62 @@ export function getSubmittedReportsFromBrowser() {
   }
 }
 
+export function getAllReportsForBrowser() {
+  const submittedReports = getSubmittedReportsFromBrowser().map(
+    normalizeSubmittedReport,
+  );
+
+  return [...submittedReports, ...demoReports];
+}
+
+export function searchReports(reports, query) {
+  const cleanQuery = query.trim().toLowerCase();
+
+  if (!cleanQuery) {
+    return [];
+  }
+
+  return reports.filter((report) => {
+    const searchableText = [
+      report.title,
+      report.fraudCategory,
+      report.location,
+      report.story,
+      report.preventionAdvice,
+      report.phoneOrPaymentNumber,
+      report.facebookLink,
+      report.websiteLink,
+      report.businessName,
+      report.paymentMethod,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(cleanQuery);
+  });
+}
+
+export function getEntityType(report) {
+  if (report.phoneOrPaymentNumber) {
+    return "Phone or Payment Number";
+  }
+
+  if (report.facebookLink) {
+    return "Facebook Page";
+  }
+
+  if (report.websiteLink) {
+    return "Website";
+  }
+
+  if (report.businessName) {
+    return "Business";
+  }
+
+  return "Unknown";
+}
+
 export function getSavedReportReactions() {
   const savedReactions = localStorage.getItem(REPORT_REACTIONS_KEY);
 

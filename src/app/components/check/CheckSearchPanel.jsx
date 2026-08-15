@@ -33,6 +33,10 @@ export default function CheckSearchPanel() {
     }
 
     router.push(`/check?q=${encodeURIComponent(cleanSearchValue)}`);
+
+    setTimeout(() => {
+      window.dispatchEvent(new Event("fraudshield-search-updated"));
+    }, 0);
   }
 
   function handleExampleClick(example) {
