@@ -7,22 +7,25 @@ import {
   AlertTriangle,
   ArrowLeft,
   Calendar,
+  Copy,
+  ExternalLink,
+  FileText,
   MessageCircle,
   MapPin,
   Share2,
   ShieldAlert,
+  ShieldCheck,
   ThumbsUp,
+  Users,
 } from "lucide-react";
 import Navbar from "../../components/shared/Navbar";
 import {
-  demoReports,
+  getAllReportsForBrowser,
   getPrimaryIdentifier,
   getRiskStyle,
   getSavedReportComments,
   getSavedReportReactions,
-  getSubmittedReportsFromBrowser,
   maskIdentifier,
-  normalizeSubmittedReport,
   saveReportComments,
   saveReportReactions,
 } from "../../lib/reportFeedData";
@@ -35,18 +38,20 @@ export default function ReportDetailsPage() {
   const [comments, setComments] = useState([]);
   const [commentDraft, setCommentDraft] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedIdentifier, setCopiedIdentifier] = useState(false);
+  const [allReports, setAllReports] = useState([]);
 
   useEffect(() => {
-    const savedReports = getSubmittedReportsFromBrowser().map(
-      normalizeSubmittedReport,
-    );
-    const allReports = [...savedReports, ...demoReports];
-    const matchedReport = allReports.find(
+    const browserReports = getAllReportsForBrowser();
+    const matchedReport = browserReports.find(
       (currentReport) => currentReport.reportId === reportId,
     );
 
+    setAllReports(browserReports);
     setReport(matchedReport || null);
-    setReaction(getSavedReportReactions()[reportId] || { liked: false, likes: 0 });
+    setReaction(
+      getSavedReportReactions()[reportId] || { liked: false, likes: 0 },
+    );
     setComments(getSavedReportComments()[reportId] || []);
     setIsLoading(false);
   }, [reportId]);
@@ -92,6 +97,7 @@ export default function ReportDetailsPage() {
 
   const riskStyle = getRiskStyle(report.riskLevel);
   const identifier = getPrimaryIdentifier(report);
+  const relatedReports = getRelatedReports(allReports, report).slice(0, 3);
 
   function toggleLike() {
     const nextLiked = !reaction.liked;
@@ -116,6 +122,15 @@ export default function ReportDetailsPage() {
 
     setTimeout(() => {
       setCopied(false);
+    }, 1600);
+  }
+
+  async function copyIdentifier() {
+    await navigator.clipboard.writeText(identifier);
+    setCopiedIdentifier(true);
+
+    setTimeout(() => {
+      setCopiedIdentifier(false);
     }, 1600);
   }
 
@@ -199,12 +214,28 @@ export default function ReportDetailsPage() {
             </section>
 
             <section className="mt-6 rounded-2xl bg-slate-50 p-5">
-              <p className="text-xs font-black uppercase text-slate-400">
-                Reported identifier
-              </p>
-              <p className="mt-2 break-words text-xl font-black text-[#06285c]">
-                {maskIdentifier(identifier)}
-              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-black uppercase text-slate-400">
+                    Reported identifier
+                  </p>
+                  <p className="mt-2 break-words text-xl font-black text-[#06285c]">
+                    {maskIdentifier(identifier)}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-500">
+                    Type: {getIdentifierLabel(report)}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={copyIdentifier}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] active:bg-slate-300"
+                >
+                  <Copy size={17} />
+                  {copiedIdentifier ? "Copied" : "Copy"}
+                </button>
+              </div>
             </section>
 
             <section className="mt-6 rounded-2xl border border-orange-100 bg-orange-50 p-5">
@@ -240,7 +271,9 @@ export default function ReportDetailsPage() {
                 <DetailAction
                   icon={<MessageCircle size={18} />}
                   label="Comment"
-                  onClick={() => document.getElementById("detail-comment-input")?.focus()}
+                  onClick={() =>
+                    document.getElementById("detail-comment-input")?.focus()
+                  }
                 />
                 <DetailAction
                   active={copied}
@@ -297,13 +330,42 @@ export default function ReportDetailsPage() {
             </section>
           </article>
 
-          <aside className="space-y-4">
-            <DetailStat label="Report ID" value={report.reportId} />
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <DetailRiskCard report={report} />
             <DetailStat
+              icon={<FileText size={20} />}
+              label="Report ID"
+              value={report.reportId}
+            />
+            <DetailStat
+              icon={<Users size={20} />}
               label="Community reports"
               value={String(report.reportsCount || 1)}
             />
-            <DetailStat label="Status" value="Published warning" />
+            <DetailStat
+              icon={<ShieldCheck size={20} />}
+              label="Status"
+              value="Published warning"
+            />
+
+            <RelatedReports reports={relatedReports} />
+
+            <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm">
+              <h2 className="font-black text-[#06285c]">
+                Help the community
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Found another number, page, or website connected to this scam?
+                Add a new report so others can check before they pay.
+              </p>
+              <Link
+                href="/report-fraud"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#009879] px-4 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
+              >
+                Report Another Scam
+                <ExternalLink size={16} />
+              </Link>
+            </div>
           </aside>
         </div>
       </section>
@@ -326,13 +388,133 @@ function DetailAction({ active = false, icon, label, onClick }) {
   );
 }
 
-function DetailStat({ label, value }) {
+function DetailRiskCard({ report }) {
+  const riskStyle = getRiskStyle(report.riskLevel);
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-bold text-slate-500">{label}</p>
-      <p className="mt-2 break-words text-xl font-black text-[#06285c]">
-        {value}
-      </p>
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+          <ShieldAlert size={25} />
+        </div>
+
+        <div>
+          <p className="text-sm font-bold text-slate-500">Risk level</p>
+          <span
+            className={`mt-1 inline-flex rounded-full px-3 py-1 text-xs font-black ${riskStyle}`}
+          >
+            {report.riskLevel}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-3 text-sm">
+        <RiskFact label="Category" value={report.fraudCategory} />
+        <RiskFact label="Location" value={report.location || "Bangladesh"} />
+        <RiskFact label="Identifier" value={getIdentifierLabel(report)} />
+      </div>
     </div>
   );
+}
+
+function RiskFact({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3">
+      <span className="font-semibold text-slate-500">{label}</span>
+      <span className="text-right font-black text-[#06285c]">{value}</span>
+    </div>
+  );
+}
+
+function RelatedReports({ reports }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-black text-[#06285c]">Related reports</h2>
+        <Link href="/reports" className="text-xs font-black text-[#009879]">
+          View all
+        </Link>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {reports.length === 0 ? (
+          <p className="text-sm leading-6 text-slate-500">
+            No closely related reports yet.
+          </p>
+        ) : (
+          reports.map((relatedReport) => (
+            <Link
+              key={relatedReport.reportId}
+              href={`/reports/${relatedReport.reportId}`}
+              className="block rounded-xl border border-slate-100 p-3 transition hover:border-[#009879] hover:bg-[#f0fbf7]"
+            >
+              <p className="line-clamp-2 text-sm font-black text-[#06285c]">
+                {relatedReport.title}
+              </p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">
+                {relatedReport.fraudCategory} •{" "}
+                {relatedReport.submittedAt || "Recently"}
+              </p>
+            </Link>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DetailStat({ icon, label, value }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 text-[#009879]">
+          {icon}
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-slate-500">{label}</p>
+          <p className="mt-1 break-words text-xl font-black text-[#06285c]">
+            {value}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getIdentifierLabel(report) {
+  if (report.phoneOrPaymentNumber) {
+    return "Phone or payment number";
+  }
+
+  if (report.facebookLink) {
+    return "Facebook page";
+  }
+
+  if (report.websiteLink) {
+    return "Website";
+  }
+
+  if (report.businessName) {
+    return "Business";
+  }
+
+  return "Unknown";
+}
+
+function getRelatedReports(reports, currentReport) {
+  return reports.filter((report) => {
+    if (report.reportId === currentReport.reportId) {
+      return false;
+    }
+
+    const sameCategory = report.fraudCategory === currentReport.fraudCategory;
+    const sameRisk = report.riskLevel === currentReport.riskLevel;
+    const sameLocation =
+      report.location &&
+      currentReport.location &&
+      report.location === currentReport.location;
+
+    return sameCategory || sameRisk || sameLocation;
+  });
 }
