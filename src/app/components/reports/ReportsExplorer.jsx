@@ -21,6 +21,7 @@ import {
   getAllReportsForBrowser,
   getEntityType,
   getPrimaryIdentifier,
+  getRiskRank,
   getRiskStyle,
   maskIdentifier,
   searchReports,
@@ -596,16 +597,4 @@ function createActiveFilters({
         }
       : null,
   ].filter(Boolean);
-}
-
-function getRiskRank(riskLevel) {
-  if (riskLevel === "High Risk") {
-    return 3;
-  }
-
-  if (riskLevel === "Medium Risk") {
-    return 2;
-  }
-
-  return 1;
 }

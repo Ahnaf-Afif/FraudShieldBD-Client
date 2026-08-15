@@ -88,13 +88,18 @@ export function saveSubmittedReport(newReport) {
 
 export function searchReports(reports, query) {
   const cleanQuery = query.trim().toLowerCase();
+  const queryDigits = getDigitsOnly(cleanQuery);
+  const queryTokens = cleanQuery
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3);
 
   if (!cleanQuery) {
     return [];
   }
 
   return reports.filter((report) => {
-    const searchableText = [
+    const searchableValues = [
       report.title,
       report.fraudCategory,
       report.location,
@@ -105,12 +110,17 @@ export function searchReports(reports, query) {
       report.websiteLink,
       report.businessName,
       report.paymentMethod,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+    ].filter(Boolean);
+    const searchableText = searchableValues.join(" ").toLowerCase();
+    const searchableDigits = getDigitsOnly(searchableText);
+    const directMatch = searchableText.includes(cleanQuery);
+    const digitMatch =
+      queryDigits.length >= 6 && searchableDigits.includes(queryDigits);
+    const tokenMatch =
+      queryTokens.length > 0 &&
+      queryTokens.every((token) => searchableText.includes(token));
 
-    return searchableText.includes(cleanQuery);
+    return directMatch || digitMatch || tokenMatch;
   });
 }
 
@@ -204,6 +214,18 @@ export function getRiskStyle(riskLevel) {
   return "bg-green-100 text-green-600";
 }
 
+export function getRiskRank(riskLevel) {
+  if (riskLevel === "High Risk") {
+    return 3;
+  }
+
+  if (riskLevel === "Medium Risk") {
+    return 2;
+  }
+
+  return 1;
+}
+
 export function getPrimaryIdentifier(report) {
   return (
     report.phoneOrPaymentNumber ||
@@ -220,6 +242,10 @@ export function maskIdentifier(identifier) {
   }
 
   return `${identifier.slice(0, 5)}****${identifier.slice(-3)}`;
+}
+
+export function getDigitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
 }
 
 export function estimateReportRiskLevel(report) {

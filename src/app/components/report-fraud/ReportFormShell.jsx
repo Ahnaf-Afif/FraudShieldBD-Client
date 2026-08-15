@@ -62,6 +62,18 @@ export default function ReportFormShell() {
     const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
 
     if (!savedDraft) {
+      const identifierFromUrl = new URLSearchParams(window.location.search).get(
+        "identifier",
+      );
+
+      if (identifierFromUrl) {
+        setReportData((currentData) => ({
+          ...currentData,
+          ...createIdentifierPrefill(identifierFromUrl),
+        }));
+        setHasUnsavedChanges(true);
+      }
+
       return;
     }
 
@@ -309,4 +321,32 @@ function validateReportBeforeSubmit(reportData) {
 
 function hasText(value) {
   return value.trim().length > 0;
+}
+
+function createIdentifierPrefill(identifier) {
+  const cleanIdentifier = identifier.trim();
+  const lowerIdentifier = cleanIdentifier.toLowerCase();
+  const digitCount = cleanIdentifier.replace(/\D/g, "").length;
+
+  if (lowerIdentifier.includes("facebook.com")) {
+    return {
+      facebookLink: cleanIdentifier,
+    };
+  }
+
+  if (lowerIdentifier.includes(".") && !lowerIdentifier.includes(" ")) {
+    return {
+      websiteLink: cleanIdentifier,
+    };
+  }
+
+  if (digitCount >= 6) {
+    return {
+      phoneOrPaymentNumber: cleanIdentifier,
+    };
+  }
+
+  return {
+    businessName: cleanIdentifier,
+  };
 }

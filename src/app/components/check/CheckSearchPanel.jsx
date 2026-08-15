@@ -25,8 +25,11 @@ export default function CheckSearchPanel() {
 
   function submitSearch(event) {
     event.preventDefault();
+    runSearch(searchValue);
+  }
 
-    const cleanSearchValue = searchValue.trim();
+  function runSearch(value) {
+    const cleanSearchValue = value.trim();
 
     if (!cleanSearchValue) {
       return;
@@ -41,6 +44,7 @@ export default function CheckSearchPanel() {
 
   function handleExampleClick(example) {
     setSearchValue(example);
+    runSearch(example);
   }
 
   function clearSearch() {
@@ -66,6 +70,7 @@ export default function CheckSearchPanel() {
 
             {searchValue && (
               <button
+                type="button"
                 onClick={clearSearch}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100"
                 aria-label="Clear search"
@@ -89,6 +94,7 @@ export default function CheckSearchPanel() {
           {examples.map((example) => (
             <button
               key={example}
+              type="button"
               onClick={() => handleExampleClick(example)}
               className="rounded-full bg-white/15 px-4 py-1 hover:bg-white/25"
             >

@@ -1,11 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AlertTriangle, Clock, MapPin, Search, ShieldAlert, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Clock,
+  Copy,
+  ExternalLink,
+  FilePlus2,
+  MapPin,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import {
   getAllReportsForBrowser,
   getEntityType,
   getPrimaryIdentifier,
+  getRiskRank,
   getRiskStyle,
   maskIdentifier,
   searchReports,
@@ -14,14 +27,19 @@ import {
 export default function CheckResultCard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [matchedReports, setMatchedReports] = useState([]);
+  const [copiedReportId, setCopiedReportId] = useState("");
 
   useEffect(() => {
     function updateSearchResults() {
       const queryValue = new URLSearchParams(window.location.search).get("q") || "";
       const allReports = getAllReportsForBrowser();
+      const reports = searchReports(allReports, queryValue).sort(
+        (firstReport, secondReport) =>
+          getRiskRank(secondReport.riskLevel) - getRiskRank(firstReport.riskLevel),
+      );
 
       setSearchQuery(queryValue);
-      setMatchedReports(searchReports(allReports, queryValue));
+      setMatchedReports(reports);
     }
 
     updateSearchResults();
@@ -30,9 +48,23 @@ export default function CheckResultCard() {
 
     return () => {
       window.removeEventListener("popstate", updateSearchResults);
-      window.removeEventListener("fraudshield-search-updated", updateSearchResults);
+      window.removeEventListener(
+        "fraudshield-search-updated",
+        updateSearchResults,
+      );
     };
   }, []);
+
+  async function copyReportLink(reportId) {
+    const reportUrl = `${window.location.origin}/reports/${reportId}`;
+
+    await navigator.clipboard.writeText(reportUrl);
+    setCopiedReportId(reportId);
+
+    setTimeout(() => {
+      setCopiedReportId("");
+    }, 1600);
+  }
 
   if (!searchQuery) {
     return (
@@ -67,6 +99,24 @@ export default function CheckResultCard() {
             No result does not guarantee safety. Verify carefully before
             sending money.
           </p>
+
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link
+              href={`/report-fraud?identifier=${encodeURIComponent(searchQuery)}`}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
+            >
+              <FilePlus2 size={18} />
+              Report This Identifier
+            </Link>
+
+            <Link
+              href="/reports"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+            >
+              Browse Reports
+              <ExternalLink size={17} />
+            </Link>
+          </div>
         </div>
       </section>
     );
@@ -75,6 +125,10 @@ export default function CheckResultCard() {
   const mainReport = matchedReports[0];
   const riskStyle = getRiskStyle(mainReport.riskLevel);
   const identifier = getPrimaryIdentifier(mainReport);
+  const totalCommunityReports = matchedReports.reduce(
+    (total, report) => total + (report.reportsCount || 1),
+    0,
+  );
 
   return (
     <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1.5fr_0.8fr]">
@@ -105,7 +159,8 @@ export default function CheckResultCard() {
 
               <span className="inline-flex items-center gap-2">
                 <Users size={17} />
-                Community submitted warning
+                {totalCommunityReports} community report
+                {totalCommunityReports === 1 ? "" : "s"}
               </span>
             </div>
 
@@ -120,13 +175,37 @@ export default function CheckResultCard() {
                 No result here guarantees safety. Always verify before you pay.
               </p>
             </div>
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href={`/reports/${mainReport.reportId}`}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
+              >
+                View Full Report
+                <ExternalLink size={17} />
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => copyReportLink(mainReport.reportId)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+              >
+                <Copy size={17} />
+                {copiedReportId === mainReport.reportId
+                  ? "Copied Link"
+                  : "Copy Report Link"}
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="mt-6 grid gap-3 rounded-2xl border border-slate-200 p-4 sm:grid-cols-2 lg:grid-cols-4">
           <InfoItem label="Entity Type" value={getEntityType(mainReport)} />
           <InfoItem label="Identifier" value={maskIdentifier(identifier)} />
-          <InfoItem label="Recent Activity" value={mainReport.submittedAt || "Recently"} />
+          <InfoItem
+            label="Recent Activity"
+            value={mainReport.submittedAt || "Recently"}
+          />
           <InfoItem label="Common Category" value={mainReport.fraudCategory} />
         </div>
       </div>
@@ -136,16 +215,19 @@ export default function CheckResultCard() {
 
         <div className="mt-5 space-y-5">
           <SafetyTip
+            icon={AlertTriangle}
             title="Do not send advance payment"
             text="Scammers often ask for upfront payment and then block you."
           />
 
           <SafetyTip
+            icon={ShieldCheck}
             title="Verify page identity"
             text="Check page creation date, follower count, reviews and real customer feedback."
           />
 
           <SafetyTip
+            icon={MapPin}
             title="Call official support"
             text="If in doubt, call the company’s official support number to verify information."
           />
@@ -164,11 +246,11 @@ function InfoItem({ label, value }) {
   );
 }
 
-function SafetyTip({ title, text }) {
+function SafetyTip({ icon: Icon, title, text }) {
   return (
     <div className="flex gap-4">
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
-        <MapPin size={20} />
+        <Icon size={20} />
       </div>
 
       <div>
