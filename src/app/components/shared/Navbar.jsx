@@ -1,7 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { Bell, Eye, FileText, LogOut, Menu, UserRound, X } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  Eye,
+  FileText,
+  LogOut,
+  Menu,
+  UserRound,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,6 +31,12 @@ const navLinks = [
   { label: "Check Before You Pay", href: "/check" },
   { label: "Browse Reports", href: "/reports" },
   { label: "Report Fraud", href: "/report-fraud" },
+];
+const accountLinks = [
+  { label: "Profile", href: "/profile", icon: UserRound },
+  { label: "My Reports", href: "/my-reports", icon: FileText },
+  { label: "Watchlist", href: "/watchlist", icon: Eye },
+  { label: "Notifications", href: "/notifications", icon: Bell },
 ];
 
 export default function Navbar() {
@@ -209,11 +224,34 @@ export default function Navbar() {
 }
 
 function DesktopUserMenu({ user, unreadCount, onLogout }) {
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+
+  function closeAccountMenu() {
+    setIsAccountMenuOpen(false);
+  }
+
+  function handleLogoutClick() {
+    closeAccountMenu();
+    onLogout();
+  }
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="relative flex items-center gap-3">
       <Link
-        href="/profile"
-        className="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-2 transition hover:border-[#009879] hover:bg-[#f0fbf7]"
+        href="/notifications"
+        className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        aria-label="Notifications"
+      >
+        <Bell size={19} />
+        <NotificationBadge unreadCount={unreadCount} />
+      </Link>
+
+      <button
+        type="button"
+        onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
+        className="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-2 text-left transition hover:border-[#009879] hover:bg-[#f0fbf7]"
+        aria-expanded={isAccountMenuOpen}
+        aria-haspopup="menu"
       >
         <UserAvatar user={user} />
         <div>
@@ -224,45 +262,55 @@ function DesktopUserMenu({ user, unreadCount, onLogout }) {
             {user.role}
           </p>
         </div>
-      </Link>
-
-      <Link
-        href="/my-reports"
-        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
-        aria-label="My reports"
-      >
-        <FileText size={19} />
-      </Link>
-
-      <Link
-        href="/watchlist"
-        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
-        aria-label="Watchlist"
-      >
-        <Eye size={19} />
-      </Link>
-
-      <Link
-        href="/notifications"
-        className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
-        aria-label="Notifications"
-      >
-        <Bell size={19} />
-        {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </Link>
-
-      <button
-        type="button"
-        onClick={onLogout}
-        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
-        aria-label="Logout"
-      >
-        <LogOut size={19} />
+        <ChevronDown
+          size={17}
+          className={`text-slate-400 transition ${
+            isAccountMenuOpen ? "rotate-180" : ""
+          }`}
+        />
       </button>
+
+      {isAccountMenuOpen && (
+        <div
+          className="absolute right-0 top-full mt-3 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl"
+          role="menu"
+        >
+          <div className="border-b border-slate-100 p-4">
+            <div className="flex items-center gap-3">
+              <UserAvatar user={user} />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-[#06285c]">
+                  {user.name}
+                </p>
+                <p className="truncate text-xs font-semibold text-slate-500">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-2">
+            {accountLinks.map((link) => (
+              <AccountMenuLink
+                key={link.href}
+                link={link}
+                unreadCount={unreadCount}
+                onClick={closeAccountMenu}
+              />
+            ))}
+
+            <button
+              type="button"
+              onClick={handleLogoutClick}
+              className="mt-1 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-black text-red-500 transition hover:bg-red-50"
+              role="menuitem"
+            >
+              <LogOut size={17} />
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -312,11 +360,7 @@ function MobileUserMenu({ user, unreadCount, onLogout }) {
       >
         <Bell size={17} />
         Notifications
-        {unreadCount > 0 && (
-          <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
+        <InlineNotificationBadge unreadCount={unreadCount} />
       </Link>
 
       <button
@@ -331,11 +375,57 @@ function MobileUserMenu({ user, unreadCount, onLogout }) {
   );
 }
 
+function AccountMenuLink({ link, unreadCount, onClick }) {
+  const Icon = link.icon;
+  const isNotificationsLink = link.href === "/notifications";
+
+  return (
+    <Link
+      href={link.href}
+      onClick={onClick}
+      className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 text-sm font-black text-[#06285c] transition hover:bg-[#f0fbf7] hover:text-[#009879]"
+      role="menuitem"
+    >
+      <span className="inline-flex items-center gap-3">
+        <Icon size={17} />
+        {link.label}
+      </span>
+      {isNotificationsLink && (
+        <InlineNotificationBadge unreadCount={unreadCount} />
+      )}
+    </Link>
+  );
+}
+
 function UserAvatar({ user }) {
   return (
     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#009879] text-sm font-black text-white">
       {getInitials(user.name || user.email)}
     </div>
+  );
+}
+
+function NotificationBadge({ unreadCount }) {
+  if (unreadCount <= 0) {
+    return null;
+  }
+
+  return (
+    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+      {unreadCount > 9 ? "9+" : unreadCount}
+    </span>
+  );
+}
+
+function InlineNotificationBadge({ unreadCount }) {
+  if (unreadCount <= 0) {
+    return null;
+  }
+
+  return (
+    <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
+      {unreadCount > 9 ? "9+" : unreadCount}
+    </span>
   );
 }
 
