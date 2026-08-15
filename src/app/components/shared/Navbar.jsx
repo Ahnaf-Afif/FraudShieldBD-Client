@@ -56,6 +56,9 @@ export default function Navbar() {
     return pathname === href;
   }
 
+  const loginHref = createAuthHref("/login", pathname);
+  const registerHref = createAuthHref("/register", pathname);
+
   function toggleMenu() {
     setIsMenuOpen(!isMenuOpen);
   }
@@ -114,7 +117,7 @@ export default function Navbar() {
           ) : (
             <>
               <Link
-                href="/login"
+                href={loginHref}
                 className={`rounded-xl border px-5 py-2.5 text-sm font-bold transition ${
                   isActive("/login")
                     ? "border-[#06285c] bg-[#06285c] text-white"
@@ -125,7 +128,7 @@ export default function Navbar() {
               </Link>
 
               <Link
-                href="/register"
+                href={registerHref}
                 className={`rounded-xl px-5 py-2.5 text-sm font-bold transition ${
                   isActive("/register")
                     ? "bg-[#06285c] text-white"
@@ -175,7 +178,7 @@ export default function Navbar() {
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-3">
               <Link
-                href="/login"
+                href={loginHref}
                 onClick={closeMenu}
                 className={`rounded-xl border px-5 py-3 text-center text-sm font-bold ${
                   isActive("/login")
@@ -187,7 +190,7 @@ export default function Navbar() {
               </Link>
 
               <Link
-                href="/register"
+                href={registerHref}
                 onClick={closeMenu}
                 className={`rounded-xl px-5 py-3 text-center text-sm font-bold ${
                   isActive("/register")
@@ -334,4 +337,13 @@ function UserAvatar({ user }) {
       {getInitials(user.name || user.email)}
     </div>
   );
+}
+
+function createAuthHref(authPath, returnPath) {
+  const safeReturnPath =
+    returnPath && returnPath !== authPath && returnPath !== "/login" && returnPath !== "/register"
+      ? returnPath
+      : "/";
+
+  return `${authPath}?next=${encodeURIComponent(safeReturnPath)}`;
 }

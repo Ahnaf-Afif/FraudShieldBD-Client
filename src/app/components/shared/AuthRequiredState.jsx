@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AlertTriangle, UserRound } from "lucide-react";
 
 const iconMap = {
@@ -12,6 +15,9 @@ export default function AuthRequiredState({
   icon = "alert",
 }) {
   const Icon = iconMap[icon] || AlertTriangle;
+  const pathname = usePathname();
+  const loginHref = createAuthHref("/login", pathname);
+  const registerHref = createAuthHref("/register", pathname);
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
@@ -28,13 +34,13 @@ export default function AuthRequiredState({
 
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
-            href="/login"
+            href={loginHref}
             className="rounded-xl border border-[#0b63f6] px-5 py-3 text-sm font-black text-[#0b63f6] transition hover:bg-[#eef6ff]"
           >
             Login
           </Link>
           <Link
-            href="/register"
+            href={registerHref}
             className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
           >
             Register
@@ -43,4 +49,10 @@ export default function AuthRequiredState({
       </div>
     </section>
   );
+}
+
+function createAuthHref(authPath, returnPath) {
+  const safeReturnPath = returnPath && returnPath !== authPath ? returnPath : "/";
+
+  return `${authPath}?next=${encodeURIComponent(safeReturnPath)}`;
 }

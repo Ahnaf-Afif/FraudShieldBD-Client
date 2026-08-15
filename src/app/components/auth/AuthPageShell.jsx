@@ -26,6 +26,7 @@ export default function AuthPageShell({ mode }) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [existingSession, setExistingSession] = useState(null);
+  const [redirectPath, setRedirectPath] = useState("/");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -37,6 +38,7 @@ export default function AuthPageShell({ mode }) {
 
   useEffect(() => {
     setExistingSession(getDemoSession());
+    setRedirectPath(getRedirectPathFromUrl());
   }, []);
 
   function updateField(fieldName, value) {
@@ -78,7 +80,7 @@ export default function AuthPageShell({ mode }) {
     setFormStatus(isRegisterMode ? "register-ready" : "login-ready");
 
     setTimeout(() => {
-      router.push("/");
+      router.push(redirectPath);
     }, 700);
   }
 
@@ -169,15 +171,15 @@ export default function AuthPageShell({ mode }) {
                 Signed in as {existingSession.name}
               </p>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                You can return to the feed or submit a report using this demo
-                session.
+                You can continue to your requested page or submit a report
+                using this demo session.
               </p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <Link
-                  href="/"
+                  href={redirectPath}
                   className="inline-flex justify-center rounded-xl bg-[#009879] px-4 py-2.5 text-sm font-black text-white"
                 >
-                  Go to Feed
+                  Continue
                 </Link>
                 <Link
                   href="/report-fraud"
@@ -278,7 +280,7 @@ export default function AuthPageShell({ mode }) {
               ? "Already have an account?"
               : "New to FraudShield BD?"}{" "}
             <Link
-              href={isRegisterMode ? "/login" : "/register"}
+              href={createModeSwitchHref(isRegisterMode, redirectPath)}
               className="font-black text-[#009879]"
             >
               {isRegisterMode ? "Login" : "Create an account"}
@@ -288,6 +290,26 @@ export default function AuthPageShell({ mode }) {
       </section>
     </main>
   );
+}
+
+function getRedirectPathFromUrl() {
+  const nextPath = new URLSearchParams(window.location.search).get("next");
+
+  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
+    return "/";
+  }
+
+  if (nextPath.startsWith("/login") || nextPath.startsWith("/register")) {
+    return "/";
+  }
+
+  return nextPath;
+}
+
+function createModeSwitchHref(isRegisterMode, redirectPath) {
+  const targetPath = isRegisterMode ? "/login" : "/register";
+
+  return `${targetPath}?next=${encodeURIComponent(redirectPath)}`;
 }
 
 function AuthField({
@@ -330,9 +352,9 @@ function AuthStatusMessage({ status, mode }) {
     "short-password": "Password should be at least 8 characters.",
     "missing-terms": "Please agree to the community safety guidelines.",
     "login-ready":
-      "Logged in for this MVP demo. Redirecting to the feed...",
+      "Logged in for this MVP demo. Redirecting...",
     "register-ready":
-      "Account created for this MVP demo. Redirecting to the feed...",
+      "Account created for this MVP demo. Redirecting...",
   };
   const isSuccess = status === "login-ready" || status === "register-ready";
 
