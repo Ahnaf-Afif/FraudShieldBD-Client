@@ -31,7 +31,11 @@ export function readJsonObject(key, fallback = {}) {
   try {
     const parsedValue = JSON.parse(savedValue);
 
-    if (!parsedValue || Array.isArray(parsedValue) || typeof parsedValue !== "object") {
+    if (
+      !parsedValue ||
+      Array.isArray(parsedValue) ||
+      typeof parsedValue !== "object"
+    ) {
       localStorage.removeItem(key);
       return fallback;
     }

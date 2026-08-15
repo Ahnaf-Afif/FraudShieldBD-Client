@@ -9,6 +9,7 @@ import {
 } from "./reportFeedData";
 import { getWatchlistFromBrowser } from "./watchlistData";
 import { notifyLocalDataUpdated } from "./localDataEvents";
+import { readJsonObject } from "./browserStorage";
 
 export const NOTIFICATION_READ_KEY = "fraudshield-read-notifications";
 export const NOTIFICATION_PREFS_KEY = "fraudshield-notification-preferences";
@@ -56,6 +57,10 @@ export function getUnreadNotificationCount(demoUser) {
 }
 
 export function markNotificationAsRead(notificationId) {
+  if (!notificationId) {
+    return;
+  }
+
   const readNotifications = getReadNotifications();
 
   localStorage.setItem(
@@ -70,7 +75,8 @@ export function markNotificationAsRead(notificationId) {
 
 export function markAllNotificationsAsRead(notifications) {
   const readNotifications = getReadNotifications();
-  const nextReadNotifications = notifications.reduce(
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const nextReadNotifications = safeNotifications.reduce(
     (readMap, notification) => ({
       ...readMap,
       [notification.id]: true,
@@ -91,60 +97,26 @@ export function clearReadNotifications() {
 }
 
 export function getNotificationPreferences() {
-  const savedPreferences = localStorage.getItem(NOTIFICATION_PREFS_KEY);
+  const savedPreferences = readJsonObject(NOTIFICATION_PREFS_KEY, null);
 
   if (!savedPreferences) {
     return defaultNotificationPreferences;
   }
 
-  try {
-    const parsedPreferences = JSON.parse(savedPreferences);
-
-    if (!parsedPreferences || Array.isArray(parsedPreferences)) {
-      return defaultNotificationPreferences;
-    }
-
-    return {
-      ...defaultNotificationPreferences,
-      ...parsedPreferences,
-    };
-  } catch (error) {
-    console.error("Could not load notification preferences:", error);
-    return defaultNotificationPreferences;
-  }
+  return normalizeNotificationPreferences(savedPreferences);
 }
 
 export function saveNotificationPreferences(preferences) {
   localStorage.setItem(
     NOTIFICATION_PREFS_KEY,
-    JSON.stringify({
-      ...defaultNotificationPreferences,
-      ...preferences,
-    }),
+    JSON.stringify(normalizeNotificationPreferences(preferences)),
   );
   window.dispatchEvent(new Event(NOTIFICATION_UPDATED_EVENT));
   notifyLocalDataUpdated();
 }
 
 function getReadNotifications() {
-  const savedReadNotifications = localStorage.getItem(NOTIFICATION_READ_KEY);
-
-  if (!savedReadNotifications) {
-    return {};
-  }
-
-  try {
-    const parsedReadNotifications = JSON.parse(savedReadNotifications);
-
-    if (!parsedReadNotifications || Array.isArray(parsedReadNotifications)) {
-      return {};
-    }
-
-    return parsedReadNotifications;
-  } catch (error) {
-    console.error("Could not load notification read state:", error);
-    return {};
-  }
+  return readJsonObject(NOTIFICATION_READ_KEY);
 }
 
 function createSubmittedReportNotifications(reports, demoUser) {
@@ -225,4 +197,17 @@ function createHighRiskNotifications(reports) {
 
 function isOwnedByUser(report, user) {
   return report.ownerEmail === user.email || report.reporterEmail === user.email;
+}
+
+function normalizeNotificationPreferences(preferences = {}) {
+  return Object.keys(defaultNotificationPreferences).reduce(
+    (nextPreferences, preferenceKey) => ({
+      ...nextPreferences,
+      [preferenceKey]:
+        typeof preferences[preferenceKey] === "boolean"
+          ? preferences[preferenceKey]
+          : defaultNotificationPreferences[preferenceKey],
+    }),
+    {},
+  );
 }

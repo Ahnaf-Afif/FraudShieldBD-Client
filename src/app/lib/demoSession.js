@@ -1,32 +1,26 @@
+import { readJsonObject } from "./browserStorage";
+
 export const DEMO_SESSION_KEY = "fraudshield-demo-session";
 export const DEMO_SESSION_UPDATED_EVENT = "fraudshield-demo-session-updated";
 
 export function getDemoSession() {
-  const savedSession = localStorage.getItem(DEMO_SESSION_KEY);
+  const parsedSession = readJsonObject(DEMO_SESSION_KEY, null);
 
-  if (!savedSession) {
+  if (!isValidDemoSession(parsedSession)) {
     return null;
   }
 
-  try {
-    const parsedSession = JSON.parse(savedSession);
-
-    if (!parsedSession || !parsedSession.email) {
-      return null;
-    }
-
-    return parsedSession;
-  } catch (error) {
-    console.error("Could not load demo session:", error);
-    localStorage.removeItem(DEMO_SESSION_KEY);
-    return null;
-  }
+  return normalizeDemoSession(parsedSession);
 }
 
 export function saveDemoSession(user) {
+  if (!user?.email) {
+    return null;
+  }
+
   const session = {
     name: user.name || getNameFromEmail(user.email),
-    email: user.email,
+    email: user.email.trim().toLowerCase(),
     role: user.role || "Community Member",
     signedInAt: new Date().toLocaleString(),
   };
@@ -49,6 +43,7 @@ export function updateDemoSession(updates) {
     ...updates,
     name: updates.name || currentSession.name,
     role: updates.role || currentSession.role,
+    email: currentSession.email,
     updatedAt: new Date().toLocaleString(),
   };
 
@@ -107,4 +102,17 @@ function getNameFromEmail(email) {
     .filter(Boolean)
     .map((namePart) => `${namePart[0].toUpperCase()}${namePart.slice(1)}`)
     .join(" ");
+}
+
+function isValidDemoSession(session) {
+  return Boolean(session && typeof session.email === "string" && session.email.trim());
+}
+
+function normalizeDemoSession(session) {
+  return {
+    ...session,
+    name: session.name || getNameFromEmail(session.email),
+    email: session.email.trim().toLowerCase(),
+    role: session.role || "Community Member",
+  };
 }
