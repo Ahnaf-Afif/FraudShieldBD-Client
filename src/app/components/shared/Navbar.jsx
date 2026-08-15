@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FileText, LogOut, Menu, X } from "lucide-react";
+import { Eye, FileText, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -202,6 +202,14 @@ function DesktopUserMenu({ user, onLogout }) {
         </div>
       </Link>
 
+      <Link
+        href="/watchlist"
+        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        aria-label="Watchlist"
+      >
+        <Eye size={19} />
+      </Link>
+
       <button
         type="button"
         onClick={onLogout}
@@ -235,6 +243,14 @@ function MobileUserMenu({ user, onLogout }) {
       >
         <FileText size={17} />
         My Reports
+      </Link>
+
+      <Link
+        href="/watchlist"
+        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-black text-[#06285c]"
+      >
+        <Eye size={17} />
+        Watchlist
       </Link>
 
       <button

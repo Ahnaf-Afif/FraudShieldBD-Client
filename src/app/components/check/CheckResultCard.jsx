@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Clock,
   Copy,
+  Eye,
   ExternalLink,
   FilePlus2,
   MapPin,
@@ -23,11 +24,17 @@ import {
   maskIdentifier,
   searchReports,
 } from "../../lib/reportFeedData";
+import {
+  addToWatchlist,
+  isIdentifierWatched,
+  removeFromWatchlist,
+} from "../../lib/watchlistData";
 
 export default function CheckResultCard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [matchedReports, setMatchedReports] = useState([]);
   const [copiedReportId, setCopiedReportId] = useState("");
+  const [watchedIdentifier, setWatchedIdentifier] = useState("");
 
   useEffect(() => {
     function updateSearchResults() {
@@ -40,6 +47,18 @@ export default function CheckResultCard() {
 
       setSearchQuery(queryValue);
       setMatchedReports(reports);
+
+      const primaryReport = reports[0];
+
+      if (!primaryReport) {
+        setWatchedIdentifier("");
+        return;
+      }
+
+      const primaryIdentifier = getPrimaryIdentifier(primaryReport);
+      setWatchedIdentifier(
+        isIdentifierWatched(primaryIdentifier) ? primaryIdentifier : "",
+      );
     }
 
     updateSearchResults();
@@ -64,6 +83,25 @@ export default function CheckResultCard() {
     setTimeout(() => {
       setCopiedReportId("");
     }, 1600);
+  }
+
+  function toggleWatchIdentifier(report) {
+    const primaryIdentifier = getPrimaryIdentifier(report);
+
+    if (isIdentifierWatched(primaryIdentifier)) {
+      removeFromWatchlist(primaryIdentifier);
+      setWatchedIdentifier("");
+      return;
+    }
+
+    addToWatchlist({
+      identifier: primaryIdentifier,
+      type: getEntityType(report),
+      riskLevel: report.riskLevel,
+      reportId: report.reportId,
+      title: report.title,
+    });
+    setWatchedIdentifier(primaryIdentifier);
   }
 
   if (!searchQuery) {
@@ -194,6 +232,19 @@ export default function CheckResultCard() {
                 {copiedReportId === mainReport.reportId
                   ? "Copied Link"
                   : "Copy Report Link"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => toggleWatchIdentifier(mainReport)}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-black transition ${
+                  watchedIdentifier
+                    ? "border-[#009879] bg-[#f0fbf7] text-[#009879]"
+                    : "border-slate-200 text-[#06285c] hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+                }`}
+              >
+                <Eye size={17} />
+                {watchedIdentifier ? "Watching" : "Add to Watchlist"}
               </button>
             </div>
           </div>

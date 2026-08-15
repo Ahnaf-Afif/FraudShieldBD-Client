@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   Calendar,
   Copy,
+  Eye,
   ExternalLink,
   FileText,
   MessageCircle,
@@ -30,6 +31,11 @@ import {
   saveReportReactions,
 } from "../../lib/reportFeedData";
 import { createDemoAuthor, getDemoSession } from "../../lib/demoSession";
+import {
+  addToWatchlist,
+  isIdentifierWatched,
+  removeFromWatchlist,
+} from "../../lib/watchlistData";
 
 export default function ReportDetailsPage() {
   const { reportId } = useParams();
@@ -42,6 +48,7 @@ export default function ReportDetailsPage() {
   const [copiedIdentifier, setCopiedIdentifier] = useState(false);
   const [allReports, setAllReports] = useState([]);
   const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
+  const [isWatched, setIsWatched] = useState(false);
 
   useEffect(() => {
     const browserReports = getAllReportsForBrowser();
@@ -51,6 +58,9 @@ export default function ReportDetailsPage() {
 
     setAllReports(browserReports);
     setReport(matchedReport || null);
+    setIsWatched(
+      matchedReport ? isIdentifierWatched(getPrimaryIdentifier(matchedReport)) : false,
+    );
     setReaction(
       getSavedReportReactions()[reportId] || { liked: false, likes: 0 },
     );
@@ -162,6 +172,23 @@ export default function ReportDetailsPage() {
     saveReportComments(updatedComments);
     setComments(nextComments);
     setCommentDraft("");
+  }
+
+  function toggleWatchIdentifier() {
+    if (isWatched) {
+      removeFromWatchlist(identifier);
+      setIsWatched(false);
+      return;
+    }
+
+    addToWatchlist({
+      identifier,
+      type: getIdentifierLabel(report),
+      riskLevel: report.riskLevel,
+      reportId: report.reportId,
+      title: report.title,
+    });
+    setIsWatched(true);
   }
 
   return (
@@ -355,6 +382,20 @@ export default function ReportDetailsPage() {
 
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
             <DetailRiskCard report={report} />
+
+            <button
+              type="button"
+              onClick={toggleWatchIdentifier}
+              className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-black shadow-sm transition ${
+                isWatched
+                  ? "border-[#009879] bg-[#f0fbf7] text-[#009879]"
+                  : "border-slate-200 bg-white text-[#06285c] hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+              }`}
+            >
+              <Eye size={18} />
+              {isWatched ? "Watching Identifier" : "Add to Watchlist"}
+            </button>
+
             <DetailStat
               icon={<FileText size={20} />}
               label="Report ID"

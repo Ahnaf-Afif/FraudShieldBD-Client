@@ -16,7 +16,7 @@ const quickLinks = [
   { label: "Browse Reports", href: "/reports" },
   { label: "Report Fraud", href: "/report-fraud" },
   { label: "My Reports", href: "/my-reports" },
-  { label: "Login", href: "/login" },
+  { label: "Watchlist", href: "/watchlist" },
 ];
 
 const supportLinks = [
