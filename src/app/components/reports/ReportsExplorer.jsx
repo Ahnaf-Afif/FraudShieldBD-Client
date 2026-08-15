@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BadgeCheck,
+  BookmarkPlus,
   ChevronRight,
   Clock,
   FileText,
@@ -16,6 +17,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
@@ -47,6 +49,7 @@ const identifierOptions = [
   "Website",
   "Business",
 ];
+const REPORT_FILTER_PRESETS_KEY = "fraudshield-report-filter-presets";
 
 export default function ReportsExplorer() {
   const [reports, setReports] = useState([]);
@@ -60,9 +63,16 @@ export default function ReportsExplorer() {
   const [sortMode, setSortMode] = useState("Newest First");
   const [viewMode, setViewMode] = useState("List");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [filterPresets, setFilterPresets] = useState([]);
+  const [presetName, setPresetName] = useState("");
+  const [presetStatus, setPresetStatus] = useState("");
 
   useEffect(() => {
-    setReports(getAllReportsForBrowser());
+    const browserReports = getAllReportsForBrowser();
+
+    setReports(browserReports);
+    setFilterPresets(getSavedFilterPresets());
+    applyUrlFilters();
   }, []);
 
   const filteredReports = useMemo(() => {
@@ -141,6 +151,7 @@ export default function ReportsExplorer() {
     setIdentifierFilter("All Identifier Types");
     setLocationFilter("All Locations");
     setSortMode("Newest First");
+    setPresetStatus("");
   }
 
   function removeFilter(filterKey) {
@@ -167,6 +178,65 @@ export default function ReportsExplorer() {
     if (filterKey === "sort") {
       setSortMode("Newest First");
     }
+
+    setPresetStatus("");
+  }
+
+  function applyUrlFilters() {
+    const searchParams = new URLSearchParams(window.location.search);
+
+    setSearchValue(searchParams.get("q") || searchParams.get("search") || "");
+    setCategoryFilter(searchParams.get("category") || "All Categories");
+    setRiskFilter(searchParams.get("risk") || "All Risk Levels");
+    setIdentifierFilter(searchParams.get("type") || "All Identifier Types");
+    setLocationFilter(searchParams.get("location") || "All Locations");
+    setSortMode(searchParams.get("sort") || "Newest First");
+  }
+
+  function saveCurrentPreset() {
+    const cleanPresetName = presetName.trim();
+
+    if (!cleanPresetName) {
+      setPresetStatus("missing-name");
+      return;
+    }
+
+    const newPreset = {
+      id: `${cleanPresetName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+      name: cleanPresetName,
+      searchValue,
+      categoryFilter,
+      riskFilter,
+      identifierFilter,
+      locationFilter,
+      sortMode,
+      createdAt: new Date().toLocaleString(),
+    };
+    const nextPresets = [newPreset, ...filterPresets].slice(0, 6);
+
+    saveFilterPresets(nextPresets);
+    setFilterPresets(nextPresets);
+    setPresetName("");
+    setPresetStatus("saved");
+  }
+
+  function applyPreset(preset) {
+    setSearchValue(preset.searchValue);
+    setCategoryFilter(preset.categoryFilter);
+    setRiskFilter(preset.riskFilter);
+    setIdentifierFilter(preset.identifierFilter);
+    setLocationFilter(preset.locationFilter);
+    setSortMode(preset.sortMode);
+    setPresetStatus(`applied:${preset.name}`);
+    setMobileFiltersOpen(false);
+  }
+
+  function deletePreset(presetId) {
+    const nextPresets = filterPresets.filter((preset) => preset.id !== presetId);
+
+    saveFilterPresets(nextPresets);
+    setFilterPresets(nextPresets);
+    setPresetStatus("deleted");
   }
 
   return (
@@ -254,6 +324,17 @@ export default function ReportsExplorer() {
             </div>
           </div>
 
+          <SavedFiltersPanel
+            presets={filterPresets}
+            presetName={presetName}
+            presetStatus={presetStatus}
+            activeFilters={activeFilters}
+            onPresetNameChange={setPresetName}
+            onSavePreset={saveCurrentPreset}
+            onApplyPreset={applyPreset}
+            onDeletePreset={deletePreset}
+          />
+
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 text-center">
             <h2 className="font-black text-[#06285c]">Have you been scammed?</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -323,18 +404,33 @@ export default function ReportsExplorer() {
               </div>
 
               {activeFilters.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {activeFilters.map((filter) => (
+                <div className="mt-4">
+                  <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs font-black uppercase text-slate-400">
+                      Active filters
+                    </p>
                     <button
-                      key={filter.key}
                       type="button"
-                      onClick={() => removeFilter(filter.key)}
-                      className="inline-flex items-center gap-2 rounded-full border border-[#bfe8dc] bg-[#f0fbf7] px-3 py-2 text-xs font-black text-[#009879] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                      onClick={clearFilters}
+                      className="text-left text-xs font-black text-[#009879] hover:text-[#007f66] sm:text-right"
                     >
-                      {filter.label}
-                      <X size={14} />
+                      Clear all
                     </button>
-                  ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {activeFilters.map((filter) => (
+                      <button
+                        key={filter.key}
+                        type="button"
+                        onClick={() => removeFilter(filter.key)}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#bfe8dc] bg-[#f0fbf7] px-3 py-2 text-xs font-black text-[#009879] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                      >
+                        {filter.label}
+                        <X size={14} />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -521,6 +617,122 @@ function ViewModeButton({ label, icon: Icon, active, onClick }) {
       <span className="hidden sm:inline xl:hidden">{label}</span>
     </button>
   );
+}
+
+function SavedFiltersPanel({
+  presets,
+  presetName,
+  presetStatus,
+  activeFilters,
+  onPresetNameChange,
+  onSavePreset,
+  onApplyPreset,
+  onDeletePreset,
+}) {
+  const hasCustomFilters = activeFilters.length > 0;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
+        <BookmarkPlus size={18} />
+        Saved filters
+      </h2>
+
+      <div className="mt-4 space-y-3">
+        <input
+          value={presetName}
+          onChange={(event) => onPresetNameChange(event.target.value)}
+          placeholder="Example: High risk pages"
+          className="min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+        />
+
+        <button
+          type="button"
+          onClick={onSavePreset}
+          disabled={!hasCustomFilters}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#009879] px-4 text-sm font-black text-white transition hover:bg-[#007f66] disabled:cursor-not-allowed disabled:bg-slate-300"
+        >
+          <BookmarkPlus size={17} />
+          Save Current Filters
+        </button>
+
+        <PresetStatusMessage status={presetStatus} />
+      </div>
+
+      {presets.length > 0 && (
+        <div className="mt-5 space-y-2">
+          {presets.map((preset) => (
+            <div
+              key={preset.id}
+              className="rounded-xl border border-slate-100 bg-slate-50 p-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => onApplyPreset(preset)}
+                  className="min-w-0 text-left"
+                >
+                  <p className="break-words text-sm font-black text-[#06285c]">
+                    {preset.name}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">
+                    {formatPresetSummary(preset)}
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onDeletePreset(preset.id)}
+                  className="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                  aria-label={`Delete ${preset.name}`}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PresetStatusMessage({ status }) {
+  if (!status) {
+    return null;
+  }
+
+  if (status === "missing-name") {
+    return (
+      <p className="text-sm font-semibold text-red-500">
+        Add a name before saving this filter.
+      </p>
+    );
+  }
+
+  if (status === "saved") {
+    return (
+      <p className="text-sm font-semibold text-[#009879]">
+        Filter saved locally.
+      </p>
+    );
+  }
+
+  if (status === "deleted") {
+    return (
+      <p className="text-sm font-semibold text-slate-500">Filter deleted.</p>
+    );
+  }
+
+  if (status.startsWith("applied:")) {
+    return (
+      <p className="text-sm font-semibold text-[#009879]">
+        Applied {status.replace("applied:", "")}.
+      </p>
+    );
+  }
+
+  return null;
 }
 
 function ReportRow({ report }) {
@@ -800,4 +1012,44 @@ function createActiveFilters({
         }
       : null,
   ].filter(Boolean);
+}
+
+function getSavedFilterPresets() {
+  const savedPresets = localStorage.getItem(REPORT_FILTER_PRESETS_KEY);
+
+  if (!savedPresets) {
+    return [];
+  }
+
+  try {
+    const parsedPresets = JSON.parse(savedPresets);
+
+    if (!Array.isArray(parsedPresets)) {
+      return [];
+    }
+
+    return parsedPresets;
+  } catch (error) {
+    console.error("Could not load report filter presets:", error);
+    return [];
+  }
+}
+
+function saveFilterPresets(presets) {
+  localStorage.setItem(REPORT_FILTER_PRESETS_KEY, JSON.stringify(presets));
+}
+
+function formatPresetSummary(preset) {
+  return [
+    preset.searchValue ? `Search: ${preset.searchValue}` : null,
+    preset.categoryFilter !== "All Categories" ? preset.categoryFilter : null,
+    preset.riskFilter !== "All Risk Levels" ? preset.riskFilter : null,
+    preset.identifierFilter !== "All Identifier Types"
+      ? preset.identifierFilter
+      : null,
+    preset.locationFilter !== "All Locations" ? preset.locationFilter : null,
+    preset.sortMode !== "Newest First" ? preset.sortMode : null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
 }
