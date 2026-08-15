@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Database,
+  Download,
+  FileUp,
   RefreshCcw,
   ShieldCheck,
   Trash2,
@@ -11,13 +13,16 @@ import {
 import {
   clearAllLocalMvpData,
   clearLocalMvpActivity,
+  createLocalMvpBackup,
   getLocalMvpStorageSummary,
+  restoreLocalMvpBackup,
 } from "../../lib/localMvpData";
 
 export default function SettingsDashboard() {
   const [storageSummary, setStorageSummary] = useState([]);
   const [status, setStatus] = useState("");
   const [confirmMode, setConfirmMode] = useState("");
+  const [importError, setImportError] = useState("");
 
   useEffect(() => {
     refreshStorageSummary();
@@ -37,6 +42,7 @@ export default function SettingsDashboard() {
     clearLocalMvpActivity();
     setConfirmMode("");
     setStatus("activity-cleared");
+    setImportError("");
     refreshStorageSummary();
   }
 
@@ -50,7 +56,57 @@ export default function SettingsDashboard() {
     clearAllLocalMvpData();
     setConfirmMode("");
     setStatus("all-cleared");
+    setImportError("");
     refreshStorageSummary();
+  }
+
+  function exportBackup() {
+    const backup = createLocalMvpBackup();
+    const backupBlob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json",
+    });
+    const downloadUrl = URL.createObjectURL(backupBlob);
+    const downloadLink = document.createElement("a");
+
+    downloadLink.href = downloadUrl;
+    downloadLink.download = `fraudshield-mvp-backup-${Date.now()}.json`;
+    downloadLink.click();
+
+    URL.revokeObjectURL(downloadUrl);
+    setStatus("backup-exported");
+    setImportError("");
+    setConfirmMode("");
+  }
+
+  async function importBackup(event) {
+    const selectedFile = event.target.files?.[0];
+
+    if (!selectedFile) {
+      return;
+    }
+
+    try {
+      const fileText = await selectedFile.text();
+      const parsedBackup = JSON.parse(fileText);
+      const restoreResult = restoreLocalMvpBackup(parsedBackup);
+
+      if (!restoreResult.ok) {
+        setImportError(restoreResult.message);
+        setStatus("");
+        return;
+      }
+
+      setStatus("backup-imported");
+      setImportError("");
+      setConfirmMode("");
+      refreshStorageSummary();
+    } catch (error) {
+      console.error("Could not import MVP backup:", error);
+      setImportError("Could not read this backup file.");
+      setStatus("");
+    } finally {
+      event.target.value = "";
+    }
   }
 
   const storedItemCount = storageSummary.filter((item) => item.isStored).length;
@@ -112,6 +168,23 @@ export default function SettingsDashboard() {
             </p>
 
             <StatusMessage status={status} />
+            {importError && (
+              <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-black text-red-600">
+                {importError}
+              </p>
+            )}
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <UtilityAction
+                icon={<Download size={22} />}
+                title="Export backup"
+                text="Download a JSON backup of the current local MVP data in this browser."
+                buttonLabel="Download Backup"
+                onClick={exportBackup}
+              />
+
+              <ImportAction onImport={importBackup} />
+            </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <DangerAction
@@ -177,14 +250,69 @@ function StatusMessage({ status }) {
     return null;
   }
 
-  const message =
-    status === "activity-cleared"
-      ? "Local activity data was cleared."
-      : "All local MVP data was cleared.";
+  const messages = {
+    "activity-cleared": "Local activity data was cleared.",
+    "all-cleared": "All local MVP data was cleared.",
+    "backup-exported": "Local MVP backup download started.",
+    "backup-imported": "Local MVP backup restored.",
+  };
 
   return (
     <div className="mt-5 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-4 text-sm font-black text-[#007f66]">
-      {message}
+      {messages[status] || "Settings updated."}
+    </div>
+  );
+}
+
+function UtilityAction({ icon, title, text, buttonLabel, onClick }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+          {icon}
+        </div>
+        <div>
+          <h3 className="font-black text-[#06285c]">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onClick}
+        className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#009879] px-4 text-sm font-black text-white transition hover:bg-[#007f66]"
+      >
+        {buttonLabel}
+      </button>
+    </div>
+  );
+}
+
+function ImportAction({ onImport }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 p-5">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eef6ff] text-[#0b63f6]">
+          <FileUp size={22} />
+        </div>
+        <div>
+          <h3 className="font-black text-[#06285c]">Import backup</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Restore a FraudShield MVP JSON backup. This replaces current local
+            MVP data.
+          </p>
+        </div>
+      </div>
+
+      <label className="mt-5 inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl border border-[#bfdbfe] bg-[#eff6ff] px-4 text-sm font-black text-[#0b63f6] transition hover:bg-[#dbeafe]">
+        Choose Backup File
+        <input
+          type="file"
+          accept="application/json,.json"
+          onChange={onImport}
+          className="sr-only"
+        />
+      </label>
     </div>
   );
 }

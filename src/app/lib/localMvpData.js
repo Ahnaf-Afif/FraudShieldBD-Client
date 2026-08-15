@@ -28,6 +28,7 @@ const activityKeys = [
 ];
 
 const allMvpKeys = [...activityKeys, DEMO_SESSION_KEY, NOTIFICATION_PREFS_KEY];
+const BACKUP_VERSION = 1;
 
 export function clearLocalMvpActivity() {
   removeLocalStorageKeys(activityKeys);
@@ -49,6 +50,64 @@ export function getLocalMvpStorageSummary() {
       size: value ? value.length : 0,
     };
   });
+}
+
+export function createLocalMvpBackup() {
+  const data = allMvpKeys.reduce((backupData, key) => {
+    const value = localStorage.getItem(key);
+
+    if (!value) {
+      return backupData;
+    }
+
+    return {
+      ...backupData,
+      [key]: value,
+    };
+  }, {});
+
+  return {
+    app: "FraudShield BD",
+    version: BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    keys: allMvpKeys,
+    data,
+  };
+}
+
+export function restoreLocalMvpBackup(backup) {
+  if (!isValidLocalMvpBackup(backup)) {
+    return {
+      ok: false,
+      message: "This file is not a valid FraudShield BD MVP backup.",
+    };
+  }
+
+  removeLocalStorageKeys(allMvpKeys);
+
+  Object.entries(backup.data).forEach(([key, value]) => {
+    if (allMvpKeys.includes(key) && typeof value === "string") {
+      localStorage.setItem(key, value);
+    }
+  });
+
+  notifyLocalMvpDataChanged();
+
+  return {
+    ok: true,
+    message: "Local MVP backup restored.",
+  };
+}
+
+export function isValidLocalMvpBackup(backup) {
+  return Boolean(
+    backup &&
+      backup.app === "FraudShield BD" &&
+      backup.version === BACKUP_VERSION &&
+      backup.data &&
+      typeof backup.data === "object" &&
+      !Array.isArray(backup.data),
+  );
 }
 
 function removeLocalStorageKeys(keys) {
