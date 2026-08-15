@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  BadgeAlert,
+  Bell,
   FilePlus2,
   MessageCircle,
   Search,
@@ -33,14 +35,7 @@ import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
 const FEED_REPEAT_COUNT = 20;
-
-const filters = [
-  "All",
-  "Mobile Financial",
-  "Facebook Page",
-  "Website",
-  "Investment",
-];
+const MIN_COMMENT_LENGTH = 3;
 
 export default function HomeNewsFeed() {
   const [reports, setReports] = useState(demoReports);
@@ -51,6 +46,7 @@ export default function HomeNewsFeed() {
   const [reportReactions, setReportReactions] = useState({});
   const [reportComments, setReportComments] = useState({});
   const [commentDrafts, setCommentDrafts] = useState({});
+  const [commentErrors, setCommentErrors] = useState({});
   const [activeCommentReportId, setActiveCommentReportId] = useState("");
   const [copiedReportId, setCopiedReportId] = useState("");
   const [visibleReportCount, setVisibleReportCount] = useState(
@@ -79,25 +75,34 @@ export default function HomeNewsFeed() {
     };
   }, []);
 
-  const categoryFilteredReports =
-    activeFilter === "All"
-      ? reports
-      : reports.filter((report) => report.fraudCategory === activeFilter);
-  const searchedReports = categoryFilteredReports.filter((report) =>
-    reportMatchesFeedSearch(report, feedSearch),
+  const feedStats = useMemo(() => createFeedStats(reports), [reports]);
+  const filterOptions = useMemo(() => createFeedFilterOptions(reports), [reports]);
+  const categoryFilteredReports = useMemo(
+    () =>
+      activeFilter === "All"
+        ? reports
+        : reports.filter((report) => report.fraudCategory === activeFilter),
+    [activeFilter, reports],
   );
-  const filteredReports = sortFeedReports(searchedReports, sortMode);
-  const feedReports = createScrollableFeedReports(filteredReports);
+  const searchedReports = useMemo(
+    () =>
+      categoryFilteredReports.filter((report) =>
+        reportMatchesFeedSearch(report, feedSearch),
+      ),
+    [categoryFilteredReports, feedSearch],
+  );
+  const filteredReports = useMemo(
+    () => sortFeedReports(searchedReports, sortMode),
+    [searchedReports, sortMode],
+  );
+  const trendingReport = filteredReports[0] || reports[0] || null;
+  const feedReports = useMemo(
+    () => createScrollableFeedReports(filteredReports),
+    [filteredReports],
+  );
   const visibleReports = feedReports.slice(0, visibleReportCount);
   const hasMoreReports = visibleReportCount < feedReports.length;
   const hasActiveFeedFilters = activeFilter !== "All" || feedSearch.trim();
-  const filterOptions = filters.map((filter) => ({
-    label: filter,
-    count:
-      filter === "All"
-        ? reports.length
-        : reports.filter((report) => report.fraudCategory === filter).length,
-  }));
 
   useEffect(() => {
     setVisibleReportCount(INITIAL_VISIBLE_REPORTS);
@@ -177,6 +182,10 @@ export default function HomeNewsFeed() {
   }
 
   function updateCommentDraft(reportId, value) {
+    setCommentErrors((currentErrors) => ({
+      ...currentErrors,
+      [reportId]: "",
+    }));
     setCommentDrafts((currentDrafts) => ({
       ...currentDrafts,
       [reportId]: value,
@@ -186,7 +195,11 @@ export default function HomeNewsFeed() {
   function submitComment(reportId) {
     const commentText = (commentDrafts[reportId] || "").trim();
 
-    if (!commentText) {
+    if (commentText.length < MIN_COMMENT_LENGTH) {
+      setCommentErrors((currentErrors) => ({
+        ...currentErrors,
+        [reportId]: `Write at least ${MIN_COMMENT_LENGTH} characters.`,
+      }));
       return;
     }
 
@@ -215,6 +228,10 @@ export default function HomeNewsFeed() {
       ...currentDrafts,
       [reportId]: "",
     }));
+    setCommentErrors((currentErrors) => ({
+      ...currentErrors,
+      [reportId]: "",
+    }));
   }
 
   function clearFeedFilters() {
@@ -229,6 +246,8 @@ export default function HomeNewsFeed() {
       className="mx-auto max-w-3xl px-4 py-8 sm:px-6"
     >
       <HomeFeedComposer />
+
+      <FeedOverview stats={feedStats} trendingReport={trendingReport} />
 
       <div className="mb-5">
         <p className="text-sm font-black uppercase tracking-wide text-[#009879]">
@@ -325,6 +344,7 @@ export default function HomeNewsFeed() {
               reaction={reportReactions[report.reportId]}
               comments={reportComments[report.reportId] || []}
               commentDraft={commentDrafts[report.reportId] || ""}
+              commentError={commentErrors[report.reportId] || ""}
               commentsOpen={activeCommentReportId === report.reportId}
               copied={copiedReportId === report.reportId}
               currentAuthor={currentAuthor}
@@ -353,6 +373,90 @@ export default function HomeNewsFeed() {
         </div>
       )}
     </section>
+  );
+}
+
+function FeedOverview({ stats, trendingReport }) {
+  return (
+    <div className="mb-6 grid gap-4 md:grid-cols-[1fr_1.2fr]">
+      <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-1">
+        <FeedStatCard
+          label="Reports"
+          value={stats.totalReports}
+          icon={ShieldAlert}
+          tone="green"
+        />
+        <FeedStatCard
+          label="High Risk"
+          value={stats.highRiskReports}
+          icon={BadgeAlert}
+          tone="red"
+        />
+        <FeedStatCard
+          label="Categories"
+          value={stats.totalCategories}
+          icon={Bell}
+          tone="blue"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4 shadow-sm sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-orange-500">
+            <AlertTriangle size={23} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-wide text-orange-600">
+              Trending warning
+            </p>
+            {trendingReport ? (
+              <>
+                <Link
+                  href={`/reports/${trendingReport.reportId}`}
+                  className="mt-1 block break-words text-lg font-black leading-snug text-[#06285c] transition hover:text-[#009879]"
+                >
+                  {trendingReport.title}
+                </Link>
+                <p className="mt-2 text-sm leading-6 text-orange-800">
+                  {maskIdentifier(getPrimaryIdentifier(trendingReport))} has{" "}
+                  {trendingReport.reportsCount || 1} community report
+                  {(trendingReport.reportsCount || 1) === 1 ? "" : "s"}.
+                </p>
+              </>
+            ) : (
+              <p className="mt-2 text-sm leading-6 text-orange-800">
+                Community warnings will appear here after reports are available.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeedStatCard({ label, value, icon: Icon, tone }) {
+  const toneClass =
+    tone === "red"
+      ? "bg-red-50 text-red-500"
+      : tone === "blue"
+        ? "bg-[#eef6ff] text-[#0b63f6]"
+        : "bg-[#e9f8f4] text-[#009879]";
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${toneClass}`}
+        >
+          <Icon size={22} />
+        </div>
+        <div>
+          <p className="text-2xl font-black text-[#06285c]">{value}</p>
+          <p className="text-sm font-bold text-slate-500">{label}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -424,6 +528,7 @@ function HomeReportPost({
   reaction,
   comments,
   commentDraft,
+  commentError,
   commentsOpen,
   copied,
   currentAuthor,
@@ -526,6 +631,7 @@ function HomeReportPost({
         <CommentPanel
           comments={comments}
           draft={commentDraft}
+          error={commentError}
           currentAuthor={currentAuthor}
           onChange={(value) => onCommentChange(report.reportId, value)}
           onSubmit={() => onCommentSubmit(report.reportId)}
@@ -535,7 +641,14 @@ function HomeReportPost({
   );
 }
 
-function CommentPanel({ comments, draft, currentAuthor, onChange, onSubmit }) {
+function CommentPanel({
+  comments,
+  draft,
+  error,
+  currentAuthor,
+  onChange,
+  onSubmit,
+}) {
   return (
     <div className="border-t border-slate-200 bg-slate-50 p-4 sm:p-5">
       <div className="space-y-3">
@@ -585,11 +698,18 @@ function CommentPanel({ comments, draft, currentAuthor, onChange, onSubmit }) {
         <button
           type="button"
           onClick={onSubmit}
+          disabled={draft.trim().length < MIN_COMMENT_LENGTH}
           className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400"
         >
           Post
         </button>
       </div>
+
+      {error && (
+        <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -684,6 +804,34 @@ function sortFeedReports(reports, sortMode) {
   }
 
   return sortedReports;
+}
+
+function createFeedStats(reports) {
+  return {
+    totalReports: reports.length,
+    highRiskReports: reports.filter((report) => report.riskLevel === "High Risk")
+      .length,
+    totalCategories: new Set(
+      reports.map((report) => report.fraudCategory).filter(Boolean),
+    ).size,
+  };
+}
+
+function createFeedFilterOptions(reports) {
+  const categoryCounts = reports.reduce((counts, report) => {
+    const category = report.fraudCategory || "Other";
+
+    return {
+      ...counts,
+      [category]: (counts[category] || 0) + 1,
+    };
+  }, {});
+  const popularCategories = Object.entries(categoryCounts)
+    .sort((firstCategory, secondCategory) => secondCategory[1] - firstCategory[1])
+    .slice(0, 5)
+    .map(([label, count]) => ({ label, count }));
+
+  return [{ label: "All", count: reports.length }, ...popularCategories];
 }
 
 function getRiskSortValue(riskLevel) {
