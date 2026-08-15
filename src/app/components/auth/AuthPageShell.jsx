@@ -6,14 +6,21 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  CheckCircle2,
   Eye,
   EyeOff,
   LockKeyhole,
   Mail,
+  RotateCcw,
   ShieldCheck,
   User,
+  XCircle,
 } from "lucide-react";
-import { getDemoSession, saveDemoSession } from "../../lib/demoSession";
+import {
+  clearDemoSession,
+  getDemoSession,
+  saveDemoSession,
+} from "../../lib/demoSession";
 
 const trustPoints = [
   "Report scams and track review status",
@@ -51,24 +58,13 @@ export default function AuthPageShell({ mode }) {
 
   function handleSubmit(event) {
     event.preventDefault();
+    const validationStatus = validateAuthForm({
+      formData,
+      isRegisterMode,
+    });
 
-    if (isRegisterMode && !formData.name.trim()) {
-      setFormStatus("missing-name");
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      setFormStatus("missing-email");
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setFormStatus("short-password");
-      return;
-    }
-
-    if (isRegisterMode && !formData.agreeToTerms) {
-      setFormStatus("missing-terms");
+    if (validationStatus) {
+      setFormStatus(validationStatus);
       return;
     }
 
@@ -83,6 +79,14 @@ export default function AuthPageShell({ mode }) {
       router.push(redirectPath);
     }, 700);
   }
+
+  function switchDemoAccount() {
+    clearDemoSession();
+    setExistingSession(null);
+    setFormStatus("session-cleared");
+  }
+
+  const passwordStrength = getPasswordStrength(formData.password);
 
   return (
     <main className="min-h-screen bg-[#f8fbff]">
@@ -174,6 +178,11 @@ export default function AuthPageShell({ mode }) {
                 You can continue to your requested page or submit a report
                 using this demo session.
               </p>
+              {redirectPath !== "/" && (
+                <p className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-black text-[#06285c]">
+                  Return target: {redirectPath}
+                </p>
+              )}
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <Link
                   href={redirectPath}
@@ -187,6 +196,14 @@ export default function AuthPageShell({ mode }) {
                 >
                   Report Fraud
                 </Link>
+                <button
+                  type="button"
+                  onClick={switchDemoAccount}
+                  className="inline-flex justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-[#06285c] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                >
+                  <RotateCcw size={16} />
+                  Switch
+                </button>
               </div>
             </div>
           )}
@@ -229,6 +246,8 @@ export default function AuthPageShell({ mode }) {
                 </button>
               }
             />
+
+            <PasswordStrengthMeter strength={passwordStrength} />
 
             {isRegisterMode && (
               <label className="block">
@@ -292,6 +311,128 @@ export default function AuthPageShell({ mode }) {
   );
 }
 
+function validateAuthForm({ formData, isRegisterMode }) {
+  if (isRegisterMode && !formData.name.trim()) {
+    return "missing-name";
+  }
+
+  if (!formData.email.trim()) {
+    return "missing-email";
+  }
+
+  if (!isValidEmail(formData.email)) {
+    return "invalid-email";
+  }
+
+  if (formData.password.length < 8) {
+    return "short-password";
+  }
+
+  if (isRegisterMode && getPasswordStrength(formData.password).score < 3) {
+    return "weak-password";
+  }
+
+  if (isRegisterMode && !formData.agreeToTerms) {
+    return "missing-terms";
+  }
+
+  return "";
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+function getPasswordStrength(password) {
+  const checks = [
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[a-z]/.test(password),
+    /\d/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ];
+  const score = checks.filter(Boolean).length;
+
+  if (!password) {
+    return {
+      score: 0,
+      label: "Password not entered",
+      checks,
+    };
+  }
+
+  if (score <= 2) {
+    return {
+      score,
+      label: "Weak password",
+      checks,
+    };
+  }
+
+  if (score <= 4) {
+    return {
+      score,
+      label: "Good password",
+      checks,
+    };
+  }
+
+  return {
+    score,
+    label: "Strong password",
+    checks,
+  };
+}
+
+function PasswordStrengthMeter({ strength }) {
+  const meterWidth = `${Math.min((strength.score / 5) * 100, 100)}%`;
+  const meterColor =
+    strength.score <= 2
+      ? "bg-red-500"
+      : strength.score <= 4
+        ? "bg-orange-500"
+        : "bg-[#009879]";
+
+  return (
+    <div className="-mt-1 rounded-2xl bg-slate-50 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-black text-[#06285c]">
+          {strength.label}
+        </p>
+        <p className="text-xs font-black text-slate-400">
+          {strength.score}/5
+        </p>
+      </div>
+
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+        <div className={`h-full rounded-full ${meterColor}`} style={{ width: meterWidth }} />
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {[
+          "8+ characters",
+          "Uppercase letter",
+          "Lowercase letter",
+          "Number",
+          "Symbol",
+        ].map((label, index) => (
+          <div
+            key={label}
+            className="flex items-center gap-2 text-xs font-bold text-slate-500"
+          >
+            {strength.checks[index] ? (
+              <CheckCircle2 size={14} className="text-[#009879]" />
+            ) : (
+              <XCircle size={14} className="text-slate-300" />
+            )}
+            {label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function getRedirectPathFromUrl() {
   const nextPath = new URLSearchParams(window.location.search).get("next");
 
@@ -349,14 +490,21 @@ function AuthStatusMessage({ status, mode }) {
   const messages = {
     "missing-name": "Please enter your full name.",
     "missing-email": "Please enter your email address.",
+    "invalid-email": "Please enter a valid email address.",
     "short-password": "Password should be at least 8 characters.",
+    "weak-password":
+      "Use a stronger password with uppercase, lowercase, number and symbol.",
     "missing-terms": "Please agree to the community safety guidelines.",
+    "session-cleared": "Demo session cleared. You can login with another account.",
     "login-ready":
       "Logged in for this MVP demo. Redirecting...",
     "register-ready":
       "Account created for this MVP demo. Redirecting...",
   };
-  const isSuccess = status === "login-ready" || status === "register-ready";
+  const isSuccess =
+    status === "login-ready" ||
+    status === "register-ready" ||
+    status === "session-cleared";
 
   return (
     <div
