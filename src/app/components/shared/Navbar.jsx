@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Eye, FileText, LogOut, Menu, X } from "lucide-react";
+import { Bell, Eye, FileText, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +11,10 @@ import {
   getDemoSession,
   getInitials,
 } from "../../lib/demoSession";
+import {
+  getUnreadNotificationCount,
+  NOTIFICATION_UPDATED_EVENT,
+} from "../../lib/notificationData";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -22,19 +26,25 @@ const navLinks = [
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [demoUser, setDemoUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
 
   useEffect(() => {
     function updateDemoUser() {
-      setDemoUser(getDemoSession());
+      const currentUser = getDemoSession();
+
+      setDemoUser(currentUser);
+      setUnreadCount(getUnreadNotificationCount(currentUser));
     }
 
     updateDemoUser();
     window.addEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
+    window.addEventListener(NOTIFICATION_UPDATED_EVENT, updateDemoUser);
     window.addEventListener("storage", updateDemoUser);
 
     return () => {
       window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
+      window.removeEventListener(NOTIFICATION_UPDATED_EVENT, updateDemoUser);
       window.removeEventListener("storage", updateDemoUser);
     };
   }, []);
@@ -93,7 +103,11 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 lg:flex">
           {demoUser ? (
-            <DesktopUserMenu user={demoUser} onLogout={handleLogout} />
+            <DesktopUserMenu
+              user={demoUser}
+              unreadCount={unreadCount}
+              onLogout={handleLogout}
+            />
           ) : (
             <>
               <Link
@@ -150,7 +164,11 @@ export default function Navbar() {
           </nav>
 
           {demoUser ? (
-            <MobileUserMenu user={demoUser} onLogout={handleLogout} />
+            <MobileUserMenu
+              user={demoUser}
+              unreadCount={unreadCount}
+              onLogout={handleLogout}
+            />
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-3">
               <Link
@@ -184,7 +202,7 @@ export default function Navbar() {
   );
 }
 
-function DesktopUserMenu({ user, onLogout }) {
+function DesktopUserMenu({ user, unreadCount, onLogout }) {
   return (
     <div className="flex items-center gap-3">
       <Link
@@ -210,6 +228,19 @@ function DesktopUserMenu({ user, onLogout }) {
         <Eye size={19} />
       </Link>
 
+      <Link
+        href="/notifications"
+        className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        aria-label="Notifications"
+      >
+        <Bell size={19} />
+        {unreadCount > 0 && (
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
+      </Link>
+
       <button
         type="button"
         onClick={onLogout}
@@ -222,7 +253,7 @@ function DesktopUserMenu({ user, onLogout }) {
   );
 }
 
-function MobileUserMenu({ user, onLogout }) {
+function MobileUserMenu({ user, unreadCount, onLogout }) {
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-center gap-3">
@@ -251,6 +282,19 @@ function MobileUserMenu({ user, onLogout }) {
       >
         <Eye size={17} />
         Watchlist
+      </Link>
+
+      <Link
+        href="/notifications"
+        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-black text-[#06285c]"
+      >
+        <Bell size={17} />
+        Notifications
+        {unreadCount > 0 && (
+          <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
       </Link>
 
       <button
