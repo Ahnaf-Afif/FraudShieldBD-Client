@@ -187,7 +187,10 @@ export default function HomeNewsFeed() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <section
+      id="community-feed"
+      className="mx-auto max-w-3xl px-4 py-8 sm:px-6"
+    >
       <HomeFeedComposer />
 
       <div className="mb-5">

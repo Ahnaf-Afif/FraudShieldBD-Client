@@ -10,7 +10,6 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "Check Before You Pay", href: "/check" },
   { label: "Browse Reports", href: "/reports" },
-  { label: "Scam Library", href: "/scam-library" },
   { label: "Report Fraud", href: "/report-fraud" },
 ];
 
@@ -32,7 +31,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center">
             <Image
               src="/favicon_rounded.ico"
@@ -46,16 +45,18 @@ export default function Navbar() {
           <h1 className="text-xl font-black text-[#06285c] sm:text-2xl">
             FraudShield <span className="text-[#009879]">BD</span>
           </h1>
-        </div>
+        </Link>
 
         <nav className="hidden items-center gap-8 text-sm font-semibold text-[#06285c] lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={
-                isActive(link.href) ? "border-b-2 border-[#06285c] py-2" : ""
-              }
+              className={`py-2 transition hover:text-[#009879] ${
+                isActive(link.href)
+                  ? "border-b-2 border-[#06285c] text-[#06285c]"
+                  : ""
+              }`}
             >
               {link.label}
             </Link>
@@ -65,14 +66,22 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 lg:flex">
           <Link
             href="/login"
-            className="rounded-xl border border-[#0b63f6] px-5 py-2.5 text-sm font-bold text-[#0b63f6]"
+            className={`rounded-xl border px-5 py-2.5 text-sm font-bold transition ${
+              isActive("/login")
+                ? "border-[#06285c] bg-[#06285c] text-white"
+                : "border-[#0b63f6] text-[#0b63f6] hover:bg-[#eef6ff]"
+            }`}
           >
             Login
           </Link>
 
           <Link
             href="/register"
-            className="rounded-xl bg-[#009879] px-5 py-2.5 text-sm font-bold text-white"
+            className={`rounded-xl px-5 py-2.5 text-sm font-bold transition ${
+              isActive("/register")
+                ? "bg-[#06285c] text-white"
+                : "bg-[#009879] text-white hover:bg-[#007f66]"
+            }`}
           >
             Register
           </Link>
@@ -110,7 +119,11 @@ export default function Navbar() {
             <Link
               href="/login"
               onClick={closeMenu}
-              className="rounded-xl border border-[#0b63f6] px-5 py-3 text-center text-sm font-bold text-[#0b63f6]"
+              className={`rounded-xl border px-5 py-3 text-center text-sm font-bold ${
+                isActive("/login")
+                  ? "border-[#06285c] bg-[#06285c] text-white"
+                  : "border-[#0b63f6] text-[#0b63f6]"
+              }`}
             >
               Login
             </Link>
@@ -118,7 +131,11 @@ export default function Navbar() {
             <Link
               href="/register"
               onClick={closeMenu}
-              className="rounded-xl bg-[#009879] px-5 py-3 text-center text-sm font-bold text-white"
+              className={`rounded-xl px-5 py-3 text-center text-sm font-bold ${
+                isActive("/register")
+                  ? "bg-[#06285c] text-white"
+                  : "bg-[#009879] text-white"
+              }`}
             >
               Register
             </Link>
