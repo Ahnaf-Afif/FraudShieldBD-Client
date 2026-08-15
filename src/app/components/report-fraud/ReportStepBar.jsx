@@ -1,10 +1,40 @@
 const steps = [
-  { number: 1, title: "Category", subtitle: "What happened?" },
-  { number: 2, title: "Story", subtitle: "Your experience" },
-  { number: 3, title: "Financial Info", subtitle: "Money details" },
-  { number: 4, title: "Identifiers", subtitle: "People & accounts" },
-  { number: 5, title: "Evidence", subtitle: "Screenshots & files" },
-  { number: 6, title: "Review", subtitle: "Submit report" },
+  {
+    number: 1,
+    title: "Category",
+    subtitle: "What happened?",
+    href: "#report-category",
+  },
+  {
+    number: 2,
+    title: "Story",
+    subtitle: "Your experience",
+    href: "#report-story",
+  },
+  {
+    number: 3,
+    title: "Financial Info",
+    subtitle: "Money details",
+    href: "#report-financial",
+  },
+  {
+    number: 4,
+    title: "Identifiers",
+    subtitle: "People & accounts",
+    href: "#report-identifiers",
+  },
+  {
+    number: 5,
+    title: "Evidence",
+    subtitle: "Screenshots & files",
+    href: "#report-evidence",
+  },
+  {
+    number: 6,
+    title: "Review",
+    subtitle: "Submit report",
+    href: "#report-review",
+  },
 ];
 
 export default function ReportStepBar() {
@@ -23,7 +53,12 @@ function StepItem({ step }) {
   const isActive = step.number === 1;
 
   return (
-    <div className={`rounded-xl p-4 ${isActive ? "bg-[#e9f8f4]" : "bg-white"}`}>
+    <a
+      href={step.href}
+      className={`rounded-xl p-4 transition hover:bg-[#f0fbf7] ${
+        isActive ? "bg-[#e9f8f4]" : "bg-white"
+      }`}
+    >
       <div className="flex items-center gap-3">
         <div
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black ${
@@ -38,6 +73,6 @@ function StepItem({ step }) {
           <p className="text-xs text-slate-500">{step.subtitle}</p>
         </div>
       </div>
-    </div>
+    </a>
   );
 }

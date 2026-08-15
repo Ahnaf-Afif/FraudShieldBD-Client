@@ -2,7 +2,10 @@ import { CalendarDays, HelpCircle } from "lucide-react";
 
 export default function ReportCategoryForm({ reportData, updateReportData }) {
   return (
-    <section className="border-b border-slate-200 p-5 sm:p-6">
+    <section
+      id="report-category"
+      className="scroll-mt-24 border-b border-slate-200 p-5 sm:p-6"
+    >
       <div className="border-b border-slate-200 pb-4">
         <h2 className="text-2xl font-black text-[#06285c]">
           1. What happened?

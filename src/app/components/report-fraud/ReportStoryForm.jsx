@@ -1,6 +1,9 @@
 export default function ReportStoryForm({ reportData, updateReportData }) {
   return (
-    <section className="border-b border-slate-200 p-5 sm:p-6">
+    <section
+      id="report-story"
+      className="scroll-mt-24 border-b border-slate-200 p-5 sm:p-6"
+    >
       <div className="border-b border-slate-200 pb-4">
         <h2 className="text-2xl font-black text-[#06285c]">
           2. Tell us what happened

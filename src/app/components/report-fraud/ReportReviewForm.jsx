@@ -47,7 +47,7 @@ export default function ReportReviewForm({
   );
 
   return (
-    <section className="p-5 sm:p-6">
+    <section id="report-review" className="scroll-mt-24 p-5 sm:p-6">
       <div className="border-b border-slate-200 pb-4">
         <h2 className="text-2xl font-black text-[#06285c]">
           6. Prevention & Review
