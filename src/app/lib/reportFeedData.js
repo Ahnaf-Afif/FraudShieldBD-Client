@@ -1,4 +1,5 @@
 import { notifyLocalDataUpdated } from "./localDataEvents";
+import { readJsonArray, readJsonObject, readJsonValue } from "./browserStorage";
 
 export const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
 export const REPORT_REACTIONS_KEY = "fraudshield-report-reactions";
@@ -60,45 +61,17 @@ export const demoReports = [
 ];
 
 export function getSubmittedReportsFromBrowser() {
-  const savedReports = localStorage.getItem(REPORT_SUBMISSIONS_KEY);
-
-  if (!savedReports) {
-    return [];
-  }
-
-  try {
-    const parsedReports = JSON.parse(savedReports);
-
-    if (!Array.isArray(parsedReports)) {
-      return [];
-    }
-
-    return parsedReports;
-  } catch (error) {
-    console.error("Could not load submitted reports:", error);
-    return [];
-  }
+  return readJsonArray(REPORT_SUBMISSIONS_KEY).filter(isValidReportShape);
 }
 
 export function getSavedReportDraftFromBrowser() {
-  const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
+  const parsedDraft = readJsonValue(REPORT_DRAFT_KEY);
 
-  if (!savedDraft) {
+  if (!isValidReportShape(parsedDraft)) {
     return null;
   }
 
-  try {
-    const parsedDraft = JSON.parse(savedDraft);
-
-    if (!parsedDraft || !parsedDraft.reportId) {
-      return null;
-    }
-
-    return normalizeSubmittedReport(parsedDraft);
-  } catch (error) {
-    console.error("Could not load report draft:", error);
-    return null;
-  }
+  return normalizeSubmittedReport(parsedDraft);
 }
 
 export function getAllReportsForBrowser() {
@@ -117,6 +90,10 @@ export function getReportByIdFromBrowser(reportId) {
 }
 
 export function saveSubmittedReport(newReport) {
+  if (!isValidReportShape(newReport)) {
+    return;
+  }
+
   const savedReports = getSubmittedReportsFromBrowser();
   const reportsWithoutCurrentReport = savedReports.filter(
     (savedReport) => savedReport.reportId !== newReport.reportId,
@@ -208,24 +185,7 @@ export function getEntityType(report) {
 }
 
 export function getSavedReportReactions() {
-  const savedReactions = localStorage.getItem(REPORT_REACTIONS_KEY);
-
-  if (!savedReactions) {
-    return {};
-  }
-
-  try {
-    const parsedReactions = JSON.parse(savedReactions);
-
-    if (!parsedReactions || Array.isArray(parsedReactions)) {
-      return {};
-    }
-
-    return parsedReactions;
-  } catch (error) {
-    console.error("Could not load report reactions:", error);
-    return {};
-  }
+  return readJsonObject(REPORT_REACTIONS_KEY);
 }
 
 export function saveReportReactions(reactions) {
@@ -234,24 +194,7 @@ export function saveReportReactions(reactions) {
 }
 
 export function getSavedReportComments() {
-  const savedComments = localStorage.getItem(REPORT_COMMENTS_KEY);
-
-  if (!savedComments) {
-    return {};
-  }
-
-  try {
-    const parsedComments = JSON.parse(savedComments);
-
-    if (!parsedComments || Array.isArray(parsedComments)) {
-      return {};
-    }
-
-    return parsedComments;
-  } catch (error) {
-    console.error("Could not load report comments:", error);
-    return {};
-  }
+  return readJsonObject(REPORT_COMMENTS_KEY);
 }
 
 export function saveReportComments(comments) {
@@ -260,16 +203,18 @@ export function saveReportComments(comments) {
 }
 
 export function normalizeSubmittedReport(report) {
+  const safeReport = report || {};
+
   return {
-    ...report,
-    riskLevel: report.riskLevel || estimateReportRiskLevel(report),
-    reportsCount: report.reportsCount || 1,
-    reporterName: report.reporterName || "Community member",
-    reporterRole: report.reporterRole || "Reporter",
-    reporterEmail: report.reporterEmail || "",
-    ownerName: report.ownerName || report.reporterName || "",
-    ownerEmail: report.ownerEmail || report.reporterEmail || "",
-    isAnonymous: Boolean(report.isAnonymous),
+    ...safeReport,
+    riskLevel: safeReport.riskLevel || estimateReportRiskLevel(safeReport),
+    reportsCount: Number(safeReport.reportsCount) || 1,
+    reporterName: safeReport.reporterName || "Community member",
+    reporterRole: safeReport.reporterRole || "Reporter",
+    reporterEmail: safeReport.reporterEmail || "",
+    ownerName: safeReport.ownerName || safeReport.reporterName || "",
+    ownerEmail: safeReport.ownerEmail || safeReport.reporterEmail || "",
+    isAnonymous: Boolean(safeReport.isAnonymous),
   };
 }
 
@@ -308,11 +253,13 @@ export function getPrimaryIdentifier(report) {
 }
 
 export function maskIdentifier(identifier) {
-  if (identifier.length < 8 || identifier.includes(".")) {
-    return identifier;
+  const cleanIdentifier = String(identifier || "");
+
+  if (cleanIdentifier.length < 8 || cleanIdentifier.includes(".")) {
+    return cleanIdentifier;
   }
 
-  return `${identifier.slice(0, 5)}****${identifier.slice(-3)}`;
+  return `${cleanIdentifier.slice(0, 5)}****${cleanIdentifier.slice(-3)}`;
 }
 
 export function getDigitsOnly(value) {
@@ -329,4 +276,8 @@ export function estimateReportRiskLevel(report) {
   }
 
   return "Low Risk";
+}
+
+function isValidReportShape(report) {
+  return Boolean(report && typeof report === "object" && report.reportId);
 }

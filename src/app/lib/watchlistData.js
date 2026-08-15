@@ -1,31 +1,21 @@
 import { notifyLocalDataUpdated } from "./localDataEvents";
+import { readJsonArray } from "./browserStorage";
 
 export const WATCHLIST_KEY = "fraudshield-watchlist";
 export const WATCHLIST_UPDATED_EVENT = "fraudshield-watchlist-updated";
 
 export function getWatchlistFromBrowser() {
-  const savedItems = localStorage.getItem(WATCHLIST_KEY);
-
-  if (!savedItems) {
-    return [];
-  }
-
-  try {
-    const parsedItems = JSON.parse(savedItems);
-
-    if (!Array.isArray(parsedItems)) {
-      return [];
-    }
-
-    return parsedItems;
-  } catch (error) {
-    console.error("Could not load watchlist:", error);
-    return [];
-  }
+  return readJsonArray(WATCHLIST_KEY)
+    .filter((item) => item && item.identifier)
+    .map(normalizeWatchlistItem);
 }
 
 export function saveWatchlist(items) {
-  localStorage.setItem(WATCHLIST_KEY, JSON.stringify(items));
+  const safeItems = items
+    .filter((item) => item && item.identifier)
+    .map(normalizeWatchlistItem);
+
+  localStorage.setItem(WATCHLIST_KEY, JSON.stringify(safeItems));
   window.dispatchEvent(new Event(WATCHLIST_UPDATED_EVENT));
   notifyLocalDataUpdated();
 }
@@ -40,6 +30,11 @@ export function isIdentifierWatched(identifier) {
 
 export function addToWatchlist({ identifier, type, riskLevel, reportId, title }) {
   const cleanIdentifier = normalizeIdentifier(identifier);
+
+  if (!cleanIdentifier) {
+    return null;
+  }
+
   const existingItems = getWatchlistFromBrowser();
   const existingItem = existingItems.find(
     (item) => item.normalizedIdentifier === cleanIdentifier,
@@ -101,4 +96,20 @@ export function toggleWatchlistAlerts(identifier) {
 
 export function normalizeIdentifier(identifier) {
   return String(identifier || "").trim().toLowerCase();
+}
+
+function normalizeWatchlistItem(item) {
+  const normalizedIdentifier =
+    item.normalizedIdentifier || normalizeIdentifier(item.identifier);
+
+  return {
+    ...item,
+    id: item.id || `${normalizedIdentifier}-${Date.now()}`,
+    normalizedIdentifier,
+    type: item.type || "Unknown",
+    riskLevel: item.riskLevel || "Unknown",
+    reportId: item.reportId || "",
+    title: item.title || "Watched identifier",
+    alertsEnabled: item.alertsEnabled !== false,
+  };
 }

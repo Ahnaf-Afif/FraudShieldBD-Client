@@ -1,28 +1,15 @@
 import { notifyLocalDataUpdated } from "./localDataEvents";
+import { readJsonArray } from "./browserStorage";
 
 export const RECENT_SEARCHES_KEY = "fraudshield-recent-searches";
 export const RECENT_SEARCHES_UPDATED_EVENT = "fraudshield-recent-searches-updated";
 const MAX_RECENT_SEARCHES = 6;
 
 export function getRecentSearchesFromBrowser() {
-  const savedSearches = localStorage.getItem(RECENT_SEARCHES_KEY);
-
-  if (!savedSearches) {
-    return [];
-  }
-
-  try {
-    const parsedSearches = JSON.parse(savedSearches);
-
-    if (!Array.isArray(parsedSearches)) {
-      return [];
-    }
-
-    return parsedSearches;
-  } catch (error) {
-    console.error("Could not load recent searches:", error);
-    return [];
-  }
+  return readJsonArray(RECENT_SEARCHES_KEY)
+    .map((search) => String(search || "").trim())
+    .filter(Boolean)
+    .slice(0, MAX_RECENT_SEARCHES);
 }
 
 export function saveRecentSearch(searchValue) {
