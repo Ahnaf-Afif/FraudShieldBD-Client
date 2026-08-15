@@ -8,8 +8,10 @@ import {
   Clock,
   Eye,
   FileText,
+  Funnel,
   Search,
   ShieldAlert,
+  X,
 } from "lucide-react";
 import {
   DEMO_SESSION_UPDATED_EVENT,
@@ -61,6 +63,7 @@ export default function NotificationsDashboard() {
   const [demoUser, setDemoUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [searchValue, setSearchValue] = useState("");
   const [preferences, setPreferences] = useState(defaultNotificationPreferences);
 
   useEffect(() => {
@@ -87,22 +90,47 @@ export default function NotificationsDashboard() {
   }, []);
 
   const filteredNotifications = useMemo(() => {
-    if (activeFilter === "All") {
-      return notifications;
+    const normalizedSearch = searchValue.trim().toLowerCase();
+    const typeFilteredNotifications =
+      activeFilter === "All"
+        ? notifications
+        : activeFilter === "Unread"
+          ? notifications.filter((notification) => !notification.isRead)
+          : notifications.filter(
+              (notification) => notification.type === activeFilter,
+            );
+
+    if (!normalizedSearch) {
+      return typeFilteredNotifications;
     }
 
-    if (activeFilter === "Unread") {
-      return notifications.filter((notification) => !notification.isRead);
-    }
-
-    return notifications.filter(
-      (notification) => notification.type === activeFilter,
+    return typeFilteredNotifications.filter((notification) =>
+      [
+        notification.title,
+        notification.message,
+        notification.type,
+        notification.tone,
+        notification.createdAt,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedSearch),
     );
-  }, [activeFilter, notifications]);
+  }, [activeFilter, notifications, searchValue]);
 
   const unreadCount = notifications.filter(
     (notification) => !notification.isRead,
   ).length;
+  const priorityNotification =
+    notifications.find(
+      (notification) =>
+        !notification.isRead &&
+        (notification.type === "Alert" || notification.tone === "High Risk"),
+    ) ||
+    notifications.find((notification) => !notification.isRead) ||
+    notifications[0] ||
+    null;
+  const hasActiveSearch = Boolean(searchValue.trim());
 
   function markAllRead() {
     markAllNotificationsAsRead(notifications);
@@ -174,6 +202,51 @@ export default function NotificationsDashboard() {
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-500">
+                <ShieldAlert size={22} />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+                  Priority
+                </p>
+                <h2 className="font-black text-[#06285c]">Next alert to check</h2>
+              </div>
+            </div>
+
+            {priorityNotification ? (
+              <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+                <p className="text-sm font-black text-[#06285c]">
+                  {priorityNotification.title}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {priorityNotification.message}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#06285c]">
+                    {priorityNotification.type}
+                  </span>
+                  <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-black text-red-600">
+                    {priorityNotification.tone}
+                  </span>
+                </div>
+                <Link
+                  href={priorityNotification.href}
+                  onClick={() => markNotificationAsRead(priorityNotification.id)}
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[#06285c] px-4 py-3 text-sm font-black text-white transition hover:bg-[#041b3f]"
+                >
+                  Open Alert
+                </Link>
+              </div>
+            ) : (
+              <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                No alerts yet. Report, watchlist and search activity will appear
+                here.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="font-black text-[#06285c]">
               Notification preferences
             </h2>
@@ -236,10 +309,65 @@ export default function NotificationsDashboard() {
                 </button>
               ))}
             </div>
+
+            <div className="mt-4">
+              <label className="sr-only" htmlFor="notification-search">
+                Search notifications
+              </label>
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 focus-within:border-[#009879] focus-within:ring-4 focus-within:ring-[#009879]/10">
+                <Search size={20} className="shrink-0 text-slate-400" />
+                <input
+                  id="notification-search"
+                  type="search"
+                  value={searchValue}
+                  onChange={(event) => setSearchValue(event.target.value)}
+                  placeholder="Search by report, identifier, alert type..."
+                  className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-[#06285c] outline-none placeholder:text-slate-400"
+                />
+                {hasActiveSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchValue("")}
+                    className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-[#06285c]"
+                    aria-label="Clear notification search"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {(activeFilter !== "All" || hasActiveSearch) && (
+              <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="inline-flex items-center gap-2 text-sm font-bold text-slate-600">
+                  <Funnel size={16} />
+                  Showing {filteredNotifications.length} of{" "}
+                  {notifications.length} notification
+                  {notifications.length === 1 ? "" : "s"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveFilter("All");
+                    setSearchValue("");
+                  }}
+                  className="text-left text-sm font-black text-[#009879] hover:text-[#007f66] sm:text-right"
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
           </div>
 
           {filteredNotifications.length === 0 ? (
-            <EmptyNotifications activeFilter={activeFilter} />
+            <EmptyNotifications
+              activeFilter={activeFilter}
+              hasActiveSearch={hasActiveSearch}
+              onClear={() => {
+                setActiveFilter("All");
+                setSearchValue("");
+              }}
+            />
           ) : (
             <div className="divide-y divide-slate-200">
               {filteredNotifications.map((notification) => (
@@ -341,18 +469,33 @@ function NotificationRow({ notification, onRead }) {
   );
 }
 
-function EmptyNotifications({ activeFilter }) {
+function EmptyNotifications({ activeFilter, hasActiveSearch, onClear }) {
+  const isFiltered = activeFilter !== "All" || hasActiveSearch;
+
   return (
     <div className="p-8 text-center">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
         <Bell size={30} />
       </div>
       <h2 className="mt-4 text-2xl font-black text-[#06285c]">
-        No {activeFilter.toLowerCase()} notifications
+        {isFiltered
+          ? "No notifications match"
+          : `No ${activeFilter.toLowerCase()} notifications`}
       </h2>
       <p className="mx-auto mt-2 max-w-md leading-7 text-slate-600">
-        Activity from your reports, watchlist and checks will appear here.
+        {isFiltered
+          ? "Try another search or clear your filters to see all notifications."
+          : "Activity from your reports, watchlist and checks will appear here."}
       </p>
+      {isFiltered && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="mt-5 rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
+        >
+          Clear Filters
+        </button>
+      )}
     </div>
   );
 }
