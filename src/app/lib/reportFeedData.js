@@ -223,6 +223,21 @@ export function clearRecentlyViewedReports() {
   notifyLocalDataUpdated();
 }
 
+export function removeRecentlyViewedReport(reportId) {
+  if (!reportId) {
+    return;
+  }
+
+  const remainingViews = readJsonArray(RECENTLY_VIEWED_REPORTS_KEY).filter(
+    (view) => view && view.reportId !== reportId,
+  );
+
+  localStorage.setItem(
+    RECENTLY_VIEWED_REPORTS_KEY,
+    JSON.stringify(remainingViews),
+  );
+}
+
 export function saveSubmittedReport(newReport) {
   if (!isValidReportShape(newReport)) {
     return;
@@ -246,6 +261,7 @@ export function deleteSubmittedReport(reportId) {
 
   localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(remainingReports));
   deleteReportEngagement(reportId);
+  removeRecentlyViewedReport(reportId);
   notifyLocalDataUpdated();
 }
 
