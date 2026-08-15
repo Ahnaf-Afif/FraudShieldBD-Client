@@ -51,6 +51,8 @@ import {
   removeFromWatchlist,
 } from "../../lib/watchlistData";
 
+const MIN_COMMENT_LENGTH = 3;
+
 export default function ReportDetailsPage() {
   const { reportId } = useParams();
   const [report, setReport] = useState(null);
@@ -142,6 +144,11 @@ export default function ReportDetailsPage() {
   const relatedReports = getRelatedReports(allReports, report).slice(0, 3);
   const riskScore = calculateDetailRiskScore(report, relatedReports);
   const checkIdentifierHref = `/check?q=${encodeURIComponent(identifier)}`;
+  const cleanCommentLength = commentDraft.trim().length;
+  const missingCommentCharacters = Math.max(
+    MIN_COMMENT_LENGTH - cleanCommentLength,
+    0,
+  );
 
   function toggleLike() {
     const nextLiked = !reaction.liked;
@@ -181,8 +188,10 @@ export default function ReportDetailsPage() {
   function submitComment() {
     const commentText = commentDraft.trim();
 
-    if (commentText.length < 3) {
-      setCommentError("Write at least 3 characters before posting.");
+    if (commentText.length < MIN_COMMENT_LENGTH) {
+      setCommentError(
+        `Write at least ${MIN_COMMENT_LENGTH} characters before posting.`,
+      );
       return;
     }
 
@@ -222,6 +231,13 @@ export default function ReportDetailsPage() {
       title: report.title,
     });
     setIsWatched(true);
+  }
+
+  function focusCommentInput() {
+    const commentInput = document.getElementById("detail-comment-input");
+
+    commentInput?.scrollIntoView({ behavior: "smooth", block: "center" });
+    commentInput?.focus();
   }
 
   return (
@@ -395,9 +411,7 @@ export default function ReportDetailsPage() {
                 <DetailAction
                   icon={<MessageCircle size={18} />}
                   label="Comment"
-                  onClick={() =>
-                    document.getElementById("detail-comment-input")?.focus()
-                  }
+                  onClick={focusCommentInput}
                 />
                 <DetailAction
                   active={copied}
@@ -462,12 +476,20 @@ export default function ReportDetailsPage() {
                 <button
                   type="button"
                   onClick={submitComment}
-                  disabled={commentDraft.trim().length < 3}
+                  disabled={cleanCommentLength < MIN_COMMENT_LENGTH}
                   className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
                 >
                   Post
                 </button>
               </div>
+
+              {cleanCommentLength > 0 &&
+                cleanCommentLength < MIN_COMMENT_LENGTH && (
+                  <p className="mt-2 rounded-xl bg-orange-50 px-3 py-2 text-sm font-bold text-orange-700">
+                    Write {missingCommentCharacters} more character
+                    {missingCommentCharacters === 1 ? "" : "s"} to post.
+                  </p>
+                )}
 
               {commentError && (
                 <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600">
