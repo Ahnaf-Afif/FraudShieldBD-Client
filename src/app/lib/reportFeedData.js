@@ -16,6 +16,9 @@ export const demoReports = [
     riskLevel: "High Risk",
     submittedAt: "2 hours ago",
     reportsCount: 23,
+    reporterName: "Community member",
+    reporterRole: "Verified reporter",
+    isAnonymous: false,
   },
   {
     reportId: "FR-DEMO-002",
@@ -30,6 +33,9 @@ export const demoReports = [
     riskLevel: "Medium Risk",
     submittedAt: "5 hours ago",
     reportsCount: 17,
+    reporterName: "Anonymous reporter",
+    reporterRole: "Hidden",
+    isAnonymous: true,
   },
   {
     reportId: "FR-DEMO-003",
@@ -44,6 +50,9 @@ export const demoReports = [
     riskLevel: "Low Risk",
     submittedAt: "Yesterday",
     reportsCount: 11,
+    reporterName: "Community member",
+    reporterRole: "Verified reporter",
+    isAnonymous: false,
   },
 ];
 
@@ -199,6 +208,9 @@ export function normalizeSubmittedReport(report) {
     ...report,
     riskLevel: report.riskLevel || estimateReportRiskLevel(report),
     reportsCount: report.reportsCount || 1,
+    reporterName: report.reporterName || "Community member",
+    reporterRole: report.reporterRole || "Reporter",
+    isAnonymous: Boolean(report.isAnonymous),
   };
 }
 

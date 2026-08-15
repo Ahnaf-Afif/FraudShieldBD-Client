@@ -16,6 +16,10 @@ import {
   estimateReportRiskLevel,
   saveSubmittedReport,
 } from "../../lib/reportFeedData";
+import {
+  DEMO_SESSION_UPDATED_EVENT,
+  getDemoSession,
+} from "../../lib/demoSession";
 
 const REPORT_DRAFT_KEY = "fraudshield-report-draft";
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
@@ -57,6 +61,22 @@ export default function ReportFormShell() {
   const [statusTime, setStatusTime] = useState("");
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [demoUser, setDemoUser] = useState(null);
+
+  useEffect(() => {
+    function updateDemoUser() {
+      setDemoUser(getDemoSession());
+    }
+
+    updateDemoUser();
+    window.addEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
+    window.addEventListener("storage", updateDemoUser);
+
+    return () => {
+      window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
+      window.removeEventListener("storage", updateDemoUser);
+    };
+  }, []);
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
@@ -132,6 +152,7 @@ export default function ReportFormShell() {
       reportId: newReportId,
       status: "submitted",
       statusTime: submittedAt,
+      demoUser,
     });
 
     saveSubmittedReport(submittedReportPayload);
@@ -149,6 +170,7 @@ export default function ReportFormShell() {
       reportId: draftReportId,
       status: "draft",
       statusTime: savedAt,
+      demoUser,
     });
 
     setReportId(draftReportId);
@@ -229,6 +251,7 @@ export default function ReportFormShell() {
           statusTime={statusTime}
           hasSavedDraft={hasSavedDraft}
           hasUnsavedChanges={hasUnsavedChanges}
+          demoUser={demoUser}
         />
         <ReportCategoryTips />
         <ReportStoryTips />
@@ -252,12 +275,20 @@ function createReportId() {
   return `FR-${year}-${month}${day}-${randomNumber}`;
 }
 
-function createReportPayload({ reportData, reportId, status, statusTime }) {
+function createReportPayload({
+  reportData,
+  reportId,
+  status,
+  statusTime,
+  demoUser,
+}) {
+  const reporter = createReporterDetails(reportData, demoUser);
   const payload = {
     ...reportData,
     reportId,
     status,
     evidenceFiles: [],
+    ...reporter,
   };
 
   if (status === "draft") {
@@ -271,6 +302,33 @@ function createReportPayload({ reportData, reportId, status, statusTime }) {
   }
 
   return payload;
+}
+
+function createReporterDetails(reportData, demoUser) {
+  if (reportData.anonymous) {
+    return {
+      reporterName: "Anonymous reporter",
+      reporterEmail: "",
+      reporterRole: "Hidden",
+      isAnonymous: true,
+    };
+  }
+
+  if (demoUser) {
+    return {
+      reporterName: demoUser.name,
+      reporterEmail: demoUser.email,
+      reporterRole: demoUser.role,
+      isAnonymous: false,
+    };
+  }
+
+  return {
+    reporterName: "Guest reporter",
+    reporterEmail: "",
+    reporterRole: "Guest",
+    isAnonymous: false,
+  };
 }
 
 function validateReportBeforeSubmit(reportData) {

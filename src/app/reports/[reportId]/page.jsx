@@ -202,6 +202,9 @@ export default function ReportDetailsPage() {
                     <Calendar size={16} />
                     {report.submittedAt || "Recently"}
                   </span>
+                  <span className="inline-flex items-center gap-1">
+                    Submitted by {report.reporterName || "Community member"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -341,6 +344,11 @@ export default function ReportDetailsPage() {
               icon={<Users size={20} />}
               label="Community reports"
               value={String(report.reportsCount || 1)}
+            />
+            <DetailStat
+              icon={<Users size={20} />}
+              label="Submitted by"
+              value={report.reporterName || "Community member"}
             />
             <DetailStat
               icon={<ShieldCheck size={20} />}

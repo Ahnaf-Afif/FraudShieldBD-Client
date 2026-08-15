@@ -373,6 +373,10 @@ function HomeReportPost({
               {report.fraudCategory} • {report.location || "Bangladesh"} •{" "}
               {report.submittedAt || "Recently"}
             </p>
+
+            <p className="mt-1 text-xs font-bold text-slate-400">
+              Reported by {report.reporterName || "Community member"}
+            </p>
           </div>
         </div>
 

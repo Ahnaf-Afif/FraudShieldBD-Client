@@ -1,4 +1,5 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, UserRound } from "lucide-react";
+import { getInitials } from "../../lib/demoSession";
 
 export default function ReportLiveSummary({
   reportData,
@@ -7,6 +8,7 @@ export default function ReportLiveSummary({
   statusTime,
   hasSavedDraft,
   hasUnsavedChanges,
+  demoUser,
 }) {
   const identifiers = [
     {
@@ -58,6 +60,7 @@ export default function ReportLiveSummary({
     hasSavedDraft,
     hasUnsavedChanges,
   );
+  const reporter = getReporterSummary(reportData, demoUser);
 
   return (
     <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm sm:p-6">
@@ -93,6 +96,31 @@ export default function ReportLiveSummary({
         {hasSavedDraft && hasUnsavedChanges && (
           <p className="mt-3 rounded-xl bg-orange-50 px-3 py-2 text-xs font-semibold leading-5 text-orange-700">
             Save again to update the browser draft.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4 rounded-xl bg-white p-4">
+        <p className="text-sm font-bold text-slate-500">Submitting as</p>
+
+        <div className="mt-3 flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#009879] text-sm font-black text-white">
+            {reporter.initials}
+          </div>
+
+          <div className="min-w-0">
+            <p className="truncate font-black text-[#06285c]">
+              {reporter.name}
+            </p>
+            <p className="truncate text-xs font-semibold text-slate-500">
+              {reporter.description}
+            </p>
+          </div>
+        </div>
+
+        {reportData.anonymous && (
+          <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold leading-5 text-slate-600">
+            Your public reporter name will be hidden on the MVP report view.
           </p>
         )}
       </div>
@@ -191,6 +219,30 @@ export default function ReportLiveSummary({
       </div>
     </div>
   );
+}
+
+function getReporterSummary(reportData, demoUser) {
+  if (reportData.anonymous) {
+    return {
+      name: "Anonymous reporter",
+      description: "Identity hidden from public report",
+      initials: <UserRound size={18} />,
+    };
+  }
+
+  if (demoUser) {
+    return {
+      name: demoUser.name,
+      description: demoUser.role,
+      initials: getInitials(demoUser.name || demoUser.email),
+    };
+  }
+
+  return {
+    name: "Guest reporter",
+    description: "Login to attach this report to your demo account",
+    initials: "G",
+  };
 }
 
 function SummaryItem({ label, value }) {
