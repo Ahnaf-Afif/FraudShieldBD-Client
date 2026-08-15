@@ -8,10 +8,12 @@ import {
   FileText,
   LogOut,
   Menu,
+  Search,
+  ShieldPlus,
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -68,7 +70,11 @@ export default function Navbar() {
   }, []);
 
   function isActive(href) {
-    return pathname === href;
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   const loginHref = createAuthHref("/login", pathname);
@@ -184,6 +190,21 @@ export default function Navbar() {
             ))}
           </nav>
 
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <MobileQuickAction
+              href="/check"
+              icon={<Search size={17} />}
+              label="Check"
+              onClick={closeMenu}
+            />
+            <MobileQuickAction
+              href="/report-fraud"
+              icon={<ShieldPlus size={17} />}
+              label="Report"
+              onClick={closeMenu}
+            />
+          </div>
+
           {demoUser ? (
             <MobileUserMenu
               user={demoUser}
@@ -225,6 +246,33 @@ export default function Navbar() {
 
 function DesktopUserMenu({ user, unreadCount, onLogout }) {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) {
+      return;
+    }
+
+    function handleDocumentClick(event) {
+      if (!menuRef.current?.contains(event.target)) {
+        setIsAccountMenuOpen(false);
+      }
+    }
+
+    function handleEscapeKey(event) {
+      if (event.key === "Escape") {
+        setIsAccountMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleDocumentClick);
+    document.addEventListener("keydown", handleEscapeKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handleDocumentClick);
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [isAccountMenuOpen]);
 
   function closeAccountMenu() {
     setIsAccountMenuOpen(false);
@@ -236,7 +284,7 @@ function DesktopUserMenu({ user, unreadCount, onLogout }) {
   }
 
   return (
-    <div className="relative flex items-center gap-3">
+    <div ref={menuRef} className="relative flex items-center gap-3">
       <Link
         href="/notifications"
         className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
@@ -312,6 +360,19 @@ function DesktopUserMenu({ user, unreadCount, onLogout }) {
         </div>
       )}
     </div>
+  );
+}
+
+function MobileQuickAction({ href, icon, label, onClick }) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f0fbf7] text-sm font-black text-[#009879]"
+    >
+      {icon}
+      {label}
+    </Link>
   );
 }
 
