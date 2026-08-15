@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   Bell,
   BellOff,
   ChevronRight,
@@ -12,13 +11,18 @@ import {
   ShieldAlert,
   Trash2,
 } from "lucide-react";
-import { getDemoSession } from "../../lib/demoSession";
+import {
+  DEMO_SESSION_UPDATED_EVENT,
+  getDemoSession,
+} from "../../lib/demoSession";
+import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import {
   getWatchlistFromBrowser,
   removeFromWatchlist,
   toggleWatchlistAlerts,
 } from "../../lib/watchlistData";
 import { getRiskStyle, maskIdentifier } from "../../lib/reportFeedData";
+import AuthRequiredState from "../shared/AuthRequiredState";
 
 const filters = ["All", "High Risk", "Medium Risk", "Low Risk"];
 
@@ -29,8 +33,21 @@ export default function WatchlistDashboard() {
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
-    setDemoUser(getDemoSession());
-    setWatchlistItems(getWatchlistFromBrowser());
+    function refreshWatchlist() {
+      setDemoUser(getDemoSession());
+      setWatchlistItems(getWatchlistFromBrowser());
+    }
+
+    refreshWatchlist();
+    window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshWatchlist);
+    window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshWatchlist);
+    window.addEventListener("storage", refreshWatchlist);
+
+    return () => {
+      window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshWatchlist);
+      window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshWatchlist);
+      window.removeEventListener("storage", refreshWatchlist);
+    };
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -64,7 +81,12 @@ export default function WatchlistDashboard() {
   }
 
   if (!demoUser) {
-    return <SignedOutState />;
+    return (
+      <AuthRequiredState
+        title="Login to use your watchlist"
+        description="This MVP saves watched identifiers to your local demo account. Login or register first to manage your personal watchlist."
+      />
+    );
   }
 
   const alertCount = watchlistItems.filter((item) => item.alertsEnabled).length;
@@ -271,37 +293,5 @@ function EmptyWatchlist() {
         Check Identifier
       </Link>
     </div>
-  );
-}
-
-function SignedOutState() {
-  return (
-    <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-          <AlertTriangle size={30} />
-        </div>
-        <h1 className="mt-4 text-2xl font-black text-[#06285c]">
-          Login to use your watchlist
-        </h1>
-        <p className="mt-2 leading-7 text-slate-600">
-          This MVP saves watched identifiers to your local demo account.
-        </p>
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link
-            href="/login"
-            className="rounded-xl border border-[#0b63f6] px-5 py-3 text-sm font-black text-[#0b63f6]"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white"
-          >
-            Register
-          </Link>
-        </div>
-      </div>
-    </section>
   );
 }

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   ChevronRight,
   Clock,
   FileText,
@@ -24,8 +23,13 @@ import {
   maskIdentifier,
   normalizeSubmittedReport,
 } from "../../lib/reportFeedData";
-import { getDemoSession } from "../../lib/demoSession";
+import {
+  DEMO_SESSION_UPDATED_EVENT,
+  getDemoSession,
+} from "../../lib/demoSession";
+import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import { removeWatchlistItemsByReportId } from "../../lib/watchlistData";
+import AuthRequiredState from "../shared/AuthRequiredState";
 
 const tabs = ["All", "Submitted", "Draft"];
 const riskFilters = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
@@ -39,8 +43,21 @@ export default function MyReportsDashboard() {
   const [riskFilter, setRiskFilter] = useState("All Risk Levels");
 
   useEffect(() => {
-    setDemoUser(getDemoSession());
-    loadReports();
+    function refreshDashboard() {
+      setDemoUser(getDemoSession());
+      loadReports();
+    }
+
+    refreshDashboard();
+    window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshDashboard);
+    window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshDashboard);
+    window.addEventListener("storage", refreshDashboard);
+
+    return () => {
+      window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshDashboard);
+      window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshDashboard);
+      window.removeEventListener("storage", refreshDashboard);
+    };
   }, []);
 
   function loadReports() {
@@ -53,6 +70,7 @@ export default function MyReportsDashboard() {
   function discardDraft() {
     localStorage.removeItem(REPORT_DRAFT_KEY);
     setDraftReport(null);
+    window.dispatchEvent(new Event(LOCAL_DATA_UPDATED_EVENT));
   }
 
   function removeSubmittedReport(reportId) {
@@ -112,7 +130,12 @@ export default function MyReportsDashboard() {
   ]);
 
   if (!demoUser) {
-    return <SignedOutState />;
+    return (
+      <AuthRequiredState
+        title="Login to see your reports"
+        description="This MVP uses a local demo session. Login or register first, then reports submitted from your account will appear here."
+      />
+    );
   }
 
   const submittedCount = submittedReports.filter((report) =>
@@ -395,39 +418,6 @@ function EmptyMyReports({ activeTab }) {
         Create Report
       </Link>
     </div>
-  );
-}
-
-function SignedOutState() {
-  return (
-    <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-          <AlertTriangle size={30} />
-        </div>
-        <h1 className="mt-4 text-2xl font-black text-[#06285c]">
-          Login to see your reports
-        </h1>
-        <p className="mt-2 leading-7 text-slate-600">
-          This MVP uses a local demo session. Login or register first, then your
-          submitted reports will appear here.
-        </p>
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link
-            href="/login"
-            className="rounded-xl border border-[#0b63f6] px-5 py-3 text-sm font-black text-[#0b63f6]"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white"
-          >
-            Register
-          </Link>
-        </div>
-      </div>
-    </section>
   );
 }
 

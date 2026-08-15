@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import {
   getDemoSession,
+  DEMO_SESSION_UPDATED_EVENT,
   getInitials,
   updateDemoSession,
 } from "../../lib/demoSession";
@@ -22,6 +23,8 @@ import {
 } from "../../lib/reportFeedData";
 import { getWatchlistFromBrowser } from "../../lib/watchlistData";
 import { getUnreadNotificationCount } from "../../lib/notificationData";
+import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
+import AuthRequiredState from "../shared/AuthRequiredState";
 
 const roleOptions = [
   "Community Member",
@@ -36,13 +39,26 @@ export default function ProfileDashboard() {
   const [saveStatus, setSaveStatus] = useState("");
 
   useEffect(() => {
-    const currentUser = getDemoSession();
+    function refreshProfile() {
+      const currentUser = getDemoSession();
 
-    setDemoUser(currentUser);
-    setFormData({
-      name: currentUser?.name || "",
-      role: currentUser?.role || "Community Member",
-    });
+      setDemoUser(currentUser);
+      setFormData({
+        name: currentUser?.name || "",
+        role: currentUser?.role || "Community Member",
+      });
+    }
+
+    refreshProfile();
+    window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshProfile);
+    window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshProfile);
+    window.addEventListener("storage", refreshProfile);
+
+    return () => {
+      window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshProfile);
+      window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshProfile);
+      window.removeEventListener("storage", refreshProfile);
+    };
   }, []);
 
   const activityStats = useMemo(() => createProfileStats(demoUser), [demoUser]);
@@ -68,7 +84,13 @@ export default function ProfileDashboard() {
   }
 
   if (!demoUser) {
-    return <SignedOutProfileState />;
+    return (
+      <AuthRequiredState
+        title="Login to edit your profile"
+        description="This MVP uses a local demo account. Login or register first to edit your profile and see your personal activity summary."
+        icon="user"
+      />
+    );
   }
 
   return (
@@ -215,38 +237,6 @@ function ProfileStat({ icon, label, value, href }) {
       <p className="mt-4 text-3xl font-black text-[#06285c]">{value}</p>
       <p className="mt-1 text-sm font-bold text-slate-500">{label}</p>
     </Link>
-  );
-}
-
-function SignedOutProfileState() {
-  return (
-    <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-          <UserRound size={30} />
-        </div>
-        <h1 className="mt-4 text-2xl font-black text-[#06285c]">
-          Login to edit your profile
-        </h1>
-        <p className="mt-2 leading-7 text-slate-600">
-          This MVP uses a local demo account. Login or register first.
-        </p>
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link
-            href="/login"
-            className="rounded-xl border border-[#0b63f6] px-5 py-3 text-sm font-black text-[#0b63f6]"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white"
-          >
-            Register
-          </Link>
-        </div>
-      </div>
-    </section>
   );
 }
 

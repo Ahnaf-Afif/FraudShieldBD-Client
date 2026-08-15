@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   Bell,
   CheckCircle2,
   Clock,
@@ -12,7 +11,10 @@ import {
   Search,
   ShieldAlert,
 } from "lucide-react";
-import { getDemoSession } from "../../lib/demoSession";
+import {
+  DEMO_SESSION_UPDATED_EVENT,
+  getDemoSession,
+} from "../../lib/demoSession";
 import {
   clearReadNotifications,
   defaultNotificationPreferences,
@@ -24,6 +26,7 @@ import {
   saveNotificationPreferences,
 } from "../../lib/notificationData";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
+import AuthRequiredState from "../shared/AuthRequiredState";
 
 const filters = ["All", "Unread", "Report", "Watchlist", "Alert", "Search"];
 const preferenceLabels = [
@@ -70,11 +73,13 @@ export default function NotificationsDashboard() {
     }
 
     loadNotifications();
+    window.addEventListener(DEMO_SESSION_UPDATED_EVENT, loadNotifications);
     window.addEventListener(LOCAL_DATA_UPDATED_EVENT, loadNotifications);
     window.addEventListener(NOTIFICATION_UPDATED_EVENT, loadNotifications);
     window.addEventListener("storage", loadNotifications);
 
     return () => {
+      window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, loadNotifications);
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, loadNotifications);
       window.removeEventListener(NOTIFICATION_UPDATED_EVENT, loadNotifications);
       window.removeEventListener("storage", loadNotifications);
@@ -118,6 +123,15 @@ export default function NotificationsDashboard() {
     saveNotificationPreferences(nextPreferences);
     setPreferences(nextPreferences);
     setNotifications(getNotificationsForBrowser(demoUser));
+  }
+
+  if (!demoUser) {
+    return (
+      <AuthRequiredState
+        title="Login to see notifications"
+        description="Notifications are personal to your local demo account. Login or register first to see report, watchlist, and search alerts."
+      />
+    );
   }
 
   return (
@@ -357,7 +371,7 @@ function getNotificationIcon(type) {
   }
 
   if (type === "Draft") {
-    return AlertTriangle;
+    return Bell;
   }
 
   return ShieldAlert;
