@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  clearRecentlyViewedReports,
   demoReports,
   getAllReportsForBrowser,
   getDigitsOnly,
@@ -282,6 +283,11 @@ export default function HomeNewsFeed() {
     setWatchedIdentifiers(createWatchedIdentifierMap());
   }
 
+  function clearRecentlyViewedHistory() {
+    clearRecentlyViewedReports();
+    setRecentlyViewedReports([]);
+  }
+
   return (
     <section
       id="community-feed"
@@ -291,7 +297,10 @@ export default function HomeNewsFeed() {
 
       <FeedOverview stats={feedStats} trendingReport={trendingReport} />
 
-      <RecentlyViewedStrip reports={recentlyViewedReports} />
+      <RecentlyViewedStrip
+        reports={recentlyViewedReports}
+        onClear={clearRecentlyViewedHistory}
+      />
 
       <div className="mb-5">
         <p className="text-sm font-black uppercase tracking-wide text-[#009879]">
@@ -434,7 +443,7 @@ export default function HomeNewsFeed() {
   );
 }
 
-function RecentlyViewedStrip({ reports }) {
+function RecentlyViewedStrip({ reports, onClear }) {
   if (reports.length === 0) {
     return null;
   }
@@ -447,12 +456,22 @@ function RecentlyViewedStrip({ reports }) {
           Recently viewed
         </h2>
 
-        <Link
-          href="/reports"
-          className="text-xs font-black text-[#009879] hover:text-[#007f66]"
-        >
-          Browse all
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClear}
+            className="text-xs font-black text-slate-400 transition hover:text-red-500"
+          >
+            Clear
+          </button>
+
+          <Link
+            href="/reports"
+            className="text-xs font-black text-[#009879] hover:text-[#007f66]"
+          >
+            Browse all
+          </Link>
+        </div>
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-1">

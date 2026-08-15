@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  clearRecentlyViewedReports,
   getAllReportsForBrowser,
   getEntityType,
   getPrimaryIdentifier,
@@ -321,6 +322,11 @@ export default function ReportsExplorer() {
     setPresetStatus("deleted");
   }
 
+  function clearRecentlyViewedHistory() {
+    clearRecentlyViewedReports();
+    setRecentlyViewedReports([]);
+  }
+
   return (
     <>
       <section className="mx-auto max-w-7xl px-4 pb-6 sm:px-6">
@@ -427,7 +433,10 @@ export default function ReportsExplorer() {
             onExportReports={exportFilteredReports}
           />
 
-          <RecentlyViewedPanel reports={recentlyViewedReports} />
+          <RecentlyViewedPanel
+            reports={recentlyViewedReports}
+            onClear={clearRecentlyViewedHistory}
+          />
 
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 text-center">
             <h2 className="font-black text-[#06285c]">Have you been scammed?</h2>
@@ -584,17 +593,27 @@ export default function ReportsExplorer() {
   );
 }
 
-function RecentlyViewedPanel({ reports }) {
+function RecentlyViewedPanel({ reports, onClear }) {
   if (reports.length === 0) {
     return null;
   }
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
-        <Clock size={18} />
-        Recently viewed
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
+          <Clock size={18} />
+          Recently viewed
+        </h2>
+
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-xs font-black text-slate-400 transition hover:text-red-500"
+        >
+          Clear
+        </button>
+      </div>
 
       <div className="mt-4 space-y-3">
         {reports.map((report) => (

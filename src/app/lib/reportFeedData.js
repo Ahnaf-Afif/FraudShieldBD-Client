@@ -218,6 +218,11 @@ export function saveRecentlyViewedReport(report) {
   localStorage.setItem(RECENTLY_VIEWED_REPORTS_KEY, JSON.stringify(nextViews));
 }
 
+export function clearRecentlyViewedReports() {
+  localStorage.removeItem(RECENTLY_VIEWED_REPORTS_KEY);
+  notifyLocalDataUpdated();
+}
+
 export function saveSubmittedReport(newReport) {
   if (!isValidReportShape(newReport)) {
     return;
