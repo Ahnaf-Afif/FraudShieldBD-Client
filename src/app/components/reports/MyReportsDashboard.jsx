@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertCircle,
+  Check,
   ChevronRight,
   Clock,
+  Copy,
   ExternalLink,
   FileText,
+  ListChecks,
   PencilLine,
   Search,
   ShieldCheck,
@@ -150,6 +154,9 @@ export default function MyReportsDashboard() {
   const latestSubmittedReport = submittedReports.find((report) =>
     isOwnedByUser(report, demoUser),
   );
+  const incompleteDraftCount =
+    draftCount > 0 && getDraftCompletionPercent(draftReport) < 100 ? 1 : 0;
+  const submittedReviewCount = submittedCount;
   const hasActiveFilters =
     activeTab !== "All" || riskFilter !== "All Risk Levels" || searchValue.trim();
 
@@ -239,6 +246,31 @@ export default function MyReportsDashboard() {
                   Your draft and submitted report activity will appear here.
                 </p>
               )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
+              <ListChecks size={18} />
+              Action queue
+            </h2>
+
+            <div className="mt-4 space-y-3">
+              <ActionQueueItem
+                label="Drafts to finish"
+                value={incompleteDraftCount}
+                tone={incompleteDraftCount > 0 ? "warning" : "good"}
+              />
+              <ActionQueueItem
+                label="Submitted for review"
+                value={submittedReviewCount}
+                tone="neutral"
+              />
+              <ActionQueueItem
+                label="Ready public copies"
+                value={submittedCount}
+                tone="good"
+              />
             </div>
           </div>
         </aside>
@@ -372,11 +404,43 @@ function ActivityLink({ href, label, value }) {
   );
 }
 
+function ActionQueueItem({ label, value, tone }) {
+  const toneClass =
+    tone === "warning"
+      ? "bg-orange-50 text-orange-600"
+      : tone === "good"
+        ? "bg-[#e9f8f4] text-[#009879]"
+        : "bg-slate-50 text-[#06285c]";
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3">
+      <p className="text-sm font-bold text-slate-500">{label}</p>
+      <span
+        className={`inline-flex min-w-8 justify-center rounded-full px-3 py-1 text-sm font-black ${toneClass}`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
 function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
+  const [copiedReportId, setCopiedReportId] = useState(false);
   const isDraft = report.dashboardStatus === "Draft";
   const riskStyle = getRiskStyle(report.riskLevel);
   const identifier = getPrimaryIdentifier(report);
   const href = isDraft ? "/report-fraud" : `/reports/${report.reportId}`;
+  const draftCompletionPercent = isDraft ? getDraftCompletionPercent(report) : 100;
+  const checkHref = `/check?q=${encodeURIComponent(identifier)}`;
+
+  async function copyReportId() {
+    await navigator.clipboard.writeText(report.reportId);
+    setCopiedReportId(true);
+
+    setTimeout(() => {
+      setCopiedReportId(false);
+    }, 1600);
+  }
 
   return (
     <div className="p-4 sm:p-5">
@@ -411,6 +475,7 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
 
             <div className="mt-3 flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
               <span>{maskIdentifier(identifier)}</span>
+              <span>{report.reportId}</span>
               <span className="inline-flex items-center gap-1">
                 <Clock size={14} />
                 {isDraft
@@ -424,6 +489,35 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
         </div>
       </Link>
 
+      {isDraft ? (
+        <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="inline-flex items-center gap-2 text-sm font-black text-[#06285c]">
+              <AlertCircle size={17} className="text-blue-600" />
+              Draft completion
+            </p>
+            <span className="text-sm font-black text-blue-600">
+              {draftCompletionPercent}%
+            </span>
+          </div>
+
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+            <div
+              className="h-full rounded-full bg-[#0b63f6]"
+              style={{ width: `${draftCompletionPercent}%` }}
+            />
+          </div>
+
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {draftCompletionPercent === 100
+              ? "This draft has the main fields ready. Review it before submitting."
+              : "Continue editing to complete the missing report details."}
+          </p>
+        </div>
+      ) : (
+        <StatusTimeline report={report} />
+      )}
+
       <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Link
           href={href}
@@ -436,6 +530,23 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
           {isDraft ? <PencilLine size={15} /> : <ExternalLink size={15} />}
           {isDraft ? "Continue Editing" : "View Public Report"}
         </Link>
+
+        <Link
+          href={checkHref}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        >
+          <Search size={15} />
+          Check Identifier
+        </Link>
+
+        <button
+          type="button"
+          onClick={copyReportId}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        >
+          {copiedReportId ? <Check size={15} /> : <Copy size={15} />}
+          {copiedReportId ? "Copied ID" : "Copy ID"}
+        </button>
 
         {isDraft ? (
           <button
@@ -458,6 +569,54 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
         )}
       </div>
     </div>
+  );
+}
+
+function StatusTimeline({ report }) {
+  const steps = [
+    {
+      label: "Submitted",
+      text: report.submittedAt || "Submitted locally",
+      isComplete: true,
+    },
+    {
+      label: "Review queue",
+      text: "Ready for moderator workflow",
+      isComplete: true,
+    },
+    {
+      label: "Public warning",
+      text: "Visible in local MVP reports",
+      isComplete: true,
+    },
+  ];
+
+  return (
+    <div className="mt-4 rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-4">
+      <p className="text-sm font-black text-[#06285c]">Report status</p>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        {steps.map((step) => (
+          <div key={step.label} className="rounded-xl bg-white p-3">
+            <div className="flex items-center gap-2">
+              <CheckCircleIcon isComplete={step.isComplete} />
+              <p className="text-sm font-black text-[#06285c]">{step.label}</p>
+            </div>
+            <p className="mt-2 text-xs font-semibold leading-5 text-slate-500">
+              {step.text}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CheckCircleIcon({ isComplete }) {
+  return isComplete ? (
+    <Check size={16} className="text-[#009879]" />
+  ) : (
+    <Clock size={16} className="text-slate-300" />
   );
 }
 
@@ -509,4 +668,36 @@ function reportMatchesSearch(report, searchValue) {
     .join(" ")
     .toLowerCase()
     .includes(cleanSearch);
+}
+
+function getDraftCompletionPercent(report) {
+  if (!report) {
+    return 0;
+  }
+
+  const readinessChecks = [
+    report.fraudCategory,
+    report.platform,
+    report.incidentDate,
+    report.location,
+    report.title,
+    report.story && report.story.trim().length >= 20 ? report.story : "",
+    report.moneyStatus,
+    getPrimaryIdentifier(report) !== "Identifier not available"
+      ? getPrimaryIdentifier(report)
+      : "",
+    report.evidenceType ||
+      report.evidenceDetails ||
+      (report.evidenceFileSummaries || []).length > 0
+      ? "Evidence added"
+      : "",
+    report.preventionAdvice && report.preventionAdvice.trim().length >= 20
+      ? report.preventionAdvice
+      : "",
+  ];
+  const completedChecks = readinessChecks.filter((check) =>
+    String(check || "").trim(),
+  ).length;
+
+  return Math.round((completedChecks / readinessChecks.length) * 100);
 }
