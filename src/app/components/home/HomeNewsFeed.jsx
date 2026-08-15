@@ -17,6 +17,7 @@ import {
 import {
   demoReports,
   getAllReportsForBrowser,
+  getEntityType,
   getPrimaryIdentifier,
   getRiskStyle,
   getSavedReportComments,
@@ -31,6 +32,13 @@ import {
   getDemoSession,
 } from "../../lib/demoSession";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
+import {
+  addToWatchlist,
+  getWatchlistFromBrowser,
+  normalizeIdentifier,
+  removeFromWatchlist,
+  WATCHLIST_UPDATED_EVENT,
+} from "../../lib/watchlistData";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -49,6 +57,7 @@ export default function HomeNewsFeed() {
   const [commentErrors, setCommentErrors] = useState({});
   const [activeCommentReportId, setActiveCommentReportId] = useState("");
   const [copiedReportId, setCopiedReportId] = useState("");
+  const [watchedIdentifiers, setWatchedIdentifiers] = useState({});
   const [visibleReportCount, setVisibleReportCount] = useState(
     INITIAL_VISIBLE_REPORTS,
   );
@@ -59,6 +68,7 @@ export default function HomeNewsFeed() {
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
     setReportReactions(getSavedReportReactions());
     setReportComments(getSavedReportComments());
+    setWatchedIdentifiers(createWatchedIdentifierMap());
   }
 
   useEffect(() => {
@@ -66,11 +76,13 @@ export default function HomeNewsFeed() {
 
     window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
     window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
+    window.addEventListener(WATCHLIST_UPDATED_EVENT, refreshFeedState);
     window.addEventListener("storage", refreshFeedState);
 
     return () => {
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
       window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
+      window.removeEventListener(WATCHLIST_UPDATED_EVENT, refreshFeedState);
       window.removeEventListener("storage", refreshFeedState);
     };
   }, []);
@@ -240,6 +252,30 @@ export default function HomeNewsFeed() {
     setSortMode("Latest");
   }
 
+  function toggleFeedWatch(report) {
+    const identifier = getPrimaryIdentifier(report);
+    const cleanIdentifier = normalizeIdentifier(identifier);
+
+    if (!cleanIdentifier || identifier === "Identifier not available") {
+      return;
+    }
+
+    if (watchedIdentifiers[cleanIdentifier]) {
+      removeFromWatchlist(identifier);
+      setWatchedIdentifiers(createWatchedIdentifierMap());
+      return;
+    }
+
+    addToWatchlist({
+      identifier,
+      type: getEntityType(report),
+      riskLevel: report.riskLevel,
+      reportId: report.reportId,
+      title: report.title,
+    });
+    setWatchedIdentifiers(createWatchedIdentifierMap());
+  }
+
   return (
     <section
       id="community-feed"
@@ -347,12 +383,18 @@ export default function HomeNewsFeed() {
               commentError={commentErrors[report.reportId] || ""}
               commentsOpen={activeCommentReportId === report.reportId}
               copied={copiedReportId === report.reportId}
+              watched={
+                watchedIdentifiers[
+                  normalizeIdentifier(getPrimaryIdentifier(report))
+                ]
+              }
               currentAuthor={currentAuthor}
               onLike={toggleReportLike}
               onToggleComments={toggleCommentBox}
               onCommentChange={updateCommentDraft}
               onCommentSubmit={submitComment}
               onShare={copyReportLink}
+              onToggleWatch={toggleFeedWatch}
             />
           ))
         )}
@@ -531,12 +573,14 @@ function HomeReportPost({
   commentError,
   commentsOpen,
   copied,
+  watched,
   currentAuthor,
   onLike,
   onToggleComments,
   onCommentChange,
   onCommentSubmit,
   onShare,
+  onToggleWatch,
 }) {
   const riskStyle = getRiskStyle(report.riskLevel);
   const liked = reaction?.liked || false;
@@ -606,7 +650,7 @@ function HomeReportPost({
         <span>{commentCount} comments</span>
       </div>
 
-      <div className="grid grid-cols-3 border-t border-slate-200 text-sm font-bold text-slate-600">
+      <div className="grid grid-cols-2 border-t border-slate-200 text-sm font-bold text-slate-600 sm:grid-cols-4">
         <FeedAction
           active={liked}
           icon={<ThumbsUp size={18} />}
@@ -624,6 +668,12 @@ function HomeReportPost({
           icon={<Share2 size={18} />}
           label={copied ? "Copied" : "Share"}
           onClick={() => onShare(report.reportId)}
+        />
+        <FeedAction
+          active={watched}
+          icon={<Bell size={18} />}
+          label={watched ? "Watching" : "Watch"}
+          onClick={() => onToggleWatch(report)}
         />
       </div>
 
@@ -749,6 +799,15 @@ function createScrollableFeedReports(filteredReports) {
       submittedAt: formatFeedTime(report.submittedAt, loopIndex),
     })),
   );
+}
+
+function createWatchedIdentifierMap() {
+  return getWatchlistFromBrowser().reduce((watchedMap, item) => {
+    return {
+      ...watchedMap,
+      [item.normalizedIdentifier || normalizeIdentifier(item.identifier)]: true,
+    };
+  }, {});
 }
 
 function formatFeedTime(submittedAt, loopIndex) {
