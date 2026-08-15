@@ -1,0 +1,117 @@
+export const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
+
+export const demoReports = [
+  {
+    reportId: "FR-DEMO-001",
+    title: "Fake investment app promising high returns",
+    fraudCategory: "Investment",
+    location: "Dhaka",
+    story:
+      "A page promised daily profit after installing their app. They asked for advance payment and stopped replying after receiving money.",
+    preventionAdvice:
+      "Do not send advance payments for investment offers. Verify the company and avoid apps shared through random links.",
+    phoneOrPaymentNumber: "01812345678",
+    riskLevel: "High Risk",
+    submittedAt: "2 hours ago",
+    reportsCount: 23,
+  },
+  {
+    reportId: "FR-DEMO-002",
+    title: "Facebook shop took payment but did not deliver",
+    fraudCategory: "Facebook Page",
+    location: "Chattogram",
+    story:
+      "The seller showed product photos and requested full payment through mobile banking. After payment, the page blocked the buyer.",
+    preventionAdvice:
+      "Check page reviews, comments, and business history before paying. Prefer cash on delivery when possible.",
+    facebookLink: "facebook.com/fashionhubbd",
+    riskLevel: "Medium Risk",
+    submittedAt: "5 hours ago",
+    reportsCount: 17,
+  },
+  {
+    reportId: "FR-DEMO-003",
+    title: "Loan offer asked for registration fee first",
+    fraudCategory: "Mobile Financial",
+    location: "Sylhet",
+    story:
+      "A caller promised instant loan approval but asked for a fee before processing. After the fee was sent, the number became unreachable.",
+    preventionAdvice:
+      "Avoid loan offers that ask for fees before approval. Contact official support channels directly.",
+    phoneOrPaymentNumber: "01897654321",
+    riskLevel: "Low Risk",
+    submittedAt: "Yesterday",
+    reportsCount: 11,
+  },
+];
+
+export function getSubmittedReportsFromBrowser() {
+  const savedReports = localStorage.getItem(REPORT_SUBMISSIONS_KEY);
+
+  if (!savedReports) {
+    return [];
+  }
+
+  try {
+    const parsedReports = JSON.parse(savedReports);
+
+    if (!Array.isArray(parsedReports)) {
+      return [];
+    }
+
+    return parsedReports;
+  } catch (error) {
+    console.error("Could not load submitted reports:", error);
+    return [];
+  }
+}
+
+export function normalizeSubmittedReport(report) {
+  return {
+    ...report,
+    riskLevel: report.riskLevel || estimateRiskLevel(report),
+    reportsCount: report.reportsCount || 1,
+  };
+}
+
+export function getRiskStyle(riskLevel) {
+  if (riskLevel === "High Risk") {
+    return "bg-red-100 text-red-600";
+  }
+
+  if (riskLevel === "Medium Risk") {
+    return "bg-orange-100 text-orange-600";
+  }
+
+  return "bg-green-100 text-green-600";
+}
+
+export function getPrimaryIdentifier(report) {
+  return (
+    report.phoneOrPaymentNumber ||
+    report.facebookLink ||
+    report.websiteLink ||
+    report.businessName ||
+    "Identifier not available"
+  );
+}
+
+export function maskIdentifier(identifier) {
+  if (identifier.length < 8 || identifier.includes(".")) {
+    return identifier;
+  }
+
+  return `${identifier.slice(0, 5)}****${identifier.slice(-3)}`;
+}
+
+function estimateRiskLevel(report) {
+  if (report.moneyStatus === "Yes, I lost money") {
+    return "High Risk";
+  }
+
+  if (report.moneyStatus === "No, but they asked for money") {
+    return "Medium Risk";
+  }
+
+  return "Low Risk";
+}

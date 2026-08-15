@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -8,56 +9,18 @@ import {
   ShieldAlert,
   ThumbsUp,
 } from "lucide-react";
+import {
+  demoReports,
+  getPrimaryIdentifier,
+  getRiskStyle,
+  getSubmittedReportsFromBrowser,
+  maskIdentifier,
+  normalizeSubmittedReport,
+} from "../../lib/reportFeedData";
 
-const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
 const FEED_REPEAT_COUNT = 8;
-
-const sampleReports = [
-  {
-    reportId: "FR-DEMO-001",
-    title: "Fake investment app promising high returns",
-    fraudCategory: "Investment",
-    location: "Dhaka",
-    story:
-      "A page promised daily profit after installing their app. They asked for advance payment and stopped replying after receiving money.",
-    preventionAdvice:
-      "Do not send advance payments for investment offers. Verify the company and avoid apps shared through random links.",
-    phoneOrPaymentNumber: "01812345678",
-    riskLevel: "High Risk",
-    submittedAt: "2 hours ago",
-    reportsCount: 23,
-  },
-  {
-    reportId: "FR-DEMO-002",
-    title: "Facebook shop took payment but did not deliver",
-    fraudCategory: "Facebook Page",
-    location: "Chattogram",
-    story:
-      "The seller showed product photos and requested full payment through mobile banking. After payment, the page blocked the buyer.",
-    preventionAdvice:
-      "Check page reviews, comments, and business history before paying. Prefer cash on delivery when possible.",
-    facebookLink: "facebook.com/fashionhubbd",
-    riskLevel: "Medium Risk",
-    submittedAt: "5 hours ago",
-    reportsCount: 17,
-  },
-  {
-    reportId: "FR-DEMO-003",
-    title: "Loan offer asked for registration fee first",
-    fraudCategory: "Mobile Financial",
-    location: "Sylhet",
-    story:
-      "A caller promised instant loan approval but asked for a fee before processing. After the fee was sent, the number became unreachable.",
-    preventionAdvice:
-      "Avoid loan offers that ask for fees before approval. Contact official support channels directly.",
-    phoneOrPaymentNumber: "01897654321",
-    riskLevel: "Low Risk",
-    submittedAt: "Yesterday",
-    reportsCount: 11,
-  },
-];
 
 const filters = [
   "All",
@@ -68,7 +31,7 @@ const filters = [
 ];
 
 export default function HomeNewsFeed() {
-  const [reports, setReports] = useState(sampleReports);
+  const [reports, setReports] = useState(demoReports);
   const [activeFilter, setActiveFilter] = useState("All");
   const [visibleReportCount, setVisibleReportCount] = useState(
     INITIAL_VISIBLE_REPORTS,
@@ -184,8 +147,8 @@ function HomeReportPost({ report }) {
   const riskStyle = getRiskStyle(report.riskLevel);
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="p-4 sm:p-5">
+    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <Link href={`/reports/${report.reportId}`} className="block p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
             <ShieldAlert size={23} />
@@ -235,7 +198,7 @@ function HomeReportPost({ report }) {
             </p>
           </div>
         </div>
-      </div>
+      </Link>
 
       <div className="grid grid-cols-3 border-t border-slate-200 text-sm font-bold text-slate-600">
         <FeedAction icon={<ThumbsUp size={18} />} label="Like" />
@@ -258,27 +221,6 @@ function FeedAction({ icon, label }) {
   );
 }
 
-function getSubmittedReportsFromBrowser() {
-  const savedReports = localStorage.getItem(REPORT_SUBMISSIONS_KEY);
-
-  if (!savedReports) {
-    return [];
-  }
-
-  try {
-    const parsedReports = JSON.parse(savedReports);
-
-    if (!Array.isArray(parsedReports)) {
-      return [];
-    }
-
-    return parsedReports;
-  } catch (error) {
-    console.error("Could not load home feed reports:", error);
-    return [];
-  }
-}
-
 function createScrollableFeedReports(filteredReports) {
   if (filteredReports.length === 0) {
     return [];
@@ -299,54 +241,4 @@ function formatFeedTime(submittedAt, loopIndex) {
   }
 
   return `${loopIndex + 1} days ago`;
-}
-
-function normalizeSubmittedReport(report) {
-  return {
-    ...report,
-    riskLevel: report.riskLevel || estimateRiskLevel(report),
-    reportsCount: report.reportsCount || 1,
-  };
-}
-
-function estimateRiskLevel(report) {
-  if (report.moneyStatus === "Yes, I lost money") {
-    return "High Risk";
-  }
-
-  if (report.moneyStatus === "No, but they asked for money") {
-    return "Medium Risk";
-  }
-
-  return "Low Risk";
-}
-
-function getRiskStyle(riskLevel) {
-  if (riskLevel === "High Risk") {
-    return "bg-red-100 text-red-600";
-  }
-
-  if (riskLevel === "Medium Risk") {
-    return "bg-orange-100 text-orange-600";
-  }
-
-  return "bg-green-100 text-green-600";
-}
-
-function getPrimaryIdentifier(report) {
-  return (
-    report.phoneOrPaymentNumber ||
-    report.facebookLink ||
-    report.websiteLink ||
-    report.businessName ||
-    "Identifier not available"
-  );
-}
-
-function maskIdentifier(identifier) {
-  if (identifier.length < 8 || identifier.includes(".")) {
-    return identifier;
-  }
-
-  return `${identifier.slice(0, 5)}****${identifier.slice(-3)}`;
 }
