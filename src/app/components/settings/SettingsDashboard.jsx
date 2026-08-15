@@ -163,8 +163,9 @@ export default function SettingsDashboard() {
 
             <p className="mt-4 leading-7 text-slate-600">
               During the frontend MVP, reports, drafts, watchlist items,
-              comments, notifications and demo login state are saved locally in
-              your browser. These controls help reset that data safely.
+              comments, recently viewed reports, notifications and demo login
+              state are saved locally in your browser. These controls help
+              reset that data safely.
             </p>
 
             <StatusMessage status={status} />
@@ -190,7 +191,7 @@ export default function SettingsDashboard() {
               <DangerAction
                 icon={<RefreshCcw size={22} />}
                 title="Clear activity only"
-                text="Removes reports, drafts, comments, reactions, watchlist, recent searches and read notifications. Keeps demo login and preferences."
+                text="Removes reports, drafts, comments, reactions, watchlist, recent searches, recently viewed reports and read notifications. Keeps demo login and preferences."
                 buttonLabel={
                   confirmMode === "activity"
                     ? "Confirm Clear Activity"

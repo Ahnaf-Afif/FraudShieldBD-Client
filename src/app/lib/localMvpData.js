@@ -13,6 +13,7 @@ import {
   REPORT_DRAFT_KEY,
   REPORT_REACTIONS_KEY,
   REPORT_SUBMISSIONS_KEY,
+  RECENTLY_VIEWED_REPORTS_KEY,
 } from "./reportFeedData";
 import { WATCHLIST_KEY, WATCHLIST_UPDATED_EVENT } from "./watchlistData";
 import { notifyLocalDataUpdated } from "./localDataEvents";
@@ -24,6 +25,7 @@ const activityKeys = [
   REPORT_DRAFT_KEY,
   WATCHLIST_KEY,
   RECENT_SEARCHES_KEY,
+  RECENTLY_VIEWED_REPORTS_KEY,
   NOTIFICATION_READ_KEY,
 ];
 
