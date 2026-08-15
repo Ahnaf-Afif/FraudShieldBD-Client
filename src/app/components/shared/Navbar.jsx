@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   Search,
+  Settings,
   ShieldPlus,
   UserRound,
   X,
@@ -39,6 +40,7 @@ const accountLinks = [
   { label: "My Reports", href: "/my-reports", icon: FileText },
   { label: "Watchlist", href: "/watchlist", icon: Eye },
   { label: "Notifications", href: "/notifications", icon: Bell },
+  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function Navbar() {
@@ -422,6 +424,14 @@ function MobileUserMenu({ user, unreadCount, onLogout }) {
         <Bell size={17} />
         Notifications
         <InlineNotificationBadge unreadCount={unreadCount} />
+      </Link>
+
+      <Link
+        href="/settings"
+        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-black text-[#06285c]"
+      >
+        <Settings size={17} />
+        Settings
       </Link>
 
       <button
