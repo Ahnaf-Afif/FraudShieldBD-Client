@@ -124,6 +124,18 @@ export function deleteSubmittedReport(reportId) {
   );
 
   localStorage.setItem(REPORT_SUBMISSIONS_KEY, JSON.stringify(remainingReports));
+  deleteReportEngagement(reportId);
+}
+
+export function deleteReportEngagement(reportId) {
+  const savedReactions = getSavedReportReactions();
+  const savedComments = getSavedReportComments();
+
+  delete savedReactions[reportId];
+  delete savedComments[reportId];
+
+  saveReportReactions(savedReactions);
+  saveReportComments(savedComments);
 }
 
 export function searchReports(reports, query) {

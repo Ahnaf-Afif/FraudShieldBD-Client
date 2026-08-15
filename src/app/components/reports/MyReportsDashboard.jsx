@@ -25,6 +25,7 @@ import {
   normalizeSubmittedReport,
 } from "../../lib/reportFeedData";
 import { getDemoSession } from "../../lib/demoSession";
+import { removeWatchlistItemsByReportId } from "../../lib/watchlistData";
 
 const tabs = ["All", "Submitted", "Draft"];
 const riskFilters = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
@@ -55,7 +56,16 @@ export default function MyReportsDashboard() {
   }
 
   function removeSubmittedReport(reportId) {
+    const shouldDelete = window.confirm(
+      "Delete this report from your local MVP data? This cannot be undone.",
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
     deleteSubmittedReport(reportId);
+    removeWatchlistItemsByReportId(reportId);
     loadReports();
   }
 

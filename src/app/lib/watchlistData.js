@@ -72,6 +72,14 @@ export function removeFromWatchlist(identifier) {
   saveWatchlist(remainingItems);
 }
 
+export function removeWatchlistItemsByReportId(reportId) {
+  const remainingItems = getWatchlistFromBrowser().filter(
+    (item) => item.reportId !== reportId,
+  );
+
+  saveWatchlist(remainingItems);
+}
+
 export function toggleWatchlistAlerts(identifier) {
   const cleanIdentifier = normalizeIdentifier(identifier);
   const updatedItems = getWatchlistFromBrowser().map((item) => {
