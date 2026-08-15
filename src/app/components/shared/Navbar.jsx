@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Bell, Eye, FileText, LogOut, Menu, X } from "lucide-react";
+import { Bell, Eye, FileText, LogOut, Menu, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -209,7 +209,7 @@ function DesktopUserMenu({ user, unreadCount, onLogout }) {
   return (
     <div className="flex items-center gap-3">
       <Link
-        href="/my-reports"
+        href="/profile"
         className="flex items-center gap-3 rounded-2xl border border-slate-200 px-3 py-2 transition hover:border-[#009879] hover:bg-[#f0fbf7]"
       >
         <UserAvatar user={user} />
@@ -221,6 +221,14 @@ function DesktopUserMenu({ user, unreadCount, onLogout }) {
             {user.role}
           </p>
         </div>
+      </Link>
+
+      <Link
+        href="/my-reports"
+        className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        aria-label="My reports"
+      >
+        <FileText size={19} />
       </Link>
 
       <Link
@@ -272,8 +280,16 @@ function MobileUserMenu({ user, unreadCount, onLogout }) {
       </div>
 
       <Link
+        href="/profile"
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-black text-[#06285c]"
+      >
+        <UserRound size={17} />
+        Profile
+      </Link>
+
+      <Link
         href="/my-reports"
-        className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#009879] text-sm font-black text-white"
+        className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#009879] text-sm font-black text-white"
       >
         <FileText size={17} />
         My Reports

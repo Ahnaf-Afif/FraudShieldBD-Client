@@ -37,6 +37,27 @@ export function saveDemoSession(user) {
   return session;
 }
 
+export function updateDemoSession(updates) {
+  const currentSession = getDemoSession();
+
+  if (!currentSession) {
+    return null;
+  }
+
+  const nextSession = {
+    ...currentSession,
+    ...updates,
+    name: updates.name || currentSession.name,
+    role: updates.role || currentSession.role,
+    updatedAt: new Date().toLocaleString(),
+  };
+
+  localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(nextSession));
+  window.dispatchEvent(new Event(DEMO_SESSION_UPDATED_EVENT));
+
+  return nextSession;
+}
+
 export function clearDemoSession() {
   localStorage.removeItem(DEMO_SESSION_KEY);
   window.dispatchEvent(new Event(DEMO_SESSION_UPDATED_EVENT));

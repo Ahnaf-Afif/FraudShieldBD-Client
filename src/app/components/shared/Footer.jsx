@@ -15,6 +15,7 @@ const quickLinks = [
   { label: "Check Before You Pay", href: "/check" },
   { label: "Browse Reports", href: "/reports" },
   { label: "Report Fraud", href: "/report-fraud" },
+  { label: "Profile", href: "/profile" },
   { label: "My Reports", href: "/my-reports" },
   { label: "Watchlist", href: "/watchlist" },
   { label: "Notifications", href: "/notifications" },
