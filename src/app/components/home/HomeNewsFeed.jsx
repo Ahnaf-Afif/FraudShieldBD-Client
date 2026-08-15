@@ -13,15 +13,18 @@ import {
   demoReports,
   getPrimaryIdentifier,
   getRiskStyle,
+  getSavedReportComments,
+  getSavedReportReactions,
   getSubmittedReportsFromBrowser,
   maskIdentifier,
   normalizeSubmittedReport,
+  saveReportComments,
+  saveReportReactions,
 } from "../../lib/reportFeedData";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
 const FEED_REPEAT_COUNT = 8;
-const REPORT_REACTIONS_KEY = "fraudshield-report-reactions";
 
 const filters = [
   "All",
@@ -35,6 +38,9 @@ export default function HomeNewsFeed() {
   const [reports, setReports] = useState(demoReports);
   const [activeFilter, setActiveFilter] = useState("All");
   const [reportReactions, setReportReactions] = useState({});
+  const [reportComments, setReportComments] = useState({});
+  const [commentDrafts, setCommentDrafts] = useState({});
+  const [activeCommentReportId, setActiveCommentReportId] = useState("");
   const [copiedReportId, setCopiedReportId] = useState("");
   const [visibleReportCount, setVisibleReportCount] = useState(
     INITIAL_VISIBLE_REPORTS,
@@ -53,6 +59,7 @@ export default function HomeNewsFeed() {
 
   useEffect(() => {
     setReportReactions(getSavedReportReactions());
+    setReportComments(getSavedReportComments());
   }, []);
 
   const filteredReports =
@@ -117,10 +124,7 @@ export default function HomeNewsFeed() {
         },
       };
 
-      localStorage.setItem(
-        REPORT_REACTIONS_KEY,
-        JSON.stringify(updatedReactions),
-      );
+      saveReportReactions(updatedReactions);
 
       return updatedReactions;
     });
@@ -135,6 +139,49 @@ export default function HomeNewsFeed() {
     setTimeout(() => {
       setCopiedReportId("");
     }, 1600);
+  }
+
+  function toggleCommentBox(reportId) {
+    setActiveCommentReportId((currentReportId) =>
+      currentReportId === reportId ? "" : reportId,
+    );
+  }
+
+  function updateCommentDraft(reportId, value) {
+    setCommentDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [reportId]: value,
+    }));
+  }
+
+  function submitComment(reportId) {
+    const commentText = (commentDrafts[reportId] || "").trim();
+
+    if (!commentText) {
+      return;
+    }
+
+    setReportComments((currentComments) => {
+      const currentReportComments = currentComments[reportId] || [];
+      const newComment = {
+        id: `${reportId}-${Date.now()}`,
+        text: commentText,
+        createdAt: "Just now",
+      };
+      const updatedComments = {
+        ...currentComments,
+        [reportId]: [...currentReportComments, newComment],
+      };
+
+      saveReportComments(updatedComments);
+
+      return updatedComments;
+    });
+
+    setCommentDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [reportId]: "",
+    }));
   }
 
   return (
@@ -177,8 +224,14 @@ export default function HomeNewsFeed() {
             key={report.feedId}
             report={report}
             reaction={reportReactions[report.reportId]}
+            comments={reportComments[report.reportId] || []}
+            commentDraft={commentDrafts[report.reportId] || ""}
+            commentsOpen={activeCommentReportId === report.reportId}
             copied={copiedReportId === report.reportId}
             onLike={toggleReportLike}
+            onToggleComments={toggleCommentBox}
+            onCommentChange={updateCommentDraft}
+            onCommentSubmit={submitComment}
             onShare={copyReportLink}
           />
         ))}
@@ -196,10 +249,23 @@ export default function HomeNewsFeed() {
   );
 }
 
-function HomeReportPost({ report, reaction, copied, onLike, onShare }) {
+function HomeReportPost({
+  report,
+  reaction,
+  comments,
+  commentDraft,
+  commentsOpen,
+  copied,
+  onLike,
+  onToggleComments,
+  onCommentChange,
+  onCommentSubmit,
+  onShare,
+}) {
   const riskStyle = getRiskStyle(report.riskLevel);
   const liked = reaction?.liked || false;
   const likes = reaction?.likes || 0;
+  const commentCount = comments.length;
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -257,7 +323,7 @@ function HomeReportPost({ report, reaction, copied, onLike, onShare }) {
 
       <div className="flex items-center gap-4 border-t border-slate-100 px-4 py-2 text-xs font-bold text-slate-500 sm:px-5">
         <span>{likes} likes</span>
-        <span>0 comments</span>
+        <span>{commentCount} comments</span>
       </div>
 
       <div className="grid grid-cols-3 border-t border-slate-200 text-sm font-bold text-slate-600">
@@ -267,7 +333,12 @@ function HomeReportPost({ report, reaction, copied, onLike, onShare }) {
           label={liked ? "Liked" : "Like"}
           onClick={() => onLike(report.reportId)}
         />
-        <FeedAction icon={<MessageCircle size={18} />} label="Comment" />
+        <FeedAction
+          active={commentsOpen}
+          icon={<MessageCircle size={18} />}
+          label="Comment"
+          onClick={() => onToggleComments(report.reportId)}
+        />
         <FeedAction
           active={copied}
           icon={<Share2 size={18} />}
@@ -275,7 +346,62 @@ function HomeReportPost({ report, reaction, copied, onLike, onShare }) {
           onClick={() => onShare(report.reportId)}
         />
       </div>
+
+      {commentsOpen && (
+        <CommentPanel
+          comments={comments}
+          draft={commentDraft}
+          onChange={(value) => onCommentChange(report.reportId, value)}
+          onSubmit={() => onCommentSubmit(report.reportId)}
+        />
+      )}
     </article>
+  );
+}
+
+function CommentPanel({ comments, draft, onChange, onSubmit }) {
+  return (
+    <div className="border-t border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <div className="space-y-3">
+        {comments.length === 0 ? (
+          <p className="text-sm font-semibold text-slate-500">
+            No comments yet. Be the first to add useful context.
+          </p>
+        ) : (
+          comments.map((comment) => (
+            <div key={comment.id} className="rounded-xl bg-white p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-black text-[#06285c]">
+                  Community member
+                </p>
+                <p className="shrink-0 text-xs font-semibold text-slate-400">
+                  {comment.createdAt}
+                </p>
+              </div>
+              <p className="mt-1 break-words text-sm leading-6 text-slate-700">
+                {comment.text}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <input
+          value={draft}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="Write a helpful comment..."
+          className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400"
+        >
+          Post
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -292,27 +418,6 @@ function FeedAction({ active = false, icon, label, onClick }) {
       {label}
     </button>
   );
-}
-
-function getSavedReportReactions() {
-  const savedReactions = localStorage.getItem(REPORT_REACTIONS_KEY);
-
-  if (!savedReactions) {
-    return {};
-  }
-
-  try {
-    const parsedReactions = JSON.parse(savedReactions);
-
-    if (!parsedReactions || Array.isArray(parsedReactions)) {
-      return {};
-    }
-
-    return parsedReactions;
-  } catch (error) {
-    console.error("Could not load report reactions:", error);
-    return {};
-  }
 }
 
 function createScrollableFeedReports(filteredReports) {

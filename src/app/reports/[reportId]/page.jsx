@@ -7,23 +7,34 @@ import {
   AlertTriangle,
   ArrowLeft,
   Calendar,
+  MessageCircle,
   MapPin,
+  Share2,
   ShieldAlert,
+  ThumbsUp,
 } from "lucide-react";
 import Navbar from "../../components/shared/Navbar";
 import {
   demoReports,
   getPrimaryIdentifier,
   getRiskStyle,
+  getSavedReportComments,
+  getSavedReportReactions,
   getSubmittedReportsFromBrowser,
   maskIdentifier,
   normalizeSubmittedReport,
+  saveReportComments,
+  saveReportReactions,
 } from "../../lib/reportFeedData";
 
 export default function ReportDetailsPage() {
   const { reportId } = useParams();
   const [report, setReport] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [reaction, setReaction] = useState({ liked: false, likes: 0 });
+  const [comments, setComments] = useState([]);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const savedReports = getSubmittedReportsFromBrowser().map(
@@ -35,6 +46,8 @@ export default function ReportDetailsPage() {
     );
 
     setReport(matchedReport || null);
+    setReaction(getSavedReportReactions()[reportId] || { liked: false, likes: 0 });
+    setComments(getSavedReportComments()[reportId] || []);
     setIsLoading(false);
   }, [reportId]);
 
@@ -79,6 +92,55 @@ export default function ReportDetailsPage() {
 
   const riskStyle = getRiskStyle(report.riskLevel);
   const identifier = getPrimaryIdentifier(report);
+
+  function toggleLike() {
+    const nextLiked = !reaction.liked;
+    const nextReaction = {
+      liked: nextLiked,
+      likes: Math.max(reaction.likes + (nextLiked ? 1 : -1), 0),
+    };
+    const updatedReactions = {
+      ...getSavedReportReactions(),
+      [report.reportId]: nextReaction,
+    };
+
+    saveReportReactions(updatedReactions);
+    setReaction(nextReaction);
+  }
+
+  async function copyReportLink() {
+    const reportUrl = `${window.location.origin}/reports/${report.reportId}`;
+
+    await navigator.clipboard.writeText(reportUrl);
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 1600);
+  }
+
+  function submitComment() {
+    const commentText = commentDraft.trim();
+
+    if (!commentText) {
+      return;
+    }
+
+    const newComment = {
+      id: `${report.reportId}-${Date.now()}`,
+      text: commentText,
+      createdAt: "Just now",
+    };
+    const nextComments = [...comments, newComment];
+    const updatedComments = {
+      ...getSavedReportComments(),
+      [report.reportId]: nextComments,
+    };
+
+    saveReportComments(updatedComments);
+    setComments(nextComments);
+    setCommentDraft("");
+  }
 
   return (
     <main className="min-h-screen bg-white">
@@ -161,6 +223,78 @@ export default function ReportDetailsPage() {
                 </div>
               </div>
             </section>
+
+            <section className="mt-6 border-t border-slate-200 pt-5">
+              <div className="flex items-center gap-4 text-sm font-bold text-slate-500">
+                <span>{reaction.likes} likes</span>
+                <span>{comments.length} comments</span>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 text-sm font-bold text-slate-600">
+                <DetailAction
+                  active={reaction.liked}
+                  icon={<ThumbsUp size={18} />}
+                  label={reaction.liked ? "Liked" : "Like"}
+                  onClick={toggleLike}
+                />
+                <DetailAction
+                  icon={<MessageCircle size={18} />}
+                  label="Comment"
+                  onClick={() => document.getElementById("detail-comment-input")?.focus()}
+                />
+                <DetailAction
+                  active={copied}
+                  icon={<Share2 size={18} />}
+                  label={copied ? "Copied" : "Share"}
+                  onClick={copyReportLink}
+                />
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-2xl bg-slate-50 p-5">
+              <h2 className="text-xl font-black text-[#06285c]">Comments</h2>
+
+              <div className="mt-4 space-y-3">
+                {comments.length === 0 ? (
+                  <p className="text-sm font-semibold text-slate-500">
+                    No comments yet. Add useful context for the community.
+                  </p>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="rounded-xl bg-white p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-black text-[#06285c]">
+                          Community member
+                        </p>
+                        <p className="shrink-0 text-xs font-semibold text-slate-400">
+                          {comment.createdAt}
+                        </p>
+                      </div>
+                      <p className="mt-1 break-words text-sm leading-6 text-slate-700">
+                        {comment.text}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="detail-comment-input"
+                  value={commentDraft}
+                  onChange={(event) => setCommentDraft(event.target.value)}
+                  placeholder="Write a helpful comment..."
+                  className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-[#06285c] outline-none focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+                />
+                <button
+                  type="button"
+                  onClick={submitComment}
+                  className="rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66] active:bg-slate-400"
+                >
+                  Post
+                </button>
+              </div>
+            </section>
           </article>
 
           <aside className="space-y-4">
@@ -174,6 +308,21 @@ export default function ReportDetailsPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function DetailAction({ active = false, icon, label, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center justify-center gap-2 py-3 transition hover:bg-slate-50 hover:text-[#009879] active:bg-slate-100 ${
+        active ? "text-[#009879]" : ""
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 

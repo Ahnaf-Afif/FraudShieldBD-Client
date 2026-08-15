@@ -1,4 +1,6 @@
 export const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
+export const REPORT_REACTIONS_KEY = "fraudshield-report-reactions";
+export const REPORT_COMMENTS_KEY = "fraudshield-report-comments";
 
 export const demoReports = [
   {
@@ -64,6 +66,56 @@ export function getSubmittedReportsFromBrowser() {
     console.error("Could not load submitted reports:", error);
     return [];
   }
+}
+
+export function getSavedReportReactions() {
+  const savedReactions = localStorage.getItem(REPORT_REACTIONS_KEY);
+
+  if (!savedReactions) {
+    return {};
+  }
+
+  try {
+    const parsedReactions = JSON.parse(savedReactions);
+
+    if (!parsedReactions || Array.isArray(parsedReactions)) {
+      return {};
+    }
+
+    return parsedReactions;
+  } catch (error) {
+    console.error("Could not load report reactions:", error);
+    return {};
+  }
+}
+
+export function saveReportReactions(reactions) {
+  localStorage.setItem(REPORT_REACTIONS_KEY, JSON.stringify(reactions));
+}
+
+export function getSavedReportComments() {
+  const savedComments = localStorage.getItem(REPORT_COMMENTS_KEY);
+
+  if (!savedComments) {
+    return {};
+  }
+
+  try {
+    const parsedComments = JSON.parse(savedComments);
+
+    if (!parsedComments || Array.isArray(parsedComments)) {
+      return {};
+    }
+
+    return parsedComments;
+  } catch (error) {
+    console.error("Could not load report comments:", error);
+    return {};
+  }
+}
+
+export function saveReportComments(comments) {
+  localStorage.setItem(REPORT_COMMENTS_KEY, JSON.stringify(comments));
 }
 
 export function normalizeSubmittedReport(report) {
