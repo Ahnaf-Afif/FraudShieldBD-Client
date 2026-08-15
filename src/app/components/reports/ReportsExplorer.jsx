@@ -4,18 +4,22 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
+  BadgeCheck,
   ChevronRight,
   Clock,
   FileText,
+  Filter,
   MapPin,
   Search,
   ShieldAlert,
   ShieldCheck,
+  SlidersHorizontal,
   Users,
   X,
 } from "lucide-react";
 import {
   getAllReportsForBrowser,
+  getEntityType,
   getPrimaryIdentifier,
   getRiskStyle,
   maskIdentifier,
@@ -33,12 +37,22 @@ const categoryOptions = [
 ];
 
 const riskOptions = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
+const identifierOptions = [
+  "All Identifier Types",
+  "Phone or Payment Number",
+  "Facebook Page",
+  "Website",
+  "Business",
+];
 
 export default function ReportsExplorer() {
   const [reports, setReports] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [riskFilter, setRiskFilter] = useState("All Risk Levels");
+  const [identifierFilter, setIdentifierFilter] = useState(
+    "All Identifier Types",
+  );
   const [sortMode, setSortMode] = useState("Newest First");
 
   useEffect(() => {
@@ -57,30 +71,82 @@ export default function ReportsExplorer() {
           : report.fraudCategory === categoryFilter,
       )
       .filter((report) =>
-        riskFilter === "All Risk Levels" ? true : report.riskLevel === riskFilter,
+        riskFilter === "All Risk Levels"
+          ? true
+          : report.riskLevel === riskFilter,
+      )
+      .filter((report) =>
+        identifierFilter === "All Identifier Types"
+          ? true
+          : getEntityType(report) === identifierFilter,
       )
       .sort((firstReport, secondReport) => {
         if (sortMode === "Most Reports") {
-          return (secondReport.reportsCount || 1) - (firstReport.reportsCount || 1);
+          return (
+            (secondReport.reportsCount || 1) -
+            (firstReport.reportsCount || 1)
+          );
         }
 
         if (sortMode === "Highest Risk") {
-          return getRiskRank(secondReport.riskLevel) - getRiskRank(firstReport.riskLevel);
+          return (
+            getRiskRank(secondReport.riskLevel) -
+            getRiskRank(firstReport.riskLevel)
+          );
         }
 
         return 0;
       });
-  }, [categoryFilter, reports, riskFilter, searchValue, sortMode]);
+  }, [
+    categoryFilter,
+    identifierFilter,
+    reports,
+    riskFilter,
+    searchValue,
+    sortMode,
+  ]);
 
   const stats = createReportStats(reports);
   const categoryCounts = createCountMap(reports, "fraudCategory");
   const riskCounts = createCountMap(reports, "riskLevel");
+  const identifierCounts = createIdentifierCountMap(reports);
+  const dynamicCategoryOptions = createCategoryOptions(reports);
+  const activeFilters = createActiveFilters({
+    searchValue,
+    categoryFilter,
+    riskFilter,
+    identifierFilter,
+    sortMode,
+  });
 
   function clearFilters() {
     setSearchValue("");
     setCategoryFilter("All Categories");
     setRiskFilter("All Risk Levels");
+    setIdentifierFilter("All Identifier Types");
     setSortMode("Newest First");
+  }
+
+  function removeFilter(filterKey) {
+    if (filterKey === "search") {
+      setSearchValue("");
+    }
+
+    if (filterKey === "category") {
+      setCategoryFilter("All Categories");
+    }
+
+    if (filterKey === "risk") {
+      setRiskFilter("All Risk Levels");
+    }
+
+    if (filterKey === "identifier") {
+      setIdentifierFilter("All Identifier Types");
+    }
+
+    if (filterKey === "sort") {
+      setSortMode("Newest First");
+    }
   }
 
   return (
@@ -104,7 +170,7 @@ export default function ReportsExplorer() {
           <StatCard
             label="Verified Reports"
             value={String(stats.verifiedReports)}
-            icon={ShieldCheck}
+            icon={BadgeCheck}
             color="text-[#0b63f6]"
             bg="bg-[#eef6ff]"
           />
@@ -119,14 +185,17 @@ export default function ReportsExplorer() {
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[280px_1fr]">
-        <aside className="space-y-5">
+        <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-black text-[#06285c]">Filters</h2>
+              <h2 className="inline-flex items-center gap-2 font-black text-[#06285c]">
+                <SlidersHorizontal size={18} />
+                Filters
+              </h2>
               <button
                 type="button"
                 onClick={clearFilters}
-                className="text-sm font-bold text-[#0b63f6]"
+                className="text-sm font-bold text-[#0b63f6] transition hover:text-[#009879]"
               >
                 Clear All
               </button>
@@ -135,7 +204,7 @@ export default function ReportsExplorer() {
             <FilterGroup
               title="Category"
               value={categoryFilter}
-              options={categoryOptions}
+              options={dynamicCategoryOptions}
               counts={categoryCounts}
               totalCount={reports.length}
               onChange={setCategoryFilter}
@@ -149,6 +218,33 @@ export default function ReportsExplorer() {
               totalCount={reports.length}
               onChange={setRiskFilter}
             />
+
+            <FilterGroup
+              title="Identifier Type"
+              value={identifierFilter}
+              options={identifierOptions}
+              counts={identifierCounts}
+              totalCount={reports.length}
+              onChange={setIdentifierFilter}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="font-black text-[#06285c]">Quick searches</h2>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {["bKash", "Facebook", "investment", "loan", "advance"].map(
+                (keyword) => (
+                  <button
+                    key={keyword}
+                    type="button"
+                    onClick={() => setSearchValue(keyword)}
+                    className="rounded-full border border-slate-200 px-3 py-2 text-xs font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+                  >
+                    {keyword}
+                  </button>
+                ),
+              )}
+            </div>
           </div>
 
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 text-center">
@@ -203,6 +299,22 @@ export default function ReportsExplorer() {
                   {filteredReports.length} shown
                 </div>
               </div>
+
+              {activeFilters.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {activeFilters.map((filter) => (
+                    <button
+                      key={filter.key}
+                      type="button"
+                      onClick={() => removeFilter(filter.key)}
+                      className="inline-flex items-center gap-2 rounded-full border border-[#bfe8dc] bg-[#f0fbf7] px-3 py-2 text-xs font-black text-[#009879] transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                    >
+                      {filter.label}
+                      <X size={14} />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {filteredReports.length === 0 ? (
@@ -215,14 +327,26 @@ export default function ReportsExplorer() {
               </div>
             )}
 
-            <div className="border-t border-slate-200 p-4 text-sm text-slate-500">
-              Showing{" "}
-              <span className="font-bold text-[#06285c]">
-                {filteredReports.length}
-              </span>{" "}
-              of{" "}
-              <span className="font-bold text-[#06285c]">{reports.length}</span>{" "}
-              reports
+            <div className="flex flex-col gap-3 border-t border-slate-200 p-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                Showing{" "}
+                <span className="font-bold text-[#06285c]">
+                  {filteredReports.length}
+                </span>{" "}
+                of{" "}
+                <span className="font-bold text-[#06285c]">
+                  {reports.length}
+                </span>{" "}
+                reports
+              </p>
+
+              <Link
+                href="/report-fraud"
+                className="inline-flex items-center gap-2 font-black text-[#009879]"
+              >
+                Submit missing report
+                <ChevronRight size={16} />
+              </Link>
             </div>
           </div>
         </section>
@@ -283,6 +407,7 @@ function FilterGroup({ title, value, options, counts, totalCount, onChange }) {
 function ReportRow({ report }) {
   const identifier = getPrimaryIdentifier(report);
   const riskStyle = getRiskStyle(report.riskLevel);
+  const identifierType = getEntityType(report);
 
   return (
     <Link
@@ -306,16 +431,32 @@ function ReportRow({ report }) {
         </div>
 
         <p className="mt-1 text-sm font-semibold text-[#009879]">
-          {report.fraudCategory}
+          {report.fraudCategory} • {identifierType}
         </p>
 
         <p className="mt-1 break-words text-sm leading-6 text-slate-600">
           {report.story}
         </p>
 
-        <p className="mt-1 break-words text-sm font-medium text-[#06285c]">
-          {maskIdentifier(identifier)}
-        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-[1fr_1.2fr]">
+          <div className="rounded-xl bg-slate-50 p-3">
+            <p className="text-xs font-black uppercase text-slate-400">
+              Identifier
+            </p>
+            <p className="mt-1 break-words text-sm font-black text-[#06285c]">
+              {maskIdentifier(identifier)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-orange-100 bg-orange-50 p-3">
+            <p className="text-xs font-black uppercase text-orange-400">
+              Safety advice
+            </p>
+            <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6 text-orange-800">
+              {report.preventionAdvice || "Verify before sending money."}
+            </p>
+          </div>
+        </div>
 
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-500">
           <span className="inline-flex items-center gap-1">
@@ -325,6 +466,10 @@ function ReportRow({ report }) {
           <span className="inline-flex items-center gap-1">
             <Clock size={14} />
             {report.submittedAt || "Recently"}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <ShieldCheck size={14} />
+            Published warning
           </span>
         </div>
       </div>
@@ -356,8 +501,9 @@ function EmptyReportsState({ onClear }) {
       <button
         type="button"
         onClick={onClear}
-        className="mt-5 rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white"
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
       >
+        <Filter size={17} />
         Clear Filters
       </button>
     </div>
@@ -367,9 +513,13 @@ function EmptyReportsState({ onClear }) {
 function createReportStats(reports) {
   return {
     totalReports: reports.length,
-    highRisk: reports.filter((report) => report.riskLevel === "High Risk").length,
+    highRisk: reports.filter((report) => report.riskLevel === "High Risk")
+      .length,
     verifiedReports: reports.length,
-    uniqueReporters: Math.max(reports.length, 1),
+    uniqueReporters: Math.max(
+      new Set(reports.map((report) => report.reportId)).size,
+      1,
+    ),
   };
 }
 
@@ -382,6 +532,70 @@ function createCountMap(reports, fieldName) {
       [fieldValue]: (countMap[fieldValue] || 0) + 1,
     };
   }, {});
+}
+
+function createIdentifierCountMap(reports) {
+  return reports.reduce((countMap, report) => {
+    const identifierType = getEntityType(report);
+
+    return {
+      ...countMap,
+      [identifierType]: (countMap[identifierType] || 0) + 1,
+    };
+  }, {});
+}
+
+function createCategoryOptions(reports) {
+  const reportCategories = reports
+    .map((report) => report.fraudCategory)
+    .filter(Boolean);
+  const categories = new Set([
+    ...categoryOptions.slice(1),
+    ...reportCategories,
+  ]);
+
+  return ["All Categories", ...categories];
+}
+
+function createActiveFilters({
+  searchValue,
+  categoryFilter,
+  riskFilter,
+  identifierFilter,
+  sortMode,
+}) {
+  return [
+    searchValue.trim()
+      ? {
+          key: "search",
+          label: `Search: ${searchValue.trim()}`,
+        }
+      : null,
+    categoryFilter !== "All Categories"
+      ? {
+          key: "category",
+          label: categoryFilter,
+        }
+      : null,
+    riskFilter !== "All Risk Levels"
+      ? {
+          key: "risk",
+          label: riskFilter,
+        }
+      : null,
+    identifierFilter !== "All Identifier Types"
+      ? {
+          key: "identifier",
+          label: identifierFilter,
+        }
+      : null,
+    sortMode !== "Newest First"
+      ? {
+          key: "sort",
+          label: sortMode,
+        }
+      : null,
+  ].filter(Boolean);
 }
 
 function getRiskRank(riskLevel) {
