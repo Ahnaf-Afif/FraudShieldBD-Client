@@ -764,6 +764,7 @@ export default function ReportDetailsPage() {
             <CommunityVerificationCard
               report={report}
               commentsCount={comments.length}
+              followUpCount={followUpReports.length}
               likesCount={reaction.likes}
               sharesCount={shareCount}
               relatedCount={relatedReports.length}
@@ -986,6 +987,7 @@ function DetailRiskScoreCard({ riskScore, report, relatedCount }) {
 function CommunityVerificationCard({
   report,
   commentsCount,
+  followUpCount,
   likesCount,
   sharesCount,
   relatedCount,
@@ -1011,6 +1013,14 @@ function CommunityVerificationCard({
         likesCount > 0
           ? "Readers marked this warning as useful."
           : "No helpful votes yet.",
+    },
+    {
+      label: "Follow-up reports",
+      value: followUpCount,
+      detail:
+        followUpCount > 0
+          ? "People submitted connected reports from this warning."
+          : "No direct follow-up reports yet.",
     },
     {
       label: "Related matches",
