@@ -150,6 +150,9 @@ export default function MyReportsDashboard() {
   const submittedCount = submittedReports.filter((report) =>
     isOwnedByUser(report, demoUser),
   ).length;
+  const connectedReportCount = submittedReports.filter(
+    (report) => isOwnedByUser(report, demoUser) && report.relatedReportId,
+  ).length;
   const draftCount =
     draftReport && isOwnedByUser(draftReport, demoUser) ? 1 : 0;
   const latestSubmittedReport = submittedReports.find((report) =>
@@ -202,6 +205,11 @@ export default function MyReportsDashboard() {
                 label="Total"
                 value={String(submittedCount + draftCount)}
                 icon={<FileText size={19} />}
+              />
+              <DashboardStat
+                label="Connected"
+                value={String(connectedReportCount)}
+                icon={<ExternalLink size={19} />}
               />
             </div>
           </div>
@@ -271,6 +279,11 @@ export default function MyReportsDashboard() {
                 label="Ready public copies"
                 value={submittedCount}
                 tone="good"
+              />
+              <ActionQueueItem
+                label="Connected warnings"
+                value={connectedReportCount}
+                tone={connectedReportCount > 0 ? "info" : "neutral"}
               />
             </div>
           </div>
@@ -411,6 +424,8 @@ function ActionQueueItem({ label, value, tone }) {
       ? "bg-orange-50 text-orange-600"
       : tone === "good"
         ? "bg-[#e9f8f4] text-[#009879]"
+        : tone === "info"
+          ? "bg-[#eef6ff] text-[#0b63f6]"
         : "bg-slate-50 text-[#06285c]";
 
   return (
