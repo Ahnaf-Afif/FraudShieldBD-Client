@@ -21,6 +21,7 @@ import {
   MessageCircle,
   MapPin,
   Pencil,
+  Search,
   Share2,
   ShieldAlert,
   ShieldCheck,
@@ -744,6 +745,14 @@ export default function ReportDetailsPage() {
               relatedCount={relatedReports.length}
             />
 
+            <CommunityVerificationCard
+              report={report}
+              commentsCount={comments.length}
+              likesCount={reaction.likes}
+              sharesCount={shareCount}
+              relatedCount={relatedReports.length}
+            />
+
             <button
               type="button"
               onClick={toggleWatchIdentifier}
@@ -981,6 +990,91 @@ function DetailRiskScoreCard({ riskScore, report, relatedCount }) {
           value={String(report.reportsCount || 1)}
         />
       </div>
+    </div>
+  );
+}
+
+function CommunityVerificationCard({
+  report,
+  commentsCount,
+  likesCount,
+  sharesCount,
+  relatedCount,
+}) {
+  const verificationSignals = [
+    {
+      label: "Community reports",
+      value: report.reportsCount || 1,
+      detail: "People reported similar suspicious activity.",
+    },
+    {
+      label: "Discussion",
+      value: commentsCount,
+      detail:
+        commentsCount > 0
+          ? "Community members added extra context."
+          : "No public comments yet.",
+    },
+    {
+      label: "Helpful votes",
+      value: likesCount,
+      detail:
+        likesCount > 0
+          ? "Readers marked this warning as useful."
+          : "No helpful votes yet.",
+    },
+    {
+      label: "Related matches",
+      value: relatedCount,
+      detail:
+        relatedCount > 0
+          ? "Other reports share similar risk signals."
+          : "No close related reports found.",
+    },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
+          <ClipboardCheck size={22} />
+        </div>
+
+        <div>
+          <h2 className="font-black text-[#06285c]">
+            Community verification
+          </h2>
+          <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
+            These local MVP signals help readers judge how much community
+            activity exists around this report.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {verificationSignals.map((signal) => (
+          <div key={signal.label} className="rounded-xl bg-slate-50 p-3">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-black text-[#06285c]">
+                {signal.label}
+              </p>
+              <p className="text-lg font-black text-[#009879]">
+                {signal.value}
+              </p>
+            </div>
+            <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+              {signal.detail}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {sharesCount > 0 && (
+        <p className="mt-4 rounded-xl bg-[#eef6ff] px-3 py-2 text-xs font-bold leading-5 text-[#0b63f6]">
+          This report has been shared {sharesCount} time
+          {sharesCount === 1 ? "" : "s"} from this browser.
+        </p>
+      )}
     </div>
   );
 }
