@@ -6,9 +6,11 @@ import {
   AlertTriangle,
   BadgeAlert,
   Bell,
+  Check,
   Clock,
   FilePlus2,
   MessageCircle,
+  Pencil,
   Search,
   Share2,
   ShieldAlert,
@@ -272,6 +274,39 @@ export default function HomeNewsFeed() {
     });
   }
 
+  function editComment(reportId, commentId, nextText) {
+    const cleanText = nextText.trim();
+
+    if (cleanText.length < MIN_COMMENT_LENGTH) {
+      return false;
+    }
+
+    setReportComments((currentComments) => {
+      const currentReportComments = currentComments[reportId] || [];
+      const updatedReportComments = currentReportComments.map((comment) => {
+        if (comment.id !== commentId) {
+          return comment;
+        }
+
+        return {
+          ...comment,
+          text: cleanText,
+          editedAt: "Edited just now",
+        };
+      });
+      const updatedComments = {
+        ...currentComments,
+        [reportId]: updatedReportComments,
+      };
+
+      saveReportComments(updatedComments);
+
+      return updatedComments;
+    });
+
+    return true;
+  }
+
   function clearFeedFilters() {
     setActiveFilter("All");
     setFeedSearch("");
@@ -437,6 +472,7 @@ export default function HomeNewsFeed() {
               onToggleComments={toggleCommentBox}
               onCommentChange={updateCommentDraft}
               onCommentSubmit={submitComment}
+              onCommentEdit={editComment}
               onCommentDelete={deleteComment}
               onShare={copyReportLink}
               onToggleWatch={toggleFeedWatch}
@@ -746,6 +782,7 @@ function HomeReportPost({
   onToggleComments,
   onCommentChange,
   onCommentSubmit,
+  onCommentEdit,
   onCommentDelete,
   onShare,
   onToggleWatch,
@@ -861,6 +898,9 @@ function HomeReportPost({
           currentAuthor={currentAuthor}
           onChange={(value) => onCommentChange(report.reportId, value)}
           onSubmit={() => onCommentSubmit(report.reportId)}
+          onEdit={(commentId, nextText) =>
+            onCommentEdit(report.reportId, commentId, nextText)
+          }
           onDelete={(commentId) => onCommentDelete(report.reportId, commentId)}
         />
       )}
@@ -895,13 +935,47 @@ function CommentPanel({
   currentAuthor,
   onChange,
   onSubmit,
+  onEdit,
   onDelete,
 }) {
+  const [editingCommentId, setEditingCommentId] = useState("");
+  const [editingDraft, setEditingDraft] = useState("");
+  const [editingError, setEditingError] = useState("");
   const cleanDraftLength = draft.trim().length;
   const missingCharacterCount = Math.max(
     MIN_COMMENT_LENGTH - cleanDraftLength,
     0,
   );
+
+  function startEditingComment(comment) {
+    setEditingCommentId(comment.id);
+    setEditingDraft(comment.text);
+    setEditingError("");
+  }
+
+  function cancelEditingComment() {
+    setEditingCommentId("");
+    setEditingDraft("");
+    setEditingError("");
+  }
+
+  function saveEditingComment() {
+    const cleanEditingDraft = editingDraft.trim();
+
+    if (cleanEditingDraft.length < MIN_COMMENT_LENGTH) {
+      setEditingError(`Write at least ${MIN_COMMENT_LENGTH} characters.`);
+      return;
+    }
+
+    const saved = onEdit(editingCommentId, cleanEditingDraft);
+
+    if (!saved) {
+      setEditingError(`Write at least ${MIN_COMMENT_LENGTH} characters.`);
+      return;
+    }
+
+    cancelEditingComment();
+  }
 
   return (
     <div className="border-t border-slate-200 bg-slate-50 p-4 sm:p-5">
@@ -913,6 +987,7 @@ function CommentPanel({
         ) : (
           comments.map((comment) => {
             const canDeleteComment = comment.authorEmail === currentAuthor.email;
+            const isEditingComment = editingCommentId === comment.id;
 
             return (
               <div key={comment.id} className="rounded-xl bg-white p-3">
@@ -934,20 +1009,79 @@ function CommentPanel({
                     </p>
 
                     {canDeleteComment && (
-                      <button
-                        type="button"
-                        onClick={() => onDelete(comment.id)}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                        aria-label="Delete comment"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => startEditingComment(comment)}
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-[#f0fbf7] hover:text-[#009879]"
+                          aria-label="Edit comment"
+                        >
+                          <Pencil size={15} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onDelete(comment.id)}
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                          aria-label="Delete comment"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
-                <p className="mt-1 break-words text-sm leading-6 text-slate-700">
-                  {comment.text}
-                </p>
+
+                {isEditingComment ? (
+                  <div className="mt-3">
+                    <textarea
+                      value={editingDraft}
+                      onChange={(event) => {
+                        setEditingDraft(event.target.value);
+                        setEditingError("");
+                      }}
+                      rows={3}
+                      className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold leading-6 text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+                    />
+
+                    {editingError && (
+                      <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600">
+                        {editingError}
+                      </p>
+                    )}
+
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={saveEditingComment}
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#009879] px-4 py-2 text-sm font-black text-white transition hover:bg-[#007f66]"
+                      >
+                        <Check size={16} />
+                        Save
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={cancelEditingComment}
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-500 transition hover:border-slate-300 hover:text-[#06285c]"
+                      >
+                        <X size={16} />
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="mt-1 break-words text-sm leading-6 text-slate-700">
+                      {comment.text}
+                    </p>
+                    {comment.editedAt && (
+                      <p className="mt-1 text-xs font-semibold text-slate-400">
+                        {comment.editedAt}
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
             );
           })
