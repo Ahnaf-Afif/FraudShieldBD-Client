@@ -1108,24 +1108,32 @@ function HomeReportPost({
       <div className="flex snap-x overflow-x-auto border-t border-slate-200 px-1 text-sm font-bold text-slate-600">
         <FeedAction
           active={liked}
+          ariaLabel={liked ? "Unlike this report" : "Like this report"}
           icon={<ThumbsUp size={18} />}
           label={liked ? "Liked" : "Like"}
           onClick={() => onLike(report.reportId)}
         />
         <FeedAction
           active={commentsOpen}
+          ariaLabel={
+            commentsOpen ? "Hide report comments" : "Show report comments"
+          }
           icon={<MessageCircle size={18} />}
           label="Comment"
           onClick={() => onToggleComments(report.reportId)}
         />
         <FeedAction
           active={copied}
+          ariaLabel="Share this report"
           icon={<Share2 size={18} />}
           label={copied ? "Copied" : "Share"}
           onClick={() => onShare(report.reportId)}
         />
         <FeedAction
           active={watched}
+          ariaLabel={
+            watched ? "Remove report from watchlist" : "Add report to watchlist"
+          }
           icon={<Bell size={18} />}
           label={watched ? "Watching" : "Watch"}
           onClick={() => onToggleWatch(report)}
@@ -1423,12 +1431,13 @@ function CommentAvatar({ comment }) {
   );
 }
 
-function FeedAction({ active = false, icon, label, onClick }) {
+function FeedAction({ active = false, ariaLabel, icon, label, onClick }) {
   return (
     <button
       type="button"
+      aria-label={ariaLabel || label}
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 py-3 transition hover:bg-slate-50 hover:text-[#009879] active:bg-slate-100 ${
+      className={`inline-flex items-center justify-center gap-2 py-3 outline-none transition hover:bg-slate-50 hover:text-[#009879] focus-visible:ring-4 focus-visible:ring-[#009879]/15 active:bg-slate-100 ${
         active ? "text-[#009879]" : ""
       } min-w-28 flex-1 shrink-0 snap-start rounded-xl`}
     >
@@ -1442,7 +1451,7 @@ function FeedLinkAction({ href, icon, label }) {
   return (
     <Link
       href={href}
-      className="inline-flex min-w-28 flex-1 shrink-0 snap-start items-center justify-center gap-2 rounded-xl py-3 transition hover:bg-slate-50 hover:text-[#009879] active:bg-slate-100"
+      className="inline-flex min-w-28 flex-1 shrink-0 snap-start items-center justify-center gap-2 rounded-xl py-3 outline-none transition hover:bg-slate-50 hover:text-[#009879] focus-visible:ring-4 focus-visible:ring-[#009879]/15 active:bg-slate-100"
     >
       {icon}
       {label}
