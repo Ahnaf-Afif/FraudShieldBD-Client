@@ -115,7 +115,9 @@ export default function ReportFormShell() {
       }
 
       if (relatedReport) {
-        setRelatedReportSummary(createRelatedReportSummary(relatedReport));
+        setRelatedReportSummary(
+          createRelatedReportSummary(relatedReport, nextPrefillData),
+        );
       }
 
       didLoadInitialData.current = true;
@@ -257,6 +259,24 @@ export default function ReportFormShell() {
     setStatusTime(new Date().toLocaleString());
   }
 
+  function clearRelatedReportContext() {
+    if (!relatedReportSummary) {
+      return;
+    }
+
+    setReportData((currentData) =>
+      removeUnchangedPrefillValues(
+        currentData,
+        relatedReportSummary.prefillData,
+      ),
+    );
+    setRelatedReportSummary(null);
+    setHasUnsavedChanges(true);
+    setSubmitStatus("");
+
+    window.history.replaceState({}, "", "/report-fraud");
+  }
+
   return (
     <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-10 sm:px-6 lg:grid-cols-[1fr_330px]">
       <form
@@ -264,7 +284,10 @@ export default function ReportFormShell() {
         className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
       >
         {relatedReportSummary && (
-          <RelatedReportPrefillNotice relatedReport={relatedReportSummary} />
+          <RelatedReportPrefillNotice
+            relatedReport={relatedReportSummary}
+            onClearContext={clearRelatedReportContext}
+          />
         )}
 
         <ReportCategoryForm
@@ -323,7 +346,7 @@ export default function ReportFormShell() {
   );
 }
 
-function RelatedReportPrefillNotice({ relatedReport }) {
+function RelatedReportPrefillNotice({ relatedReport, onClearContext }) {
   return (
     <div className="border-b border-[#bfdbfe] bg-[#eff6ff] p-5 sm:p-6">
       <p className="text-xs font-black uppercase text-[#0b63f6]">
@@ -354,6 +377,14 @@ function RelatedReportPrefillNotice({ relatedReport }) {
         >
           Review Prefilled Fields
         </a>
+
+        <button
+          type="button"
+          onClick={onClearContext}
+          className="inline-flex justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+        >
+          Start Blank Instead
+        </button>
       </div>
     </div>
   );
@@ -588,11 +619,28 @@ function createRelatedReportPrefill(relatedReport) {
   };
 }
 
-function createRelatedReportSummary(relatedReport) {
+function createRelatedReportSummary(relatedReport, prefillData) {
   return {
     reportId: relatedReport.reportId,
     title: relatedReport.title || "this report",
+    prefillData,
   };
+}
+
+function removeUnchangedPrefillValues(reportData, prefillData) {
+  return Object.entries(prefillData).reduce(
+    (nextReportData, [fieldName, prefilledValue]) => {
+      if (nextReportData[fieldName] !== prefilledValue) {
+        return nextReportData;
+      }
+
+      return {
+        ...nextReportData,
+        [fieldName]: initialReportData[fieldName],
+      };
+    },
+    reportData,
+  );
 }
 
 function mapRelatedCategoryToFormCategory(category) {
