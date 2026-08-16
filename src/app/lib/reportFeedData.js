@@ -304,6 +304,8 @@ export function searchReports(reports, query) {
       report.websiteLink,
       report.businessName,
       report.paymentMethod,
+      report.relatedReportId,
+      report.relatedReportTitle,
     ].filter(Boolean);
     const searchableText = searchableValues.join(" ").toLowerCase();
     const searchableDigits = getDigitsOnly(searchableText);
