@@ -135,7 +135,14 @@ export default function HomeNewsFeed() {
   );
   const visibleReports = feedReports.slice(0, visibleReportCount);
   const hasMoreReports = visibleReportCount < feedReports.length;
-  const hasActiveFeedFilters = activeFilter !== "All" || feedSearch.trim();
+  const hasActiveFeedFilters =
+    activeFilter !== "All" || feedSearch.trim() || sortMode !== "Latest";
+  const feedViewSummary = createFeedViewSummary({
+    activeFilter,
+    feedSearch,
+    filteredCount: filteredReports.length,
+    sortMode,
+  });
 
   useEffect(() => {
     setVisibleReportCount(INITIAL_VISIBLE_REPORTS);
@@ -453,6 +460,18 @@ export default function HomeNewsFeed() {
               Clear filters
             </button>
           )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+          {feedViewSummary.map((item) => (
+            <span
+              key={item.label}
+              className="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-500"
+            >
+              {item.label}:{" "}
+              <span className="text-[#06285c]">{item.value}</span>
+            </span>
+          ))}
         </div>
       </div>
 
@@ -1344,6 +1363,41 @@ function getCommentCount(report, reportComments) {
 
 function getShareCount(report, reportShares) {
   return Number(reportShares[report.reportId] || 0);
+}
+
+function createFeedViewSummary({
+  activeFilter,
+  feedSearch,
+  filteredCount,
+  sortMode,
+}) {
+  const cleanSearch = feedSearch.trim();
+  const summaryItems = [
+    {
+      label: "Category",
+      value: activeFilter,
+    },
+    {
+      label: "Sort",
+      value: sortMode,
+    },
+    {
+      label: "Results",
+      value: filteredCount,
+    },
+  ];
+
+  if (!cleanSearch) {
+    return summaryItems;
+  }
+
+  return [
+    ...summaryItems,
+    {
+      label: "Search",
+      value: cleanSearch,
+    },
+  ];
 }
 
 function createFeedStats(reports) {
