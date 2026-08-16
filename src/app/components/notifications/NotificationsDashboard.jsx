@@ -476,7 +476,13 @@ function NotificationRow({ notification, onRead }) {
             <Clock size={14} />
             {notification.createdAt}
           </span>
-          <span>{notification.tone}</span>
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-black ${getToneBadgeClass(
+              notification.tone,
+            )}`}
+          >
+            {notification.tone}
+          </span>
         </div>
       </div>
 
@@ -543,4 +549,28 @@ function getNotificationIcon(type) {
   }
 
   return ShieldAlert;
+}
+
+function getToneBadgeClass(tone) {
+  if (tone === "High Risk") {
+    return "bg-red-100 text-red-600";
+  }
+
+  if (tone === "Medium Risk") {
+    return "bg-orange-100 text-orange-600";
+  }
+
+  if (tone === "Low Risk") {
+    return "bg-[#e9f8f4] text-[#009879]";
+  }
+
+  if (tone === "Follow-up") {
+    return "bg-[#eef6ff] text-[#0b63f6]";
+  }
+
+  if (tone === "Draft") {
+    return "bg-blue-50 text-blue-600";
+  }
+
+  return "bg-slate-100 text-[#06285c]";
 }
