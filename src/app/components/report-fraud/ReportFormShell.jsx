@@ -329,6 +329,7 @@ export default function ReportFormShell() {
         <ReportLiveSummary
           reportData={reportData}
           reportId={reportId}
+          relatedReport={relatedReportSummary}
           submitStatus={submitStatus}
           statusTime={statusTime}
           hasSavedDraft={hasSavedDraft}

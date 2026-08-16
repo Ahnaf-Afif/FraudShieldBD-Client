@@ -1,9 +1,11 @@
-import { ClipboardList, UserRound } from "lucide-react";
+import Link from "next/link";
+import { ClipboardList, Link2, UserRound } from "lucide-react";
 import { getInitials } from "../../lib/demoSession";
 
 export default function ReportLiveSummary({
   reportData,
   reportId,
+  relatedReport,
   submitStatus,
   statusTime,
   hasSavedDraft,
@@ -99,6 +101,32 @@ export default function ReportLiveSummary({
           </p>
         )}
       </div>
+
+      {relatedReport && (
+        <div className="mt-4 rounded-xl border border-[#bfdbfe] bg-white p-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eff6ff] text-[#0b63f6]">
+              <Link2 size={18} />
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-slate-500">
+                Related to report
+              </p>
+              <Link
+                href={`/reports/${relatedReport.reportId}`}
+                className="mt-1 block break-words font-black text-[#06285c] transition hover:text-[#0b63f6]"
+              >
+                {relatedReport.title}
+              </Link>
+              <p className="mt-2 text-xs font-semibold leading-5 text-slate-500">
+                Prefilled fields can be reviewed or cleared from the top of the
+                form.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 rounded-xl bg-white p-4">
         <p className="text-sm font-bold text-slate-500">Submitting as</p>
