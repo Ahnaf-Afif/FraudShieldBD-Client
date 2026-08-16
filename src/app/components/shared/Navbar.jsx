@@ -85,6 +85,28 @@ export default function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    function handleEscapeKey(event) {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleEscapeKey);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [isMenuOpen]);
+
   function isActive(href) {
     if (href === "/") {
       return pathname === "/";
@@ -183,13 +205,18 @@ export default function Navbar() {
           className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-[#06285c] lg:hidden"
           onClick={toggleMenu}
           aria-label="Toggle navigation menu"
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-navigation-menu"
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       {isMenuOpen && (
-        <div className="border-t border-slate-200 bg-white px-4 py-4 shadow-lg lg:hidden">
+        <div
+          id="mobile-navigation-menu"
+          className="border-t border-slate-200 bg-white px-4 py-4 shadow-lg lg:hidden"
+        >
           <nav className="flex flex-col gap-2">
             {navLinks.map((link) => (
               <Link
