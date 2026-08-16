@@ -41,6 +41,9 @@ export function getNotificationsForBrowser(demoUser) {
     ...(preferences.Report
       ? createSubmittedReportNotifications(submittedReports, demoUser)
       : []),
+    ...(preferences.Report
+      ? createFollowUpReportNotifications(allReports, demoUser)
+      : []),
     ...(preferences.Draft ? createDraftNotifications(draftReport, demoUser) : []),
     ...(preferences.Watchlist ? createWatchlistNotifications(watchlistItems) : []),
     ...(preferences.Viewed
@@ -141,6 +144,31 @@ function createSubmittedReportNotifications(reports, demoUser) {
       href: `/reports/${report.reportId}`,
       createdAt: report.submittedAt || "Recently",
       tone: report.riskLevel || "Submitted",
+    }));
+}
+
+function createFollowUpReportNotifications(reports, demoUser) {
+  if (!demoUser) {
+    return [];
+  }
+
+  const ownedReportIds = new Set(
+    reports
+      .filter((report) => isOwnedByUser(report, demoUser))
+      .map((report) => report.reportId),
+  );
+
+  return reports
+    .filter((report) => ownedReportIds.has(report.relatedReportId))
+    .slice(0, 5)
+    .map((report) => ({
+      id: `follow-up-${report.reportId}`,
+      type: "Report",
+      title: "New follow-up report",
+      message: `${report.title || "A connected report"} was submitted from one of your reports.`,
+      href: `/reports/${report.reportId}`,
+      createdAt: report.submittedAt || "Recently",
+      tone: "Follow-up",
     }));
 }
 
