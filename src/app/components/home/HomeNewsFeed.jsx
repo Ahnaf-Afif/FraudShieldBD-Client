@@ -1105,7 +1105,7 @@ function HomeReportPost({
         {watched && <span className="text-[#009879]">Watching</span>}
       </div>
 
-      <div className="flex overflow-x-auto border-t border-slate-200 text-sm font-bold text-slate-600">
+      <div className="flex snap-x overflow-x-auto border-t border-slate-200 px-1 text-sm font-bold text-slate-600">
         <FeedAction
           active={liked}
           icon={<ThumbsUp size={18} />}
@@ -1430,7 +1430,7 @@ function FeedAction({ active = false, icon, label, onClick }) {
       onClick={onClick}
       className={`inline-flex items-center justify-center gap-2 py-3 transition hover:bg-slate-50 hover:text-[#009879] active:bg-slate-100 ${
         active ? "text-[#009879]" : ""
-      } min-w-28 flex-1 shrink-0`}
+      } min-w-28 flex-1 shrink-0 snap-start rounded-xl`}
     >
       {icon}
       {label}
@@ -1442,7 +1442,7 @@ function FeedLinkAction({ href, icon, label }) {
   return (
     <Link
       href={href}
-      className="inline-flex min-w-28 flex-1 shrink-0 items-center justify-center gap-2 py-3 transition hover:bg-slate-50 hover:text-[#009879] active:bg-slate-100"
+      className="inline-flex min-w-28 flex-1 shrink-0 snap-start items-center justify-center gap-2 rounded-xl py-3 transition hover:bg-slate-50 hover:text-[#009879] active:bg-slate-100"
     >
       {icon}
       {label}
