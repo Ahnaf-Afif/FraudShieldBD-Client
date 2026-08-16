@@ -196,9 +196,7 @@ export default function HomeNewsFeed() {
           return;
         }
 
-        setVisibleReportCount((currentCount) =>
-          Math.min(currentCount + REPORTS_PER_LOAD, feedReports.length),
-        );
+        loadMoreReports();
       },
       {
         rootMargin: "240px",
@@ -211,6 +209,12 @@ export default function HomeNewsFeed() {
       observer.disconnect();
     };
   }, [feedReports.length, hasMoreReports]);
+
+  function loadMoreReports() {
+    setVisibleReportCount((currentCount) =>
+      Math.min(currentCount + REPORTS_PER_LOAD, feedReports.length),
+    );
+  }
 
   function toggleReportLike(reportId) {
     setReportReactions((currentReactions) => {
@@ -587,12 +591,14 @@ export default function HomeNewsFeed() {
       </div>
 
       {hasMoreReports && (
-        <div
+        <button
+          type="button"
           ref={loadMoreRef}
-          className="mt-6 rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-bold text-slate-500"
+          onClick={loadMoreReports}
+          className="mt-6 w-full rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-black text-[#06285c] shadow-sm transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
         >
-          Loading more reports...
-        </div>
+          Load more reports
+        </button>
       )}
 
       {!hasMoreReports && visibleReports.length > 0 && (
