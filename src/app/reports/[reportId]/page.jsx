@@ -411,6 +411,18 @@ export default function ReportDetailsPage() {
                     </span>
                   </span>
                 </div>
+
+                {report.relatedReportId && (
+                  <Link
+                    href={`/reports/${report.relatedReportId}`}
+                    className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full bg-[#eef6ff] px-3 py-2 text-sm font-black text-[#0b63f6] transition hover:bg-[#dbeafe]"
+                  >
+                    <ExternalLink size={15} />
+                    <span className="truncate">
+                      Related to {report.relatedReportTitle || "another report"}
+                    </span>
+                  </Link>
+                )}
               </div>
             </div>
 

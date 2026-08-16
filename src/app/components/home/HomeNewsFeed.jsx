@@ -1065,6 +1065,15 @@ function HomeReportPost({
                 {reporterTrust.label}
               </span>
             </div>
+
+            {report.relatedReportId && (
+              <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-black text-[#0b63f6]">
+                <ExternalLink size={13} />
+                <span className="truncate">
+                  Related to {report.relatedReportTitle || "another report"}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

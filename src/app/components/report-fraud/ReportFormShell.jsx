@@ -49,6 +49,8 @@ const initialReportData = {
   facebookLink: "",
   websiteLink: "",
   businessName: "",
+  relatedReportId: "",
+  relatedReportTitle: "",
   evidenceType: "",
   evidenceFiles: [],
   evidenceDetails: "",
@@ -611,6 +613,8 @@ function createRelatedReportPrefill(relatedReport) {
   const relatedIdentifier = getPrimaryIdentifier(relatedReport);
 
   return {
+    relatedReportId: relatedReport.reportId,
+    relatedReportTitle: relatedReport.title || "",
     fraudCategory: mapRelatedCategoryToFormCategory(
       relatedReport.fraudCategory,
     ),
