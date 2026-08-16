@@ -79,6 +79,7 @@ export default function ReportDetailsPage() {
   const [editingCommentId, setEditingCommentId] = useState("");
   const [editingCommentDraft, setEditingCommentDraft] = useState("");
   const [editingCommentError, setEditingCommentError] = useState("");
+  const [pendingDeleteCommentId, setPendingDeleteCommentId] = useState("");
 
   function refreshReportDetails() {
     const browserReports = getAllReportsForBrowser();
@@ -250,12 +251,22 @@ export default function ReportDetailsPage() {
     setEditingCommentId(comment.id);
     setEditingCommentDraft(comment.text);
     setEditingCommentError("");
+    setPendingDeleteCommentId("");
   }
 
   function cancelEditingComment() {
     setEditingCommentId("");
     setEditingCommentDraft("");
     setEditingCommentError("");
+  }
+
+  function askToDeleteComment(commentId) {
+    cancelEditingComment();
+    setPendingDeleteCommentId(commentId);
+  }
+
+  function cancelDeleteComment() {
+    setPendingDeleteCommentId("");
   }
 
   function saveEditedComment() {
@@ -298,6 +309,7 @@ export default function ReportDetailsPage() {
 
     saveReportComments(updatedComments);
     setComments(nextComments);
+    setPendingDeleteCommentId("");
 
     if (editingCommentId === commentId) {
       cancelEditingComment();
@@ -534,6 +546,8 @@ export default function ReportDetailsPage() {
                     const canManageComment =
                       comment.authorEmail === currentAuthor.email;
                     const isEditingComment = editingCommentId === comment.id;
+                    const isConfirmingDelete =
+                      pendingDeleteCommentId === comment.id;
 
                     return (
                       <div key={comment.id} className="rounded-xl bg-white p-3">
@@ -567,7 +581,7 @@ export default function ReportDetailsPage() {
 
                                 <button
                                   type="button"
-                                  onClick={() => deleteComment(comment.id)}
+                                  onClick={() => askToDeleteComment(comment.id)}
                                   className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-red-50 hover:text-red-500"
                                   aria-label="Delete comment"
                                 >
@@ -577,6 +591,31 @@ export default function ReportDetailsPage() {
                             )}
                           </div>
                         </div>
+
+                        {isConfirmingDelete && (
+                          <div className="mt-3 rounded-xl border border-red-100 bg-red-50 p-3">
+                            <p className="text-sm font-bold text-red-700">
+                              Delete this comment?
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => deleteComment(comment.id)}
+                                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-black text-white transition hover:bg-red-600"
+                              >
+                                Delete
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={cancelDeleteComment}
+                                className="rounded-xl border border-red-100 bg-white px-4 py-2 text-sm font-black text-red-600 transition hover:border-red-200"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
 
                         {isEditingComment ? (
                           <div className="mt-3">
