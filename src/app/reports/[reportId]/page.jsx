@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   BadgeAlert,
   Calendar,
+  Check,
   CheckCircle2,
   ClipboardCheck,
   Copy,
@@ -19,13 +20,16 @@ import {
   Lock,
   MessageCircle,
   MapPin,
+  Pencil,
   Share2,
   ShieldAlert,
   ShieldCheck,
   ThumbsUp,
+  Trash2,
   Upload,
   UserRound,
   Users,
+  X,
 } from "lucide-react";
 import Navbar from "../../components/shared/Navbar";
 import {
@@ -72,6 +76,9 @@ export default function ReportDetailsPage() {
   const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
   const [isWatched, setIsWatched] = useState(false);
   const [commentError, setCommentError] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState("");
+  const [editingCommentDraft, setEditingCommentDraft] = useState("");
+  const [editingCommentError, setEditingCommentError] = useState("");
 
   function refreshReportDetails() {
     const browserReports = getAllReportsForBrowser();
@@ -237,6 +244,64 @@ export default function ReportDetailsPage() {
     setComments(nextComments);
     setCommentDraft("");
     setCommentError("");
+  }
+
+  function startEditingComment(comment) {
+    setEditingCommentId(comment.id);
+    setEditingCommentDraft(comment.text);
+    setEditingCommentError("");
+  }
+
+  function cancelEditingComment() {
+    setEditingCommentId("");
+    setEditingCommentDraft("");
+    setEditingCommentError("");
+  }
+
+  function saveEditedComment() {
+    const cleanEditedComment = editingCommentDraft.trim();
+
+    if (cleanEditedComment.length < MIN_COMMENT_LENGTH) {
+      setEditingCommentError(
+        `Write at least ${MIN_COMMENT_LENGTH} characters before saving.`,
+      );
+      return;
+    }
+
+    const nextComments = comments.map((comment) => {
+      if (comment.id !== editingCommentId) {
+        return comment;
+      }
+
+      return {
+        ...comment,
+        text: cleanEditedComment,
+        editedAt: "Edited just now",
+      };
+    });
+    const updatedComments = {
+      ...getSavedReportComments(),
+      [report.reportId]: nextComments,
+    };
+
+    saveReportComments(updatedComments);
+    setComments(nextComments);
+    cancelEditingComment();
+  }
+
+  function deleteComment(commentId) {
+    const nextComments = comments.filter((comment) => comment.id !== commentId);
+    const updatedComments = {
+      ...getSavedReportComments(),
+      [report.reportId]: nextComments,
+    };
+
+    saveReportComments(updatedComments);
+    setComments(nextComments);
+
+    if (editingCommentId === commentId) {
+      cancelEditingComment();
+    }
   }
 
   function toggleWatchIdentifier() {
@@ -465,29 +530,107 @@ export default function ReportDetailsPage() {
                     No comments yet. Add useful context for the community.
                   </p>
                 ) : (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="rounded-xl bg-white p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <CommentAvatar comment={comment} />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-black text-[#06285c]">
-                              {comment.authorName || "Community member"}
+                  comments.map((comment) => {
+                    const canManageComment =
+                      comment.authorEmail === currentAuthor.email;
+                    const isEditingComment = editingCommentId === comment.id;
+
+                    return (
+                      <div key={comment.id} className="rounded-xl bg-white p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <CommentAvatar comment={comment} />
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-black text-[#06285c]">
+                                {comment.authorName || "Community member"}
+                              </p>
+                              <p className="truncate text-xs font-semibold text-slate-400">
+                                {comment.authorRole || "Member"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <p className="text-xs font-semibold text-slate-400">
+                              {comment.createdAt}
                             </p>
-                            <p className="truncate text-xs font-semibold text-slate-400">
-                              {comment.authorRole || "Member"}
-                            </p>
+
+                            {canManageComment && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => startEditingComment(comment)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-[#f0fbf7] hover:text-[#009879]"
+                                  aria-label="Edit comment"
+                                >
+                                  <Pencil size={15} />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => deleteComment(comment.id)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                                  aria-label="Delete comment"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
-                        <p className="shrink-0 text-xs font-semibold text-slate-400">
-                          {comment.createdAt}
-                        </p>
+
+                        {isEditingComment ? (
+                          <div className="mt-3">
+                            <textarea
+                              value={editingCommentDraft}
+                              onChange={(event) => {
+                                setEditingCommentDraft(event.target.value);
+                                setEditingCommentError("");
+                              }}
+                              rows={3}
+                              className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold leading-6 text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
+                            />
+
+                            {editingCommentError && (
+                              <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-bold text-red-600">
+                                {editingCommentError}
+                              </p>
+                            )}
+
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={saveEditedComment}
+                                className="inline-flex items-center gap-2 rounded-xl bg-[#009879] px-4 py-2 text-sm font-black text-white transition hover:bg-[#007f66]"
+                              >
+                                <Check size={16} />
+                                Save
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={cancelEditingComment}
+                                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-500 transition hover:border-slate-300 hover:text-[#06285c]"
+                              >
+                                <X size={16} />
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="mt-1 break-words text-sm leading-6 text-slate-700">
+                              {comment.text}
+                            </p>
+                            {comment.editedAt && (
+                              <p className="mt-1 text-xs font-semibold text-slate-400">
+                                {comment.editedAt}
+                              </p>
+                            )}
+                          </>
+                        )}
                       </div>
-                      <p className="mt-1 break-words text-sm leading-6 text-slate-700">
-                        {comment.text}
-                      </p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
 
