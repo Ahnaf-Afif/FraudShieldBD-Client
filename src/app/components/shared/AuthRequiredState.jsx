@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { AlertTriangle, UserRound } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { AlertTriangle, ArrowLeft, UserRound } from "lucide-react";
 
 const iconMap = {
   alert: AlertTriangle,
@@ -16,8 +16,10 @@ export default function AuthRequiredState({
 }) {
   const Icon = iconMap[icon] || AlertTriangle;
   const pathname = usePathname();
-  const loginHref = createAuthHref("/login", pathname);
-  const registerHref = createAuthHref("/register", pathname);
+  const searchParams = useSearchParams();
+  const returnPath = createReturnPath(pathname, searchParams);
+  const loginHref = createAuthHref("/login", returnPath);
+  const registerHref = createAuthHref("/register", returnPath);
 
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
@@ -30,6 +32,10 @@ export default function AuthRequiredState({
 
         <p className="mx-auto mt-2 max-w-xl leading-7 text-slate-600">
           {description}
+        </p>
+
+        <p className="mx-auto mt-4 max-w-xl rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold leading-6 text-slate-500">
+          After login, you will return to this page automatically.
         </p>
 
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
@@ -46,13 +52,37 @@ export default function AuthRequiredState({
             Register
           </Link>
         </div>
+
+        <Link
+          href="/"
+          className="mt-5 inline-flex items-center justify-center gap-2 text-sm font-black text-slate-500 transition hover:text-[#009879]"
+        >
+          <ArrowLeft size={16} />
+          Back to Home
+        </Link>
       </div>
     </section>
   );
 }
 
+function createReturnPath(pathname, searchParams) {
+  const queryString = searchParams?.toString();
+
+  if (!queryString) {
+    return pathname || "/";
+  }
+
+  return `${pathname}?${queryString}`;
+}
+
 function createAuthHref(authPath, returnPath) {
-  const safeReturnPath = returnPath && returnPath !== authPath ? returnPath : "/";
+  const safeReturnPath =
+    returnPath &&
+    !returnPath.startsWith(authPath) &&
+    !returnPath.startsWith("/login") &&
+    !returnPath.startsWith("/register")
+      ? returnPath
+      : "/";
 
   return `${authPath}?next=${encodeURIComponent(safeReturnPath)}`;
 }
