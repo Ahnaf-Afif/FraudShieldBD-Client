@@ -54,6 +54,11 @@ import {
   getFeedPreferences,
   saveFeedPreferences,
 } from "../../lib/feedPreferences";
+import {
+  getRecentSearchesFromBrowser,
+  RECENT_SEARCHES_UPDATED_EVENT,
+  saveRecentSearch,
+} from "../../lib/recentSearches";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -64,6 +69,7 @@ export default function HomeNewsFeed() {
   const [reports, setReports] = useState(demoReports);
   const [activeFilter, setActiveFilter] = useState("All");
   const [feedSearch, setFeedSearch] = useState("");
+  const [recentFeedSearches, setRecentFeedSearches] = useState([]);
   const [sortMode, setSortMode] = useState("Latest");
   const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
   const [reportReactions, setReportReactions] = useState({});
@@ -90,8 +96,13 @@ export default function HomeNewsFeed() {
     setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
   }
 
+  function refreshRecentFeedSearches() {
+    setRecentFeedSearches(getRecentSearchesFromBrowser());
+  }
+
   useEffect(() => {
     refreshFeedState();
+    refreshRecentFeedSearches();
 
     const savedPreferences = getFeedPreferences();
 
@@ -101,13 +112,23 @@ export default function HomeNewsFeed() {
     window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
     window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
     window.addEventListener(WATCHLIST_UPDATED_EVENT, refreshFeedState);
+    window.addEventListener(
+      RECENT_SEARCHES_UPDATED_EVENT,
+      refreshRecentFeedSearches,
+    );
     window.addEventListener("storage", refreshFeedState);
+    window.addEventListener("storage", refreshRecentFeedSearches);
 
     return () => {
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
       window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
       window.removeEventListener(WATCHLIST_UPDATED_EVENT, refreshFeedState);
+      window.removeEventListener(
+        RECENT_SEARCHES_UPDATED_EVENT,
+        refreshRecentFeedSearches,
+      );
       window.removeEventListener("storage", refreshFeedState);
+      window.removeEventListener("storage", refreshRecentFeedSearches);
     };
   }, []);
 
@@ -162,6 +183,22 @@ export default function HomeNewsFeed() {
   useEffect(() => {
     setVisibleReportCount(INITIAL_VISIBLE_REPORTS);
   }, [activeFilter, feedSearch, reports, sortMode]);
+
+  useEffect(() => {
+    const cleanSearch = feedSearch.trim();
+
+    if (cleanSearch.length < 3) {
+      return;
+    }
+
+    const saveSearchTimer = setTimeout(() => {
+      saveRecentSearch(cleanSearch);
+    }, 700);
+
+    return () => {
+      clearTimeout(saveSearchTimer);
+    };
+  }, [feedSearch]);
 
   useEffect(() => {
     if (activeFilter === "All" || reports.length === 0) {
@@ -411,6 +448,10 @@ export default function HomeNewsFeed() {
     });
   }
 
+  function useRecentFeedSearch(searchValue) {
+    setFeedSearch(searchValue);
+  }
+
   function toggleFeedWatch(report) {
     const identifier = getPrimaryIdentifier(report);
     const cleanIdentifier = normalizeIdentifier(identifier);
@@ -530,6 +571,27 @@ export default function HomeNewsFeed() {
             </span>
           ))}
         </div>
+
+        {recentFeedSearches.length > 0 && (
+          <div className="mt-3 border-t border-slate-100 pt-3">
+            <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+              Recent searches
+            </p>
+
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+              {recentFeedSearches.slice(0, 5).map((search) => (
+                <button
+                  key={search}
+                  type="button"
+                  onClick={() => useRecentFeedSearch(search)}
+                  className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+                >
+                  {search}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {feedSearch.trim() && (
