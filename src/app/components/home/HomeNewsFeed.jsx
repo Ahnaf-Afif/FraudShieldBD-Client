@@ -48,7 +48,7 @@ import {
   removeFromWatchlist,
   WATCHLIST_UPDATED_EVENT,
 } from "../../lib/watchlistData";
-import { copyTextToClipboard } from "../../lib/clipboard";
+import { shareOrCopyLink } from "../../lib/clipboard";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -192,9 +192,20 @@ export default function HomeNewsFeed() {
   }
 
   async function copyReportLink(reportId) {
+    const selectedReport = reports.find((report) => report.reportId === reportId);
     const reportUrl = `${window.location.origin}/reports/${reportId}`;
+    const shareResult = await shareOrCopyLink({
+      title: selectedReport?.title || "FraudShield BD report",
+      text:
+        selectedReport?.preventionAdvice ||
+        "Check this community fraud report before you pay.",
+      url: reportUrl,
+    });
 
-    await copyTextToClipboard(reportUrl);
+    if (shareResult === "cancelled" || shareResult === "failed") {
+      return;
+    }
+
     setReportShares((currentShares) => {
       const nextShareCount = Number(currentShares[reportId] || 0) + 1;
       const updatedShares = {

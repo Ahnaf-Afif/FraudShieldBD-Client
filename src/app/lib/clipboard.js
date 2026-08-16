@@ -23,3 +23,31 @@ export async function copyTextToClipboard(text) {
 
   return true;
 }
+
+export async function shareOrCopyLink({ title, text, url }) {
+  const safeUrl = String(url || "");
+
+  if (!safeUrl) {
+    return "failed";
+  }
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: title || "FraudShield BD report",
+        text: text || "Check this FraudShield BD report.",
+        url: safeUrl,
+      });
+
+      return "shared";
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        return "cancelled";
+      }
+    }
+  }
+
+  await copyTextToClipboard(safeUrl);
+
+  return "copied";
+}

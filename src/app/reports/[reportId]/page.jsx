@@ -57,7 +57,7 @@ import {
   isIdentifierWatched,
   removeFromWatchlist,
 } from "../../lib/watchlistData";
-import { copyTextToClipboard } from "../../lib/clipboard";
+import { copyTextToClipboard, shareOrCopyLink } from "../../lib/clipboard";
 
 const MIN_COMMENT_LENGTH = 3;
 
@@ -189,15 +189,27 @@ export default function ReportDetailsPage() {
     const reportUrl = `${window.location.origin}/reports/${report.reportId}`;
     const savedShares = getSavedReportShares();
     const nextShareCount = Number(savedShares[report.reportId] || 0) + 1;
+    const shareResult = await shareOrCopyLink({
+      title: report.title,
+      text:
+        report.preventionAdvice ||
+        "Check this community fraud report before you pay.",
+      url: reportUrl,
+    });
 
-    await copyTextToClipboard(reportUrl);
+    if (shareResult === "cancelled" || shareResult === "failed") {
+      return;
+    }
+
     saveReportShares({
       ...savedShares,
       [report.reportId]: nextShareCount,
     });
     setShareCount(nextShareCount);
     setCopied(true);
-    setCopyFeedback("Report link copied.");
+    setCopyFeedback(
+      shareResult === "shared" ? "Report shared." : "Report link copied.",
+    );
 
     setTimeout(() => {
       setCopied(false);
