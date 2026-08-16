@@ -112,7 +112,10 @@ export default function HomeNewsFeed() {
   }, []);
 
   const feedStats = useMemo(() => createFeedStats(reports), [reports]);
-  const filterOptions = useMemo(() => createFeedFilterOptions(reports), [reports]);
+  const filterOptions = useMemo(
+    () => createFeedFilterOptions(reports, activeFilter),
+    [activeFilter, reports],
+  );
   const categoryFilteredReports = useMemo(
     () =>
       activeFilter === "All"
@@ -157,6 +160,26 @@ export default function HomeNewsFeed() {
   useEffect(() => {
     setVisibleReportCount(INITIAL_VISIBLE_REPORTS);
   }, [activeFilter, feedSearch, reports, sortMode]);
+
+  useEffect(() => {
+    if (activeFilter === "All" || reports.length === 0) {
+      return;
+    }
+
+    const activeFilterStillExists = reports.some(
+      (report) => report.fraudCategory === activeFilter,
+    );
+
+    if (activeFilterStillExists) {
+      return;
+    }
+
+    setActiveFilter("All");
+    saveFeedPreferences({
+      activeFilter: "All",
+      sortMode,
+    });
+  }, [activeFilter, reports, sortMode]);
 
   useEffect(() => {
     const loadMoreElement = loadMoreRef.current;
@@ -1439,7 +1462,7 @@ function createFeedStats(reports) {
   };
 }
 
-function createFeedFilterOptions(reports) {
+function createFeedFilterOptions(reports, activeFilter) {
   const categoryCounts = reports.reduce((counts, report) => {
     const category = report.fraudCategory || "Other";
 
@@ -1452,8 +1475,21 @@ function createFeedFilterOptions(reports) {
     .sort((firstCategory, secondCategory) => secondCategory[1] - firstCategory[1])
     .slice(0, 5)
     .map(([label, count]) => ({ label, count }));
+  const activeFilterAlreadyVisible = popularCategories.some(
+    (category) => category.label === activeFilter,
+  );
+  const activeFilterOption =
+    activeFilter !== "All" &&
+    categoryCounts[activeFilter] &&
+    !activeFilterAlreadyVisible
+      ? [{ label: activeFilter, count: categoryCounts[activeFilter] }]
+      : [];
 
-  return [{ label: "All", count: reports.length }, ...popularCategories];
+  return [
+    { label: "All", count: reports.length },
+    ...activeFilterOption,
+    ...popularCategories,
+  ];
 }
 
 function getRiskSortValue(riskLevel) {
