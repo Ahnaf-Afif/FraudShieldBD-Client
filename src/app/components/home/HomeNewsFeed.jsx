@@ -55,6 +55,7 @@ import {
   saveFeedPreferences,
 } from "../../lib/feedPreferences";
 import {
+  clearRecentSearches,
   getRecentSearchesFromBrowser,
   RECENT_SEARCHES_UPDATED_EVENT,
   saveRecentSearch,
@@ -574,9 +575,19 @@ export default function HomeNewsFeed() {
 
         {recentFeedSearches.length > 0 && (
           <div className="mt-3 border-t border-slate-100 pt-3">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400">
-              Recent searches
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-black uppercase tracking-wide text-slate-400">
+                Recent searches
+              </p>
+
+              <button
+                type="button"
+                onClick={clearRecentSearches}
+                className="text-xs font-black text-slate-400 transition hover:text-red-500"
+              >
+                Clear
+              </button>
+            </div>
 
             <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
               {recentFeedSearches.slice(0, 5).map((search) => (
