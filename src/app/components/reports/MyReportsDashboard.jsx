@@ -38,6 +38,7 @@ import {
 } from "../../lib/localDataEvents";
 import { removeWatchlistItemsByReportId } from "../../lib/watchlistData";
 import AuthRequiredState from "../shared/AuthRequiredState";
+import { copyTextToClipboard } from "../../lib/clipboard";
 
 const tabs = ["All", "Submitted", "Draft"];
 const riskFilters = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
@@ -434,7 +435,7 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
   const checkHref = `/check?q=${encodeURIComponent(identifier)}`;
 
   async function copyReportId() {
-    await navigator.clipboard.writeText(report.reportId);
+    await copyTextToClipboard(report.reportId);
     setCopiedReportId(true);
 
     setTimeout(() => {

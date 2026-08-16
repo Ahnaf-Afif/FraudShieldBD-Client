@@ -34,6 +34,7 @@ import {
   maskIdentifier,
   searchReports,
 } from "../../lib/reportFeedData";
+import { copyTextToClipboard } from "../../lib/clipboard";
 
 const categoryOptions = [
   "All Categories",
@@ -243,7 +244,7 @@ export default function ReportsExplorer() {
       sortMode,
     })}`;
 
-    await navigator.clipboard.writeText(filterUrl);
+    await copyTextToClipboard(filterUrl);
     setShareStatus("copied");
 
     setTimeout(() => {

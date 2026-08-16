@@ -32,6 +32,7 @@ import {
   isIdentifierWatched,
   removeFromWatchlist,
 } from "../../lib/watchlistData";
+import { copyTextToClipboard } from "../../lib/clipboard";
 
 export default function CheckResultCard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -509,22 +510,4 @@ function detectIdentifierType(value) {
   }
 
   return "Business";
-}
-
-async function copyTextToClipboard(text) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  const temporaryInput = document.createElement("textarea");
-
-  temporaryInput.value = text;
-  temporaryInput.setAttribute("readonly", "");
-  temporaryInput.style.position = "fixed";
-  temporaryInput.style.opacity = "0";
-  document.body.appendChild(temporaryInput);
-  temporaryInput.select();
-  document.execCommand("copy");
-  document.body.removeChild(temporaryInput);
 }

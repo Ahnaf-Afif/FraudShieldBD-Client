@@ -8,6 +8,7 @@ import {
   FileCheck,
   ListChecks,
 } from "lucide-react";
+import { copyTextToClipboard } from "../../lib/clipboard";
 
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
 
@@ -25,8 +26,8 @@ export default function ReportReviewForm({
 }) {
   const [copiedReportId, setCopiedReportId] = useState(false);
 
-  function copyReportId() {
-    navigator.clipboard.writeText(reportId);
+  async function copyReportId() {
+    await copyTextToClipboard(reportId);
     setCopiedReportId(true);
 
     setTimeout(() => {

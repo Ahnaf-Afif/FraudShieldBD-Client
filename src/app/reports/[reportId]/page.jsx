@@ -51,6 +51,7 @@ import {
   isIdentifierWatched,
   removeFromWatchlist,
 } from "../../lib/watchlistData";
+import { copyTextToClipboard } from "../../lib/clipboard";
 
 const MIN_COMMENT_LENGTH = 3;
 
@@ -614,24 +615,6 @@ function DetailAction({ active = false, icon, label, onClick }) {
       {label}
     </button>
   );
-}
-
-async function copyTextToClipboard(text) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  const temporaryInput = document.createElement("textarea");
-
-  temporaryInput.value = text;
-  temporaryInput.setAttribute("readonly", "");
-  temporaryInput.style.position = "fixed";
-  temporaryInput.style.opacity = "0";
-  document.body.appendChild(temporaryInput);
-  temporaryInput.select();
-  document.execCommand("copy");
-  document.body.removeChild(temporaryInput);
 }
 
 function CommentAvatar({ comment }) {

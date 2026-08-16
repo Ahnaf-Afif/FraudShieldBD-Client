@@ -43,6 +43,7 @@ import {
   removeFromWatchlist,
   WATCHLIST_UPDATED_EVENT,
 } from "../../lib/watchlistData";
+import { copyTextToClipboard } from "../../lib/clipboard";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -186,7 +187,7 @@ export default function HomeNewsFeed() {
   async function copyReportLink(reportId) {
     const reportUrl = `${window.location.origin}/reports/${reportId}`;
 
-    await navigator.clipboard.writeText(reportUrl);
+    await copyTextToClipboard(reportUrl);
     setCopiedReportId(reportId);
 
     setTimeout(() => {
