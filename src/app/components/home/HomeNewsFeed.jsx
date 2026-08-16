@@ -8,6 +8,7 @@ import {
   Bell,
   Check,
   Clock,
+  ExternalLink,
   FilePlus2,
   MessageCircle,
   Pencil,
@@ -1104,7 +1105,7 @@ function HomeReportPost({
         {watched && <span className="text-[#009879]">Watching</span>}
       </div>
 
-      <div className="grid grid-cols-2 border-t border-slate-200 text-sm font-bold text-slate-600 sm:grid-cols-4">
+      <div className="grid grid-cols-2 border-t border-slate-200 text-sm font-bold text-slate-600 sm:grid-cols-5">
         <FeedAction
           active={liked}
           icon={<ThumbsUp size={18} />}
@@ -1128,6 +1129,11 @@ function HomeReportPost({
           icon={<Bell size={18} />}
           label={watched ? "Watching" : "Watch"}
           onClick={() => onToggleWatch(report)}
+        />
+        <FeedLinkAction
+          href={`/reports/${report.reportId}`}
+          icon={<ExternalLink size={18} />}
+          label="Details"
         />
       </div>
 
@@ -1429,6 +1435,18 @@ function FeedAction({ active = false, icon, label, onClick }) {
       {icon}
       {label}
     </button>
+  );
+}
+
+function FeedLinkAction({ href, icon, label }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center justify-center gap-2 py-3 transition hover:bg-slate-50 hover:text-[#009879] active:bg-slate-100"
+    >
+      {icon}
+      {label}
+    </Link>
   );
 }
 
