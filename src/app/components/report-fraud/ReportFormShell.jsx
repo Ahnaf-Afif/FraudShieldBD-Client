@@ -15,6 +15,8 @@ import ReportLiveSummary from "./ReportLiveSummary";
 import {
   REPORT_DRAFT_KEY,
   estimateReportRiskLevel,
+  getPrimaryIdentifier,
+  getReportByIdFromBrowser,
   saveSubmittedReport,
 } from "../../lib/reportFeedData";
 import {
@@ -85,14 +87,27 @@ export default function ReportFormShell() {
     const savedDraft = localStorage.getItem(REPORT_DRAFT_KEY);
 
     if (!savedDraft) {
-      const identifierFromUrl = new URLSearchParams(window.location.search).get(
-        "identifier",
-      );
+      const searchParams = new URLSearchParams(window.location.search);
+      const identifierFromUrl = searchParams.get("identifier");
+      const relatedReportIdFromUrl = searchParams.get("relatedReportId");
+      const relatedReport = relatedReportIdFromUrl
+        ? getReportByIdFromBrowser(relatedReportIdFromUrl)
+        : null;
+      const relatedReportPrefill = relatedReport
+        ? createRelatedReportPrefill(relatedReport)
+        : {};
+      const identifierPrefill = identifierFromUrl
+        ? createIdentifierPrefill(identifierFromUrl)
+        : {};
+      const nextPrefillData = {
+        ...relatedReportPrefill,
+        ...identifierPrefill,
+      };
 
-      if (identifierFromUrl) {
+      if (Object.keys(nextPrefillData).length > 0) {
         setReportData((currentData) => ({
           ...currentData,
-          ...createIdentifierPrefill(identifierFromUrl),
+          ...nextPrefillData,
         }));
         setHasUnsavedChanges(true);
       }
@@ -511,4 +526,66 @@ function createIdentifierPrefill(identifier) {
   return {
     businessName: cleanIdentifier,
   };
+}
+
+function createRelatedReportPrefill(relatedReport) {
+  const relatedIdentifier = getPrimaryIdentifier(relatedReport);
+
+  return {
+    fraudCategory: mapRelatedCategoryToFormCategory(
+      relatedReport.fraudCategory,
+    ),
+    platform: mapRelatedReportToFormPlatform(relatedReport),
+    location: mapRelatedLocationToFormLocation(relatedReport.location),
+    ...createIdentifierPrefill(relatedIdentifier),
+  };
+}
+
+function mapRelatedCategoryToFormCategory(category) {
+  const categoryMap = {
+    "Mobile Financial": "Mobile Financial Scam",
+    "Mobile Financial Scam": "Mobile Financial Scam",
+    "Facebook Page": "Fake Online Shop",
+    "E-commerce": "Fake Online Shop",
+    Website: "Phishing Website",
+    "Phishing Website": "Phishing Website",
+    Investment: "Investment Scam",
+    "Investment Scam": "Investment Scam",
+    "Job Scam": "Fake Job Offer",
+    "Fake Job Offer": "Fake Job Offer",
+  };
+
+  return categoryMap[category] || "";
+}
+
+function mapRelatedReportToFormPlatform(relatedReport) {
+  if (relatedReport.facebookLink || relatedReport.fraudCategory === "Facebook Page") {
+    return "Facebook";
+  }
+
+  if (relatedReport.websiteLink || relatedReport.fraudCategory === "Website") {
+    return "Website";
+  }
+
+  if (relatedReport.phoneOrPaymentNumber) {
+    return "Phone Call";
+  }
+
+  return "";
+}
+
+function mapRelatedLocationToFormLocation(location) {
+  const allowedLocations = [
+    "Dhaka",
+    "Chattogram",
+    "Sylhet",
+    "Rajshahi",
+    "Online only",
+  ];
+
+  if (allowedLocations.includes(location)) {
+    return location;
+  }
+
+  return location ? "Online only" : "";
 }

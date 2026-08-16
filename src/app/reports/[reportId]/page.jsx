@@ -165,6 +165,9 @@ export default function ReportDetailsPage() {
   const relatedReports = getRelatedReports(allReports, report).slice(0, 3);
   const riskScore = calculateDetailRiskScore(report, relatedReports);
   const checkIdentifierHref = `/check?q=${encodeURIComponent(identifier)}`;
+  const relatedReportHref = `/report-fraud?relatedReportId=${encodeURIComponent(
+    report.reportId,
+  )}&identifier=${encodeURIComponent(identifier)}`;
   const reporterTrust = getReporterTrustBadge(report);
   const cleanCommentLength = commentDraft.trim().length;
   const missingCommentCharacters = Math.max(
@@ -759,6 +762,7 @@ export default function ReportDetailsPage() {
               isWatched={isWatched}
               onCopyIdentifier={copyIdentifier}
               onToggleWatch={toggleWatchIdentifier}
+              relatedReportHref={relatedReportHref}
             />
 
             <DetailStat
@@ -1186,6 +1190,7 @@ function DetailQuickActions({
   isWatched,
   onCopyIdentifier,
   onToggleWatch,
+  relatedReportHref,
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -1227,7 +1232,7 @@ function DetailQuickActions({
         </button>
 
         <Link
-          href="/report-fraud"
+          href={relatedReportHref}
           className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#009879] px-4 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
         >
           Report Related Scam
