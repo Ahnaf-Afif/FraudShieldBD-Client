@@ -29,6 +29,12 @@ import {
   NOTIFICATION_UPDATED_EVENT,
 } from "../../lib/notificationData";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
+import {
+  getSavedReportDraftFromBrowser,
+  getSubmittedReportsFromBrowser,
+  normalizeSubmittedReport,
+} from "../../lib/reportFeedData";
+import { getWatchlistFromBrowser } from "../../lib/watchlistData";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -49,6 +55,11 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [demoUser, setDemoUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [activitySummary, setActivitySummary] = useState({
+    submittedReports: 0,
+    drafts: 0,
+    watchlistItems: 0,
+  });
   const pathname = usePathname();
 
   useEffect(() => {
@@ -57,6 +68,7 @@ export default function Navbar() {
 
       setDemoUser(currentUser);
       setUnreadCount(getUnreadNotificationCount(currentUser));
+      setActivitySummary(createNavbarActivitySummary(currentUser));
     }
 
     updateDemoUser();
@@ -137,6 +149,7 @@ export default function Navbar() {
             <DesktopUserMenu
               user={demoUser}
               unreadCount={unreadCount}
+              activitySummary={activitySummary}
               onLogout={handleLogout}
             />
           ) : (
@@ -213,6 +226,7 @@ export default function Navbar() {
             <MobileUserMenu
               user={demoUser}
               unreadCount={unreadCount}
+              activitySummary={activitySummary}
               onLogout={handleLogout}
             />
           ) : (
@@ -248,7 +262,7 @@ export default function Navbar() {
   );
 }
 
-function DesktopUserMenu({ user, unreadCount, onLogout }) {
+function DesktopUserMenu({ user, unreadCount, activitySummary, onLogout }) {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -339,6 +353,8 @@ function DesktopUserMenu({ user, unreadCount, onLogout }) {
                 </p>
               </div>
             </div>
+
+            <NavbarActivitySummary summary={activitySummary} />
           </div>
 
           <div className="p-2">
@@ -380,7 +396,7 @@ function MobileQuickAction({ href, icon, label, onClick }) {
   );
 }
 
-function MobileUserMenu({ user, unreadCount, onLogout }) {
+function MobileUserMenu({ user, unreadCount, activitySummary, onLogout }) {
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-center gap-3">
@@ -394,6 +410,8 @@ function MobileUserMenu({ user, unreadCount, onLogout }) {
           </p>
         </div>
       </div>
+
+      <NavbarActivitySummary summary={activitySummary} />
 
       <Link
         href="/profile"
@@ -508,6 +526,52 @@ function InlineNotificationBadge({ unreadCount }) {
       {unreadCount > 9 ? "9+" : unreadCount}
     </span>
   );
+}
+
+function NavbarActivitySummary({ summary }) {
+  return (
+    <div className="mt-4 grid grid-cols-3 gap-2">
+      <NavbarActivityPill label="Reports" value={summary.submittedReports} />
+      <NavbarActivityPill label="Drafts" value={summary.drafts} />
+      <NavbarActivityPill label="Watching" value={summary.watchlistItems} />
+    </div>
+  );
+}
+
+function NavbarActivityPill({ label, value }) {
+  return (
+    <div className="rounded-xl bg-slate-50 px-2 py-2 text-center">
+      <p className="text-sm font-black text-[#06285c]">{value}</p>
+      <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function createNavbarActivitySummary(user) {
+  if (!user) {
+    return {
+      submittedReports: 0,
+      drafts: 0,
+      watchlistItems: 0,
+    };
+  }
+
+  const submittedReports = getSubmittedReportsFromBrowser()
+    .map(normalizeSubmittedReport)
+    .filter((report) => isOwnedByUser(report, user));
+  const draftReport = getSavedReportDraftFromBrowser();
+
+  return {
+    submittedReports: submittedReports.length,
+    drafts: draftReport && isOwnedByUser(draftReport, user) ? 1 : 0,
+    watchlistItems: getWatchlistFromBrowser().length,
+  };
+}
+
+function isOwnedByUser(report, user) {
+  return report.ownerEmail === user.email || report.reporterEmail === user.email;
 }
 
 function createAuthHref(authPath, returnPath) {
