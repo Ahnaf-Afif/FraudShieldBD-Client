@@ -49,6 +49,11 @@ import {
   WATCHLIST_UPDATED_EVENT,
 } from "../../lib/watchlistData";
 import { shareOrCopyLink } from "../../lib/clipboard";
+import {
+  FEED_SORT_OPTIONS,
+  getFeedPreferences,
+  saveFeedPreferences,
+} from "../../lib/feedPreferences";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -87,6 +92,11 @@ export default function HomeNewsFeed() {
 
   useEffect(() => {
     refreshFeedState();
+
+    const savedPreferences = getFeedPreferences();
+
+    setActiveFilter(savedPreferences.activeFilter);
+    setSortMode(savedPreferences.sortMode);
 
     window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
     window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
@@ -350,6 +360,26 @@ export default function HomeNewsFeed() {
     setActiveFilter("All");
     setFeedSearch("");
     setSortMode("Latest");
+    saveFeedPreferences({
+      activeFilter: "All",
+      sortMode: "Latest",
+    });
+  }
+
+  function changeFeedFilter(nextFilter) {
+    setActiveFilter(nextFilter);
+    saveFeedPreferences({
+      activeFilter: nextFilter,
+      sortMode,
+    });
+  }
+
+  function changeFeedSort(nextSortMode) {
+    setSortMode(nextSortMode);
+    saveFeedPreferences({
+      activeFilter,
+      sortMode: nextSortMode,
+    });
   }
 
   function toggleFeedWatch(report) {
@@ -434,14 +464,12 @@ export default function HomeNewsFeed() {
 
           <select
             value={sortMode}
-            onChange={(event) => setSortMode(event.target.value)}
+            onChange={(event) => changeFeedSort(event.target.value)}
             className="min-h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
           >
-            <option>Latest</option>
-            <option>Highest Risk</option>
-            <option>Most Reports</option>
-            <option>Most Discussed</option>
-            <option>Most Shared</option>
+            {FEED_SORT_OPTIONS.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
           </select>
         </div>
 
@@ -488,7 +516,7 @@ export default function HomeNewsFeed() {
           <button
             key={filter.label}
             type="button"
-            onClick={() => setActiveFilter(filter.label)}
+            onClick={() => changeFeedFilter(filter.label)}
             className={`shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition ${
               activeFilter === filter.label
                 ? "border-[#009879] bg-[#009879] text-white"

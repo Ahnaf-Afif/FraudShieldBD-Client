@@ -8,6 +8,7 @@ import {
   NOTIFICATION_UPDATED_EVENT,
 } from "./notificationData";
 import { RECENT_SEARCHES_KEY } from "./recentSearches";
+import { FEED_PREFERENCES_KEY } from "./feedPreferences";
 import {
   REPORT_COMMENTS_KEY,
   REPORT_DRAFT_KEY,
@@ -28,6 +29,7 @@ const activityKeys = [
   WATCHLIST_KEY,
   RECENT_SEARCHES_KEY,
   RECENTLY_VIEWED_REPORTS_KEY,
+  FEED_PREFERENCES_KEY,
   NOTIFICATION_READ_KEY,
 ];
 
