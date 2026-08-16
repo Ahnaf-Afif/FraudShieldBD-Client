@@ -180,7 +180,7 @@ export default function AuthPageShell({ mode }) {
               </p>
               {redirectPath !== "/" && (
                 <p className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-black text-[#06285c]">
-                  Return target: {redirectPath}
+                  Return target: {formatReturnTarget(redirectPath)}
                 </p>
               )}
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -436,11 +436,17 @@ function PasswordStrengthMeter({ strength }) {
 function getRedirectPathFromUrl() {
   const nextPath = new URLSearchParams(window.location.search).get("next");
 
+  return sanitizeRedirectPath(nextPath);
+}
+
+function sanitizeRedirectPath(nextPath) {
   if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
     return "/";
   }
 
-  if (nextPath.startsWith("/login") || nextPath.startsWith("/register")) {
+  const [pathOnly] = nextPath.split("?");
+
+  if (pathOnly === "/login" || pathOnly === "/register") {
     return "/";
   }
 
@@ -449,8 +455,21 @@ function getRedirectPathFromUrl() {
 
 function createModeSwitchHref(isRegisterMode, redirectPath) {
   const targetPath = isRegisterMode ? "/login" : "/register";
+  const safeRedirectPath = sanitizeRedirectPath(redirectPath);
 
-  return `${targetPath}?next=${encodeURIComponent(redirectPath)}`;
+  return `${targetPath}?next=${encodeURIComponent(safeRedirectPath)}`;
+}
+
+function formatReturnTarget(redirectPath) {
+  try {
+    const decodedPath = decodeURIComponent(redirectPath);
+
+    return decodedPath.length > 60
+      ? `${decodedPath.slice(0, 57)}...`
+      : decodedPath;
+  } catch {
+    return redirectPath;
+  }
 }
 
 function AuthField({
