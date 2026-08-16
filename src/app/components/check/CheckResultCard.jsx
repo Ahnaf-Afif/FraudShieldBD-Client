@@ -38,6 +38,7 @@ export default function CheckResultCard() {
   const [matchedReports, setMatchedReports] = useState([]);
   const [copiedReportId, setCopiedReportId] = useState("");
   const [copiedIdentifier, setCopiedIdentifier] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState("");
   const [watchedIdentifier, setWatchedIdentifier] = useState("");
 
   useEffect(() => {
@@ -81,20 +82,24 @@ export default function CheckResultCard() {
   async function copyReportLink(reportId) {
     const reportUrl = `${window.location.origin}/reports/${reportId}`;
 
-    await navigator.clipboard.writeText(reportUrl);
+    await copyTextToClipboard(reportUrl);
     setCopiedReportId(reportId);
+    setCopyFeedback("Report link copied.");
 
     setTimeout(() => {
       setCopiedReportId("");
+      setCopyFeedback("");
     }, 1600);
   }
 
   async function copyIdentifier(identifier) {
-    await navigator.clipboard.writeText(identifier);
+    await copyTextToClipboard(identifier);
     setCopiedIdentifier(true);
+    setCopyFeedback("Identifier copied.");
 
     setTimeout(() => {
       setCopiedIdentifier(false);
+      setCopyFeedback("");
     }, 1600);
   }
 
@@ -310,6 +315,12 @@ export default function CheckResultCard() {
                 {watchedIdentifier ? "Watching" : "Add to Watchlist"}
               </button>
             </div>
+
+            {copyFeedback && (
+              <p className="mt-3 rounded-xl bg-[#f0fbf7] px-4 py-3 text-sm font-black text-[#009879]">
+                {copyFeedback}
+              </p>
+            )}
           </div>
         </div>
 
@@ -498,4 +509,22 @@ function detectIdentifierType(value) {
   }
 
   return "Business";
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const temporaryInput = document.createElement("textarea");
+
+  temporaryInput.value = text;
+  temporaryInput.setAttribute("readonly", "");
+  temporaryInput.style.position = "fixed";
+  temporaryInput.style.opacity = "0";
+  document.body.appendChild(temporaryInput);
+  temporaryInput.select();
+  document.execCommand("copy");
+  document.body.removeChild(temporaryInput);
 }
