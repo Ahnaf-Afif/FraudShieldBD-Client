@@ -147,6 +147,8 @@ export default function HomeNewsFeed() {
     [filteredReports],
   );
   const visibleReports = feedReports.slice(0, visibleReportCount);
+  const visibleFeedCount = visibleReports.length;
+  const totalFeedCount = feedReports.length;
   const hasMoreReports = visibleReportCount < feedReports.length;
   const hasActiveFeedFilters =
     activeFilter !== "All" || feedSearch.trim() || sortMode !== "Latest";
@@ -590,20 +592,40 @@ export default function HomeNewsFeed() {
         )}
       </div>
 
-      {hasMoreReports && (
-        <button
-          type="button"
-          ref={loadMoreRef}
-          onClick={loadMoreReports}
-          className="mt-6 w-full rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-black text-[#06285c] shadow-sm transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
-        >
-          Load more reports
-        </button>
-      )}
+      {visibleFeedCount > 0 && (
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+          <p className="text-sm font-bold text-slate-500">
+            Showing {visibleFeedCount} of {totalFeedCount} feed posts
+          </p>
 
-      {!hasMoreReports && visibleReports.length > 0 && (
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-bold text-slate-500">
-          You are caught up for now.
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-[#009879] transition-all"
+              style={{
+                width: `${Math.min(
+                  (visibleFeedCount / totalFeedCount) * 100,
+                  100,
+                )}%`,
+              }}
+            />
+          </div>
+
+          {hasMoreReports && (
+            <button
+              type="button"
+              ref={loadMoreRef}
+              onClick={loadMoreReports}
+              className="mt-4 w-full rounded-xl border border-slate-200 bg-white py-3 text-center text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+            >
+              Load more reports
+            </button>
+          )}
+
+          {!hasMoreReports && (
+            <p className="mt-4 text-sm font-bold text-slate-500">
+              You are caught up for now.
+            </p>
+          )}
         </div>
       )}
     </section>
