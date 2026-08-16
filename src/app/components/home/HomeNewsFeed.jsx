@@ -29,9 +29,11 @@ import {
   getRiskStyle,
   getSavedReportComments,
   getSavedReportReactions,
+  getSavedReportShares,
   maskIdentifier,
   saveReportComments,
   saveReportReactions,
+  saveReportShares,
 } from "../../lib/reportFeedData";
 import {
   createDemoAuthor,
@@ -61,6 +63,7 @@ export default function HomeNewsFeed() {
   const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
   const [reportReactions, setReportReactions] = useState({});
   const [reportComments, setReportComments] = useState({});
+  const [reportShares, setReportShares] = useState({});
   const [commentDrafts, setCommentDrafts] = useState({});
   const [commentErrors, setCommentErrors] = useState({});
   const [activeCommentReportId, setActiveCommentReportId] = useState("");
@@ -77,6 +80,7 @@ export default function HomeNewsFeed() {
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
     setReportReactions(getSavedReportReactions());
     setReportComments(getSavedReportComments());
+    setReportShares(getSavedReportShares());
     setWatchedIdentifiers(createWatchedIdentifierMap());
     setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
   }
@@ -191,6 +195,17 @@ export default function HomeNewsFeed() {
     const reportUrl = `${window.location.origin}/reports/${reportId}`;
 
     await copyTextToClipboard(reportUrl);
+    setReportShares((currentShares) => {
+      const nextShareCount = Number(currentShares[reportId] || 0) + 1;
+      const updatedShares = {
+        ...currentShares,
+        [reportId]: nextShareCount,
+      };
+
+      saveReportShares(updatedShares);
+
+      return updatedShares;
+    });
     setCopiedReportId(reportId);
 
     setTimeout(() => {
@@ -458,6 +473,7 @@ export default function HomeNewsFeed() {
               report={report}
               reaction={reportReactions[report.reportId]}
               comments={reportComments[report.reportId] || []}
+              shares={Number(reportShares[report.reportId] || 0)}
               commentDraft={commentDrafts[report.reportId] || ""}
               commentError={commentErrors[report.reportId] || ""}
               commentsOpen={activeCommentReportId === report.reportId}
@@ -772,6 +788,7 @@ function HomeReportPost({
   report,
   reaction,
   comments,
+  shares,
   commentDraft,
   commentError,
   commentsOpen,
@@ -860,6 +877,11 @@ function HomeReportPost({
         >
           {commentCount} comments
         </button>
+        {shares > 0 && (
+          <span>
+            {shares} share{shares === 1 ? "" : "s"}
+          </span>
+        )}
         {watched && <span className="text-[#009879]">Watching</span>}
       </div>
 

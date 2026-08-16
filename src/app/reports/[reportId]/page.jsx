@@ -35,10 +35,12 @@ import {
   getRiskStyle,
   getSavedReportComments,
   getSavedReportReactions,
+  getSavedReportShares,
   maskIdentifier,
   saveRecentlyViewedReport,
   saveReportComments,
   saveReportReactions,
+  saveReportShares,
 } from "../../lib/reportFeedData";
 import {
   createDemoAuthor,
@@ -61,6 +63,7 @@ export default function ReportDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [reaction, setReaction] = useState({ liked: false, likes: 0 });
   const [comments, setComments] = useState([]);
+  const [shareCount, setShareCount] = useState(0);
   const [commentDraft, setCommentDraft] = useState("");
   const [copied, setCopied] = useState(false);
   const [copiedIdentifier, setCopiedIdentifier] = useState(false);
@@ -90,6 +93,7 @@ export default function ReportDetailsPage() {
       getSavedReportReactions()[reportId] || { liked: false, likes: 0 },
     );
     setComments(getSavedReportComments()[reportId] || []);
+    setShareCount(Number(getSavedReportShares()[reportId] || 0));
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
     setIsLoading(false);
   }
@@ -175,8 +179,15 @@ export default function ReportDetailsPage() {
 
   async function copyReportLink() {
     const reportUrl = `${window.location.origin}/reports/${report.reportId}`;
+    const savedShares = getSavedReportShares();
+    const nextShareCount = Number(savedShares[report.reportId] || 0) + 1;
 
     await copyTextToClipboard(reportUrl);
+    saveReportShares({
+      ...savedShares,
+      [report.reportId]: nextShareCount,
+    });
+    setShareCount(nextShareCount);
     setCopied(true);
     setCopyFeedback("Report link copied.");
 
@@ -411,6 +422,11 @@ export default function ReportDetailsPage() {
               <div className="flex items-center gap-4 text-sm font-bold text-slate-500">
                 <span>{reaction.likes} likes</span>
                 <span>{comments.length} comments</span>
+                {shareCount > 0 && (
+                  <span>
+                    {shareCount} share{shareCount === 1 ? "" : "s"}
+                  </span>
+                )}
               </div>
 
               <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 text-sm font-bold text-slate-600">

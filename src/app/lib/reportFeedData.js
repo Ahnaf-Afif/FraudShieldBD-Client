@@ -4,6 +4,7 @@ import { readJsonArray, readJsonObject, readJsonValue } from "./browserStorage";
 export const REPORT_SUBMISSIONS_KEY = "fraudshield-submitted-reports";
 export const REPORT_REACTIONS_KEY = "fraudshield-report-reactions";
 export const REPORT_COMMENTS_KEY = "fraudshield-report-comments";
+export const REPORT_SHARES_KEY = "fraudshield-report-shares";
 export const REPORT_DRAFT_KEY = "fraudshield-report-draft";
 export const RECENTLY_VIEWED_REPORTS_KEY = "fraudshield-recently-viewed-reports";
 const MAX_RECENTLY_VIEWED_REPORTS = 5;
@@ -268,12 +269,15 @@ export function deleteSubmittedReport(reportId) {
 export function deleteReportEngagement(reportId) {
   const savedReactions = getSavedReportReactions();
   const savedComments = getSavedReportComments();
+  const savedShares = getSavedReportShares();
 
   delete savedReactions[reportId];
   delete savedComments[reportId];
+  delete savedShares[reportId];
 
   saveReportReactions(savedReactions);
   saveReportComments(savedComments);
+  saveReportShares(savedShares);
 }
 
 export function searchReports(reports, query) {
@@ -349,6 +353,15 @@ export function getSavedReportComments() {
 
 export function saveReportComments(comments) {
   localStorage.setItem(REPORT_COMMENTS_KEY, JSON.stringify(comments));
+  notifyLocalDataUpdated();
+}
+
+export function getSavedReportShares() {
+  return readJsonObject(REPORT_SHARES_KEY);
+}
+
+export function saveReportShares(shares) {
+  localStorage.setItem(REPORT_SHARES_KEY, JSON.stringify(shares));
   notifyLocalDataUpdated();
 }
 
