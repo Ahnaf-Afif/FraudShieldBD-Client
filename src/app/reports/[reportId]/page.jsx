@@ -753,26 +753,13 @@ export default function ReportDetailsPage() {
               relatedCount={relatedReports.length}
             />
 
-            <button
-              type="button"
-              onClick={toggleWatchIdentifier}
-              className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-black shadow-sm transition ${
-                isWatched
-                  ? "border-[#009879] bg-[#f0fbf7] text-[#009879]"
-                  : "border-slate-200 bg-white text-[#06285c] hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
-              }`}
-            >
-              <Eye size={18} />
-              {isWatched ? "Watching Identifier" : "Add to Watchlist"}
-            </button>
-
-            <Link
-              href={checkIdentifierHref}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#06285c] shadow-sm transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
-            >
-              <Search size={18} />
-              Check This Identifier
-            </Link>
+            <DetailQuickActions
+              checkHref={checkIdentifierHref}
+              copiedIdentifier={copiedIdentifier}
+              isWatched={isWatched}
+              onCopyIdentifier={copyIdentifier}
+              onToggleWatch={toggleWatchIdentifier}
+            />
 
             <DetailStat
               icon={<FileText size={20} />}
@@ -803,23 +790,6 @@ export default function ReportDetailsPage() {
             <RelatedReports reports={relatedReports} />
 
             <SafetyActionPlan report={report} />
-
-            <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm">
-              <h2 className="font-black text-[#06285c]">
-                Help the community
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Found another number, page, or website connected to this scam?
-                Add a new report so others can check before they pay.
-              </p>
-              <Link
-                href="/report-fraud"
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#009879] px-4 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
-              >
-                Report Another Scam
-                <ExternalLink size={16} />
-              </Link>
-            </div>
           </aside>
         </div>
       </section>
@@ -1205,6 +1175,64 @@ function DetailStat({ icon, label, value }) {
             {value}
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailQuickActions({
+  checkHref,
+  copiedIdentifier,
+  isWatched,
+  onCopyIdentifier,
+  onToggleWatch,
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="font-black text-[#06285c]">Quick actions</h2>
+      <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
+        Save this warning, verify the identifier, or help the community with a
+        related report.
+      </p>
+
+      <div className="mt-4 space-y-2">
+        <button
+          type="button"
+          onClick={onToggleWatch}
+          className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-black transition ${
+            isWatched
+              ? "border-[#009879] bg-[#f0fbf7] text-[#009879]"
+              : "border-slate-200 bg-white text-[#06285c] hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+          }`}
+        >
+          <Eye size={17} />
+          {isWatched ? "Watching Identifier" : "Add to Watchlist"}
+        </button>
+
+        <Link
+          href={checkHref}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+        >
+          <Search size={17} />
+          Check Identifier
+        </Link>
+
+        <button
+          type="button"
+          onClick={onCopyIdentifier}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] active:bg-slate-300"
+        >
+          <Copy size={17} />
+          {copiedIdentifier ? "Identifier Copied" : "Copy Identifier"}
+        </button>
+
+        <Link
+          href="/report-fraud"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#009879] px-4 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
+        >
+          Report Related Scam
+          <ExternalLink size={16} />
+        </Link>
       </div>
     </div>
   );
