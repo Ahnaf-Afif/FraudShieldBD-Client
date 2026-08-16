@@ -164,6 +164,7 @@ export default function ReportDetailsPage() {
   const relatedReports = getRelatedReports(allReports, report).slice(0, 3);
   const riskScore = calculateDetailRiskScore(report, relatedReports);
   const checkIdentifierHref = `/check?q=${encodeURIComponent(identifier)}`;
+  const reporterTrust = getReporterTrustBadge(report);
   const cleanCommentLength = commentDraft.trim().length;
   const missingCommentCharacters = Math.max(
     MIN_COMMENT_LENGTH - cleanCommentLength,
@@ -397,8 +398,13 @@ export default function ReportDetailsPage() {
                     <Calendar size={16} />
                     {report.submittedAt || "Recently"}
                   </span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex flex-wrap items-center gap-2">
                     Submitted by {report.reporterName || "Community member"}
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs font-black ${reporterTrust.className}`}
+                    >
+                      {reporterTrust.label}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -1128,6 +1134,25 @@ function getIdentifierLabel(report) {
   }
 
   return "Unknown";
+}
+
+function getReporterTrustBadge(report) {
+  if (report.isAnonymous) {
+    return { label: "Anonymous", className: "bg-slate-100 text-slate-500" };
+  }
+
+  if (report.reporterRole === "Top contributor") {
+    return { label: "Top contributor", className: "bg-orange-100 text-orange-600" };
+  }
+
+  if (report.reporterRole === "Verified reporter") {
+    return { label: "Verified", className: "bg-[#e9f8f4] text-[#009879]" };
+  }
+
+  return {
+    label: report.reporterRole || "Reporter",
+    className: "bg-[#eef6ff] text-[#0b63f6]",
+  };
 }
 
 function formatDetailValue(value) {
