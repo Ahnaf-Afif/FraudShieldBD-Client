@@ -63,6 +63,7 @@ export default function ReportDetailsPage() {
   const [commentDraft, setCommentDraft] = useState("");
   const [copied, setCopied] = useState(false);
   const [copiedIdentifier, setCopiedIdentifier] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState("");
   const [allReports, setAllReports] = useState([]);
   const [currentAuthor, setCurrentAuthor] = useState(createDemoAuthor(null));
   const [isWatched, setIsWatched] = useState(false);
@@ -174,20 +175,24 @@ export default function ReportDetailsPage() {
   async function copyReportLink() {
     const reportUrl = `${window.location.origin}/reports/${report.reportId}`;
 
-    await navigator.clipboard.writeText(reportUrl);
+    await copyTextToClipboard(reportUrl);
     setCopied(true);
+    setCopyFeedback("Report link copied.");
 
     setTimeout(() => {
       setCopied(false);
+      setCopyFeedback("");
     }, 1600);
   }
 
   async function copyIdentifier() {
-    await navigator.clipboard.writeText(identifier);
+    await copyTextToClipboard(identifier);
     setCopiedIdentifier(true);
+    setCopyFeedback("Identifier copied.");
 
     setTimeout(() => {
       setCopiedIdentifier(false);
+      setCopyFeedback("");
     }, 1600);
   }
 
@@ -426,6 +431,12 @@ export default function ReportDetailsPage() {
                   onClick={copyReportLink}
                 />
               </div>
+
+              {copyFeedback && (
+                <p className="mt-3 rounded-xl bg-[#f0fbf7] px-4 py-3 text-sm font-black text-[#009879]">
+                  {copyFeedback}
+                </p>
+              )}
             </section>
 
             <section className="mt-6 rounded-2xl bg-slate-50 p-5">
@@ -603,6 +614,24 @@ function DetailAction({ active = false, icon, label, onClick }) {
       {label}
     </button>
   );
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const temporaryInput = document.createElement("textarea");
+
+  temporaryInput.value = text;
+  temporaryInput.setAttribute("readonly", "");
+  temporaryInput.style.position = "fixed";
+  temporaryInput.style.opacity = "0";
+  document.body.appendChild(temporaryInput);
+  temporaryInput.select();
+  document.execCommand("copy");
+  document.body.removeChild(temporaryInput);
 }
 
 function CommentAvatar({ comment }) {
