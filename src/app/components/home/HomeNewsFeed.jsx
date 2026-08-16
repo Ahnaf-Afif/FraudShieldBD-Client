@@ -135,6 +135,7 @@ export default function HomeNewsFeed() {
   }, []);
 
   const feedStats = useMemo(() => createFeedStats(reports), [reports]);
+  const followUpCounts = useMemo(() => createFollowUpCounts(reports), [reports]);
   const filterOptions = useMemo(
     () => createFeedFilterOptions(reports, activeFilter),
     [activeFilter, reports],
@@ -647,6 +648,7 @@ export default function HomeNewsFeed() {
               report={report}
               reaction={reportReactions[report.reportId]}
               comments={reportComments[report.reportId] || []}
+              followUpCount={followUpCounts[report.reportId] || 0}
               shares={Number(reportShares[report.reportId] || 0)}
               commentDraft={commentDrafts[report.reportId] || ""}
               commentError={commentErrors[report.reportId] || ""}
@@ -1008,6 +1010,7 @@ function HomeReportPost({
   report,
   reaction,
   comments,
+  followUpCount,
   shares,
   commentDraft,
   commentError,
@@ -1072,6 +1075,14 @@ function HomeReportPost({
                 <span className="truncate">
                   Related to {report.relatedReportTitle || "another report"}
                 </span>
+              </div>
+            )}
+
+            {followUpCount > 0 && (
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#f0fbf7] px-3 py-1 text-xs font-black text-[#009879]">
+                <MessageCircle size={13} />
+                {followUpCount} follow-up report
+                {followUpCount === 1 ? "" : "s"}
               </div>
             )}
           </div>
@@ -1660,6 +1671,19 @@ function createFeedStats(reports) {
       reports.map((report) => report.fraudCategory).filter(Boolean),
     ).size,
   };
+}
+
+function createFollowUpCounts(reports) {
+  return reports.reduce((counts, report) => {
+    if (!report.relatedReportId) {
+      return counts;
+    }
+
+    return {
+      ...counts,
+      [report.relatedReportId]: (counts[report.relatedReportId] || 0) + 1,
+    };
+  }, {});
 }
 
 function createFeedFilterOptions(reports, activeFilter) {
