@@ -1029,6 +1029,7 @@ function HomeReportPost({
   const likes = reaction?.likes || 0;
   const commentCount = comments.length;
   const latestComment = comments[comments.length - 1] || null;
+  const reporterTrust = getReporterTrustBadge(report);
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -1056,9 +1057,14 @@ function HomeReportPost({
               {report.submittedAt || "Recently"}
             </p>
 
-            <p className="mt-1 text-xs font-bold text-slate-400">
-              Reported by {report.reporterName || "Community member"}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-400">
+              <span>Reported by {report.reporterName || "Community member"}</span>
+              <span
+                className={`rounded-full px-2 py-1 font-black ${reporterTrust.className}`}
+              >
+                {reporterTrust.label}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -1457,6 +1463,34 @@ function FeedLinkAction({ href, icon, label }) {
       {label}
     </Link>
   );
+}
+
+function getReporterTrustBadge(report) {
+  if (report.isAnonymous) {
+    return {
+      label: "Anonymous",
+      className: "bg-slate-100 text-slate-500",
+    };
+  }
+
+  if (report.reporterRole === "Top contributor") {
+    return {
+      label: "Top contributor",
+      className: "bg-orange-100 text-orange-600",
+    };
+  }
+
+  if (report.reporterRole === "Verified reporter") {
+    return {
+      label: "Verified",
+      className: "bg-[#e9f8f4] text-[#009879]",
+    };
+  }
+
+  return {
+    label: report.reporterRole || "Reporter",
+    className: "bg-[#eef6ff] text-[#0b63f6]",
+  };
 }
 
 function createScrollableFeedReports(filteredReports) {
