@@ -118,8 +118,14 @@ export default function HomeNewsFeed() {
     [categoryFilteredReports, feedSearch],
   );
   const filteredReports = useMemo(
-    () => sortFeedReports(searchedReports, sortMode),
-    [searchedReports, sortMode],
+    () =>
+      sortFeedReports({
+        reports: searchedReports,
+        sortMode,
+        reportComments,
+        reportShares,
+      }),
+    [reportComments, reportShares, searchedReports, sortMode],
   );
   const searchInsightReport = filteredReports[0] || null;
   const trendingReport = filteredReports[0] || reports[0] || null;
@@ -427,6 +433,8 @@ export default function HomeNewsFeed() {
             <option>Latest</option>
             <option>Highest Risk</option>
             <option>Most Reports</option>
+            <option>Most Discussed</option>
+            <option>Most Shared</option>
           </select>
         </div>
 
@@ -1293,7 +1301,7 @@ function reportMatchesFeedSearch(report, searchValue) {
   return directTextMatch || digitMatch || tokenMatch;
 }
 
-function sortFeedReports(reports, sortMode) {
+function sortFeedReports({ reports, sortMode, reportComments, reportShares }) {
   const sortedReports = [...reports];
 
   if (sortMode === "Highest Risk") {
@@ -1311,7 +1319,31 @@ function sortFeedReports(reports, sortMode) {
     );
   }
 
+  if (sortMode === "Most Discussed") {
+    return sortedReports.sort(
+      (firstReport, secondReport) =>
+        getCommentCount(secondReport, reportComments) -
+        getCommentCount(firstReport, reportComments),
+    );
+  }
+
+  if (sortMode === "Most Shared") {
+    return sortedReports.sort(
+      (firstReport, secondReport) =>
+        getShareCount(secondReport, reportShares) -
+        getShareCount(firstReport, reportShares),
+    );
+  }
+
   return sortedReports;
+}
+
+function getCommentCount(report, reportComments) {
+  return (reportComments[report.reportId] || []).length;
+}
+
+function getShareCount(report, reportShares) {
+  return Number(reportShares[report.reportId] || 0);
 }
 
 function createFeedStats(reports) {
