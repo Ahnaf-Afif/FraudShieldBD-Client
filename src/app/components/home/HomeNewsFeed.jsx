@@ -13,6 +13,7 @@ import {
   Share2,
   ShieldAlert,
   ThumbsUp,
+  Trash2,
   X,
 } from "lucide-react";
 import {
@@ -254,6 +255,23 @@ export default function HomeNewsFeed() {
     }));
   }
 
+  function deleteComment(reportId, commentId) {
+    setReportComments((currentComments) => {
+      const currentReportComments = currentComments[reportId] || [];
+      const updatedReportComments = currentReportComments.filter(
+        (comment) => comment.id !== commentId,
+      );
+      const updatedComments = {
+        ...currentComments,
+        [reportId]: updatedReportComments,
+      };
+
+      saveReportComments(updatedComments);
+
+      return updatedComments;
+    });
+  }
+
   function clearFeedFilters() {
     setActiveFilter("All");
     setFeedSearch("");
@@ -419,6 +437,7 @@ export default function HomeNewsFeed() {
               onToggleComments={toggleCommentBox}
               onCommentChange={updateCommentDraft}
               onCommentSubmit={submitComment}
+              onCommentDelete={deleteComment}
               onShare={copyReportLink}
               onToggleWatch={toggleFeedWatch}
             />
@@ -727,6 +746,7 @@ function HomeReportPost({
   onToggleComments,
   onCommentChange,
   onCommentSubmit,
+  onCommentDelete,
   onShare,
   onToggleWatch,
 }) {
@@ -841,6 +861,7 @@ function HomeReportPost({
           currentAuthor={currentAuthor}
           onChange={(value) => onCommentChange(report.reportId, value)}
           onSubmit={() => onCommentSubmit(report.reportId)}
+          onDelete={(commentId) => onCommentDelete(report.reportId, commentId)}
         />
       )}
 
@@ -874,6 +895,7 @@ function CommentPanel({
   currentAuthor,
   onChange,
   onSubmit,
+  onDelete,
 }) {
   const cleanDraftLength = draft.trim().length;
   const missingCharacterCount = Math.max(
@@ -889,29 +911,46 @@ function CommentPanel({
             No comments yet. Be the first to add useful context.
           </p>
         ) : (
-          comments.map((comment) => (
-            <div key={comment.id} className="rounded-xl bg-white p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2">
-                  <CommentAvatar comment={comment} />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-[#06285c]">
-                      {comment.authorName || "Community member"}
+          comments.map((comment) => {
+            const canDeleteComment = comment.authorEmail === currentAuthor.email;
+
+            return (
+              <div key={comment.id} className="rounded-xl bg-white p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <CommentAvatar comment={comment} />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-[#06285c]">
+                        {comment.authorName || "Community member"}
+                      </p>
+                      <p className="truncate text-xs font-semibold text-slate-400">
+                        {comment.authorRole || "Member"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <p className="text-xs font-semibold text-slate-400">
+                      {comment.createdAt}
                     </p>
-                    <p className="truncate text-xs font-semibold text-slate-400">
-                      {comment.authorRole || "Member"}
-                    </p>
+
+                    {canDeleteComment && (
+                      <button
+                        type="button"
+                        onClick={() => onDelete(comment.id)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                        aria-label="Delete comment"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
                   </div>
                 </div>
-                <p className="shrink-0 text-xs font-semibold text-slate-400">
-                  {comment.createdAt}
+                <p className="mt-1 break-words text-sm leading-6 text-slate-700">
+                  {comment.text}
                 </p>
               </div>
-              <p className="mt-1 break-words text-sm leading-6 text-slate-700">
-                {comment.text}
-              </p>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
