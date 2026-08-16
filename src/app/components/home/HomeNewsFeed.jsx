@@ -560,7 +560,12 @@ export default function HomeNewsFeed() {
 
       <div className="space-y-4">
         {visibleReports.length === 0 ? (
-          <EmptyFeedState activeFilter={activeFilter} />
+          <EmptyFeedState
+            activeFilter={activeFilter}
+            feedSearch={feedSearch}
+            hasActiveFeedFilters={Boolean(hasActiveFeedFilters)}
+            onClear={clearFeedFilters}
+          />
         ) : (
           visibleReports.map((report) => (
             <HomeReportPost
@@ -875,7 +880,20 @@ function HomeFeedComposer() {
   );
 }
 
-function EmptyFeedState({ activeFilter }) {
+function EmptyFeedState({
+  activeFilter,
+  feedSearch,
+  hasActiveFeedFilters,
+  onClear,
+}) {
+  const cleanSearch = feedSearch.trim();
+  const title = cleanSearch
+    ? `No reports found for "${cleanSearch}"`
+    : `No ${activeFilter.toLowerCase()} reports yet`;
+  const message = hasActiveFeedFilters
+    ? "Try clearing the current feed view or search another identifier."
+    : "When the community submits reports in this category, they will appear here.";
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
@@ -883,20 +901,31 @@ function EmptyFeedState({ activeFilter }) {
       </div>
 
       <h3 className="mt-4 text-xl font-black text-[#06285c]">
-        No {activeFilter.toLowerCase()} reports yet
+        {title}
       </h3>
 
       <p className="mx-auto mt-2 max-w-md leading-7 text-slate-600">
-        When the community submits reports in this category, they will appear
-        here.
+        {message}
       </p>
 
-      <Link
-        href="/report-fraud"
-        className="mt-4 inline-flex rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
-      >
-        Submit a Report
-      </Link>
+      <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
+        {hasActiveFeedFilters && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="inline-flex justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+          >
+            Clear Feed View
+          </button>
+        )}
+
+        <Link
+          href="/report-fraud"
+          className="inline-flex justify-center rounded-xl bg-[#009879] px-5 py-3 text-sm font-black text-white transition hover:bg-[#007f66]"
+        >
+          Submit a Report
+        </Link>
+      </div>
     </div>
   );
 }
