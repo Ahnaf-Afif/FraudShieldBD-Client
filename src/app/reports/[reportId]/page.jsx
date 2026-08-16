@@ -162,6 +162,7 @@ export default function ReportDetailsPage() {
 
   const riskStyle = getRiskStyle(report.riskLevel);
   const identifier = getPrimaryIdentifier(report);
+  const followUpReports = getFollowUpReports(allReports, report).slice(0, 4);
   const relatedReports = getRelatedReports(allReports, report).slice(0, 3);
   const riskScore = calculateDetailRiskScore(report, relatedReports);
   const checkIdentifierHref = `/check?q=${encodeURIComponent(identifier)}`;
@@ -803,6 +804,8 @@ export default function ReportDetailsPage() {
               value="Published warning"
             />
 
+            <FollowUpReports reports={followUpReports} />
+
             <RelatedReports reports={relatedReports} />
 
             <SafetyActionPlan report={report} />
@@ -1153,6 +1156,47 @@ function RelatedReports({ reports }) {
   );
 }
 
+function FollowUpReports({ reports }) {
+  if (reports.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-2xl border border-[#bfdbfe] bg-[#eff6ff] p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#0b63f6]">
+          <Users size={20} />
+        </div>
+
+        <div>
+          <h2 className="font-black text-[#06285c]">Follow-up reports</h2>
+          <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+            Community members submitted these reports from this warning.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {reports.map((followUpReport) => (
+          <Link
+            key={followUpReport.reportId}
+            href={`/reports/${followUpReport.reportId}`}
+            className="block rounded-xl bg-white p-3 transition hover:bg-[#f8fbff]"
+          >
+            <p className="line-clamp-2 text-sm font-black text-[#06285c]">
+              {followUpReport.title}
+            </p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">
+              {followUpReport.fraudCategory} •{" "}
+              {followUpReport.submittedAt || "Recently"}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SafetyActionPlan({ report }) {
   const actions = createSafetyActions(report);
 
@@ -1402,6 +1446,12 @@ function getRelatedReports(reports, currentReport) {
 
     return sameCategory || sameRisk || sameLocation;
   });
+}
+
+function getFollowUpReports(reports, currentReport) {
+  return reports.filter(
+    (report) => report.relatedReportId === currentReport.reportId,
+  );
 }
 
 function calculateDetailRiskScore(report, relatedReports) {
