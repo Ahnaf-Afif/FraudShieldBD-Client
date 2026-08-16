@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ReportCategoryForm, { ReportCategoryTips } from "./ReportCategoryForm";
 import ReportEvidenceForm, { ReportEvidenceTips } from "./ReportEvidenceForm";
@@ -66,6 +67,7 @@ export default function ReportFormShell() {
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [demoUser, setDemoUser] = useState(null);
+  const [relatedReportSummary, setRelatedReportSummary] = useState(null);
   const didLoadInitialData = useRef(false);
 
   useEffect(() => {
@@ -112,6 +114,10 @@ export default function ReportFormShell() {
         setHasUnsavedChanges(true);
       }
 
+      if (relatedReport) {
+        setRelatedReportSummary(createRelatedReportSummary(relatedReport));
+      }
+
       didLoadInitialData.current = true;
       return;
     }
@@ -130,6 +136,7 @@ export default function ReportFormShell() {
       setHasSavedDraft(true);
       setHasUnsavedChanges(false);
       setSubmitStatus("draft-loaded");
+      setRelatedReportSummary(null);
     } catch (error) {
       console.error("Could not load report draft:", error);
       localStorage.removeItem(REPORT_DRAFT_KEY);
@@ -256,6 +263,10 @@ export default function ReportFormShell() {
         onSubmit={handleSubmit}
         className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
       >
+        {relatedReportSummary && (
+          <RelatedReportPrefillNotice relatedReport={relatedReportSummary} />
+        )}
+
         <ReportCategoryForm
           reportData={reportData}
           updateReportData={updateReportData}
@@ -309,6 +320,42 @@ export default function ReportFormShell() {
         <ReportReviewTips />
       </aside>
     </section>
+  );
+}
+
+function RelatedReportPrefillNotice({ relatedReport }) {
+  return (
+    <div className="border-b border-[#bfdbfe] bg-[#eff6ff] p-5 sm:p-6">
+      <p className="text-xs font-black uppercase text-[#0b63f6]">
+        Related report context
+      </p>
+
+      <h2 className="mt-2 break-words text-xl font-black text-[#06285c]">
+        Reporting another case connected to "{relatedReport.title}"
+      </h2>
+
+      <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+        We prefilled the category, platform, location and identifier when they
+        were available. Add your own story, evidence and safety advice before
+        submitting.
+      </p>
+
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <Link
+          href={`/reports/${relatedReport.reportId}`}
+          className="inline-flex justify-center rounded-xl border border-[#bfdbfe] bg-white px-4 py-3 text-sm font-black text-[#0b63f6] transition hover:bg-[#f8fbff]"
+        >
+          View Original Report
+        </Link>
+
+        <a
+          href="#report-category"
+          className="inline-flex justify-center rounded-xl bg-[#0b63f6] px-4 py-3 text-sm font-black text-white transition hover:bg-[#084fc5]"
+        >
+          Review Prefilled Fields
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -538,6 +585,13 @@ function createRelatedReportPrefill(relatedReport) {
     platform: mapRelatedReportToFormPlatform(relatedReport),
     location: mapRelatedLocationToFormLocation(relatedReport.location),
     ...createIdentifierPrefill(relatedIdentifier),
+  };
+}
+
+function createRelatedReportSummary(relatedReport) {
+  return {
+    reportId: relatedReport.reportId,
+    title: relatedReport.title || "this report",
   };
 }
 
