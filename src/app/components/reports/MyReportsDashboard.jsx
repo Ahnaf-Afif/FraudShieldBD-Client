@@ -470,6 +470,15 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
               {report.location || "Location not added"}
             </p>
 
+            {report.relatedReportId && (
+              <div className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-black text-[#0b63f6]">
+                <ExternalLink size={13} />
+                <span className="truncate">
+                  Related to {report.relatedReportTitle || "another report"}
+                </span>
+              </div>
+            )}
+
             <p className="mt-2 break-words text-sm leading-6 text-slate-600">
               {report.story || "Story not added yet."}
             </p>
@@ -664,6 +673,8 @@ function reportMatchesSearch(report, searchValue) {
     report.websiteLink,
     report.businessName,
     report.reportId,
+    report.relatedReportId,
+    report.relatedReportTitle,
   ]
     .filter(Boolean)
     .join(" ")
