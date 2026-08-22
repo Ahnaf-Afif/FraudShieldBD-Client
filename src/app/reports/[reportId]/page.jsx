@@ -109,15 +109,36 @@ export default function ReportDetailsPage() {
       saveRecentlyViewedReport(matchedReport);
     }
 
+    let nextReaction =
+      getSavedReportReactions()[reportId] || { liked: false, likes: 0 };
+    let nextComments = getSavedReportComments()[reportId] || [];
+
+    if (matchedReport && /^[a-f\d]{24}$/i.test(String(reportId || ""))) {
+      try {
+        const engagement = await apiRequest(
+          `/reports/${reportId}/engagement`,
+        );
+        nextReaction = { ...nextReaction, likes: engagement.likes || 0 };
+        nextComments = (engagement.comments || []).map((comment) => ({
+          ...comment,
+          id: comment._id || comment.id,
+          createdAt: comment.createdAt || "Recently",
+          authorName: comment.author?.name || "Community member",
+          authorRole: comment.author?.role || "Reporter",
+          authorInitials: String(comment.author?.name || "U").slice(0, 1),
+        }));
+      } catch (_error) {
+        // Keep local engagement if the API is temporarily unavailable.
+      }
+    }
+
     setIsWatched(
       matchedReport
         ? isIdentifierWatched(getPrimaryIdentifier(matchedReport))
         : false,
     );
-    setReaction(
-      getSavedReportReactions()[reportId] || { liked: false, likes: 0 },
-    );
-    setComments(getSavedReportComments()[reportId] || []);
+    setReaction(nextReaction);
+    setComments(nextComments);
     setShareCount(Number(getSavedReportShares()[reportId] || 0));
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
     setIsLoading(false);
