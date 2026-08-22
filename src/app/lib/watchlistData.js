@@ -98,7 +98,7 @@ export function normalizeIdentifier(identifier) {
   return String(identifier || "").trim().toLowerCase();
 }
 
-function normalizeWatchlistItem(item) {
+export function normalizeWatchlistItem(item) {
   const normalizedIdentifier =
     item.normalizedIdentifier || normalizeIdentifier(item.identifier);
 

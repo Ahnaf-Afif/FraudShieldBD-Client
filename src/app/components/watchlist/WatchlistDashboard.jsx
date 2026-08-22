@@ -20,10 +20,12 @@ import {
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import {
   getWatchlistFromBrowser,
+  normalizeWatchlistItem,
   removeFromWatchlist,
   toggleWatchlistAlerts,
 } from "../../lib/watchlistData";
 import { getRiskStyle, maskIdentifier } from "../../lib/reportFeedData";
+import { apiRequest } from "../../lib/apiClient";
 import AuthRequiredState from "../shared/AuthRequiredState";
 
 const filters = ["All", "High Risk", "Medium Risk", "Low Risk"];
@@ -35,9 +37,25 @@ export default function WatchlistDashboard() {
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
-    function refreshWatchlist() {
+    async function refreshWatchlist() {
       setDemoUser(getDemoSession());
-      setWatchlistItems(getWatchlistFromBrowser());
+      const localItems = getWatchlistFromBrowser();
+
+      if (!window.localStorage.getItem("fraudshield-token")) {
+        setWatchlistItems(localItems);
+        return;
+      }
+
+      try {
+        const result = await apiRequest("/watchlist");
+        setWatchlistItems(
+          Array.isArray(result.items)
+            ? result.items.map(normalizeWatchlistItem)
+            : localItems,
+        );
+      } catch (_error) {
+        setWatchlistItems(localItems);
+      }
     }
 
     refreshWatchlist();
@@ -72,12 +90,55 @@ export default function WatchlistDashboard() {
       });
   }, [activeFilter, searchValue, watchlistItems]);
 
-  function handleRemove(identifier) {
+  async function handleRemove(identifier) {
+    const selectedItem = watchlistItems.find(
+      (item) => item.identifier === identifier,
+    );
+
+    if (window.localStorage.getItem("fraudshield-token") && selectedItem?.id) {
+      try {
+        await apiRequest(`/watchlist/${selectedItem.id}`, { method: "DELETE" });
+        setWatchlistItems((currentItems) =>
+          currentItems.filter((item) => item.identifier !== identifier),
+        );
+        return;
+      } catch (_error) {
+        // Keep the local action available if the server is temporarily offline.
+      }
+    }
+
     removeFromWatchlist(identifier);
     setWatchlistItems(getWatchlistFromBrowser());
   }
 
-  function handleToggleAlerts(identifier) {
+  async function handleToggleAlerts(identifier) {
+    const selectedItem = watchlistItems.find(
+      (item) => item.identifier === identifier,
+    );
+    const nextAlertsEnabled = !selectedItem?.alertsEnabled;
+
+    if (window.localStorage.getItem("fraudshield-token") && selectedItem?.id) {
+      try {
+        const result = await apiRequest(
+          `/watchlist/${selectedItem.id}/alerts`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({ alertsEnabled: nextAlertsEnabled }),
+          },
+        );
+        setWatchlistItems((currentItems) =>
+          currentItems.map((item) =>
+            item.identifier === identifier
+              ? normalizeWatchlistItem(result.item)
+              : item,
+          ),
+        );
+        return;
+      } catch (_error) {
+        // Keep the local action available if the server is temporarily offline.
+      }
+    }
+
     toggleWatchlistAlerts(identifier);
     setWatchlistItems(getWatchlistFromBrowser());
   }
