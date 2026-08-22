@@ -93,12 +93,14 @@ export default function Navbar() {
     window.addEventListener(LOCAL_DATA_UPDATED_EVENT, updateDemoUser);
     window.addEventListener(NOTIFICATION_UPDATED_EVENT, updateDemoUser);
     window.addEventListener("storage", updateDemoUser);
+    const notificationRefreshTimer = window.setInterval(updateDemoUser, 30000);
 
     return () => {
       window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, updateDemoUser);
       window.removeEventListener(NOTIFICATION_UPDATED_EVENT, updateDemoUser);
       window.removeEventListener("storage", updateDemoUser);
+      window.clearInterval(notificationRefreshTimer);
     };
   }, []);
 
