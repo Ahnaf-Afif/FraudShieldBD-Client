@@ -27,6 +27,7 @@ import {
   getSubmittedReportsFromBrowser,
   maskIdentifier,
   normalizeSubmittedReport,
+  normalizeApiReport,
 } from "../../lib/reportFeedData";
 import {
   DEMO_SESSION_UPDATED_EVENT,
@@ -39,6 +40,7 @@ import {
 import { removeWatchlistItemsByReportId } from "../../lib/watchlistData";
 import AuthRequiredState from "../shared/AuthRequiredState";
 import { copyTextToClipboard } from "../../lib/clipboard";
+import { apiRequest } from "../../lib/apiClient";
 
 const tabs = ["All", "Submitted", "Connected", "Draft"];
 const riskFilters = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
@@ -52,9 +54,9 @@ export default function MyReportsDashboard() {
   const [riskFilter, setRiskFilter] = useState("All Risk Levels");
 
   useEffect(() => {
-    function refreshDashboard() {
+    async function refreshDashboard() {
       setDemoUser(getDemoSession());
-      loadReports();
+      await loadReports();
     }
 
     refreshDashboard();
@@ -69,10 +71,24 @@ export default function MyReportsDashboard() {
     };
   }, []);
 
-  function loadReports() {
-    setSubmittedReports(
-      getSubmittedReportsFromBrowser().map(normalizeSubmittedReport),
+  async function loadReports() {
+    const localReports = getSubmittedReportsFromBrowser().map(
+      normalizeSubmittedReport,
     );
+    let nextReports = localReports;
+
+    if (window.localStorage.getItem("fraudshield-token")) {
+      try {
+        const result = await apiRequest("/reports/mine");
+        nextReports = Array.isArray(result.reports)
+          ? result.reports.map(normalizeApiReport)
+          : localReports;
+      } catch (_error) {
+        nextReports = localReports;
+      }
+    }
+
+    setSubmittedReports(nextReports);
     setDraftReport(getSavedReportDraftFromBrowser());
   }
 
@@ -676,7 +692,11 @@ function EmptyMyReports({ activeTab }) {
 }
 
 function isOwnedByUser(report, user) {
-  return report.ownerEmail === user.email || report.reporterEmail === user.email;
+  return (
+    report.ownerId === user.id ||
+    report.ownerEmail === user.email ||
+    report.reporterEmail === user.email
+  );
 }
 
 function reportMatchesSearch(report, searchValue) {

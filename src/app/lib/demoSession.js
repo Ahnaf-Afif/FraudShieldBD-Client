@@ -19,6 +19,7 @@ export function saveDemoSession(user) {
   }
 
   const session = {
+    id: user.id || user._id || "",
     name: user.name || getNameFromEmail(user.email),
     email: user.email.trim().toLowerCase(),
     role: user.role || "Community Member",

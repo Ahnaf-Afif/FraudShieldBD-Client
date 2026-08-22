@@ -391,6 +391,7 @@ export function normalizeApiReport(report) {
   return normalizeSubmittedReport({
     ...report,
     reportId: report?._id || report?.reportId,
+    ownerId: report?.owner?._id || report?.owner || report?.ownerId || "",
     submittedAt: report?.createdAt || report?.submittedAt || "Recently",
     phoneOrPaymentNumber:
       report?.phoneOrPaymentNumber || getIdentifier("Phone Number"),
