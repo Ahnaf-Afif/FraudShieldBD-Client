@@ -71,7 +71,6 @@ import {
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
-const FEED_REPEAT_COUNT = 20;
 const MIN_COMMENT_LENGTH = 3;
 
 export default function HomeNewsFeed() {
@@ -90,6 +89,10 @@ export default function HomeNewsFeed() {
   const [copiedReportId, setCopiedReportId] = useState("");
   const [watchedIdentifiers, setWatchedIdentifiers] = useState({});
   const [recentlyViewedReports, setRecentlyViewedReports] = useState([]);
+  const [apiPage, setApiPage] = useState(1);
+  const [apiTotal, setApiTotal] = useState(0);
+  const [isLoadingApiPage, setIsLoadingApiPage] = useState(false);
+  const [isUsingApiFeed, setIsUsingApiFeed] = useState(false);
   const [visibleReportCount, setVisibleReportCount] = useState(
     INITIAL_VISIBLE_REPORTS,
   );
@@ -99,13 +102,22 @@ export default function HomeNewsFeed() {
     const localReports = getAllReportsForBrowser();
 
     try {
-      const result = await apiRequest("/reports?limit=50");
+      const result = await apiRequest("/reports?page=1&limit=20");
       const apiReports = Array.isArray(result.reports)
-        ? result.reports.map(normalizeApiReport)
+        ? result.reports.map((report) => ({
+            ...normalizeApiReport(report),
+            _fromApi: true,
+          }))
         : [];
 
+      setApiPage(1);
+      setApiTotal(Number(result.total) || apiReports.length);
+      setIsUsingApiFeed(apiReports.length > 0);
       setReports(apiReports.length > 0 ? [...apiReports, ...demoReports] : localReports);
     } catch (_error) {
+      setApiPage(1);
+      setApiTotal(0);
+      setIsUsingApiFeed(false);
       setReports(localReports);
     }
 
@@ -271,10 +283,40 @@ export default function HomeNewsFeed() {
     };
   }, [feedReports.length, hasMoreReports]);
 
-  function loadMoreReports() {
-    setVisibleReportCount((currentCount) =>
-      Math.min(currentCount + REPORTS_PER_LOAD, feedReports.length),
-    );
+  async function loadMoreReports() {
+    if (isLoadingApiPage || !isUsingApiFeed || apiPage * 20 >= apiTotal) {
+      setVisibleReportCount((currentCount) =>
+        Math.min(currentCount + REPORTS_PER_LOAD, feedReports.length),
+      );
+      return;
+    }
+
+    setIsLoadingApiPage(true);
+
+    try {
+      const nextPage = apiPage + 1;
+      const result = await apiRequest(`/reports?page=${nextPage}&limit=20`);
+      const nextReports = Array.isArray(result.reports)
+        ? result.reports.map((report) => ({
+            ...normalizeApiReport(report),
+            _fromApi: true,
+          }))
+        : [];
+
+      setReports((currentReports) => [
+        ...currentReports,
+        ...nextReports,
+      ]);
+      setApiPage(nextPage);
+      setApiTotal(Number(result.total) || apiTotal);
+      setVisibleReportCount((currentCount) => currentCount + REPORTS_PER_LOAD);
+    } catch (_error) {
+      setVisibleReportCount((currentCount) =>
+        Math.min(currentCount + REPORTS_PER_LOAD, feedReports.length),
+      );
+    } finally {
+      setIsLoadingApiPage(false);
+    }
   }
 
   function toggleReportLike(reportId) {
@@ -1540,13 +1582,11 @@ function createScrollableFeedReports(filteredReports) {
     return [];
   }
 
-  return Array.from({ length: FEED_REPEAT_COUNT }).flatMap((_, loopIndex) =>
-    filteredReports.map((report) => ({
-      ...report,
-      feedId: `${report.reportId}-${loopIndex}`,
-      submittedAt: formatFeedTime(report.submittedAt, loopIndex),
-    })),
-  );
+  return filteredReports.map((report) => ({
+    ...report,
+    feedId: report.reportId,
+    submittedAt: formatFeedTime(report.submittedAt, 0),
+  }));
 }
 
 function createWatchedIdentifierMap() {
