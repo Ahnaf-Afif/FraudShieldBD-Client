@@ -33,9 +33,11 @@ import {
   getRiskRank,
   getRiskStyle,
   maskIdentifier,
+  normalizeApiReport,
   searchReports,
 } from "../../lib/reportFeedData";
 import { copyTextToClipboard } from "../../lib/clipboard";
+import { apiRequest } from "../../lib/apiClient";
 
 const categoryOptions = [
   "All Categories",
@@ -89,7 +91,17 @@ export default function ReportsExplorer() {
   useEffect(() => {
     const browserReports = getAllReportsForBrowser();
 
-    setReports(browserReports);
+    apiRequest("/reports?limit=50")
+      .then((result) => {
+        const apiReports = Array.isArray(result.reports)
+          ? result.reports.map(normalizeApiReport)
+          : [];
+
+        setReports(apiReports.length > 0 ? apiReports : browserReports);
+      })
+      .catch(() => {
+        setReports(browserReports);
+      });
     setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
     setFilterPresets(getSavedFilterPresets());
     applyUrlFilters();
