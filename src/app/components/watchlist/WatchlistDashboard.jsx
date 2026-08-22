@@ -309,6 +309,11 @@ function WatchlistRow({ item, onRemove, onToggleAlerts }) {
           <p className="mt-1 text-sm font-semibold text-slate-500">
             {item.type} • Added {item.addedAt}
           </p>
+          {item.reportId && (
+            <span className="mt-2 inline-flex rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-black text-[#0b63f6]">
+              Connected to a community report
+            </span>
+          )}
           <p className="mt-2 break-words text-sm leading-6 text-slate-600">
             {item.title || "Watched from a community report."}
           </p>
