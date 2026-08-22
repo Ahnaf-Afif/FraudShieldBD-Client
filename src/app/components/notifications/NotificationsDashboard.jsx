@@ -29,6 +29,7 @@ import {
 } from "../../lib/notificationData";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import AuthRequiredState from "../shared/AuthRequiredState";
+import { apiRequest } from "../../lib/apiClient";
 
 const filters = [
   "All",
@@ -72,6 +73,17 @@ const preferenceLabels = [
   },
 ];
 
+function normalizeServerNotification(notification) {
+  return {
+    ...notification,
+    id: notification._id,
+    createdAt: notification.createdAt || "Recently",
+    href: notification.href || "/notifications",
+    tone: notification.tone || "Info",
+    isRead: Boolean(notification.isRead),
+  };
+}
+
 export default function NotificationsDashboard() {
   const [demoUser, setDemoUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -80,12 +92,25 @@ export default function NotificationsDashboard() {
   const [preferences, setPreferences] = useState(defaultNotificationPreferences);
 
   useEffect(() => {
-    function loadNotifications() {
+    async function loadNotifications() {
       const currentUser = getDemoSession();
 
       setDemoUser(currentUser);
       setPreferences(getNotificationPreferences());
-      setNotifications(getNotificationsForBrowser(currentUser));
+      const localNotifications = getNotificationsForBrowser(currentUser);
+      setNotifications(localNotifications);
+
+      if (window.localStorage.getItem("fraudshield-token")) {
+        try {
+          const result = await apiRequest("/notifications");
+          const serverNotifications = (result.notifications || []).map(
+            normalizeServerNotification,
+          );
+          setNotifications([...serverNotifications, ...localNotifications]);
+        } catch (_error) {
+          // Keep browser notifications when the API is unavailable.
+        }
+      }
     }
 
     loadNotifications();
@@ -147,7 +172,30 @@ export default function NotificationsDashboard() {
 
   function markAllRead() {
     markAllNotificationsAsRead(notifications);
-    setNotifications(getNotificationsForBrowser(demoUser));
+    setNotifications((currentNotifications) =>
+      currentNotifications.map((notification) => ({
+        ...notification,
+        isRead: true,
+      })),
+    );
+    apiRequest("/notifications/read-all", { method: "PATCH" }).catch(() => {});
+  }
+
+  function markOneRead(notificationId) {
+    markNotificationAsRead(notificationId);
+    setNotifications((currentNotifications) =>
+      currentNotifications.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, isRead: true }
+          : notification,
+      ),
+    );
+
+    if (!String(notificationId).startsWith("local-")) {
+      apiRequest(`/notifications/${notificationId}/read`, {
+        method: "PATCH",
+      }).catch(() => {});
+    }
   }
 
   function resetReadState() {
@@ -253,7 +301,7 @@ export default function NotificationsDashboard() {
                 </div>
                 <Link
                   href={priorityNotification.href}
-                  onClick={() => markNotificationAsRead(priorityNotification.id)}
+                  onClick={() => markOneRead(priorityNotification.id)}
                   className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[#06285c] px-4 py-3 text-sm font-black text-white transition hover:bg-[#041b3f]"
                 >
                   Open Alert
@@ -395,7 +443,7 @@ export default function NotificationsDashboard() {
                 <NotificationRow
                   key={notification.id}
                   notification={notification}
-                  onRead={markNotificationAsRead}
+                  onRead={markOneRead}
                 />
               ))}
             </div>
