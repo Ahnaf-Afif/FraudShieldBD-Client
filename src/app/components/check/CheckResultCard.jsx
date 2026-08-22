@@ -25,6 +25,7 @@ import {
   getRiskRank,
   getRiskStyle,
   maskIdentifier,
+  normalizeApiReport,
   searchReports,
 } from "../../lib/reportFeedData";
 import {
@@ -33,7 +34,7 @@ import {
   removeFromWatchlist,
 } from "../../lib/watchlistData";
 import { copyTextToClipboard } from "../../lib/clipboard";
-import { syncWatchlistItem } from "../../lib/apiClient";
+import { apiRequest, syncWatchlistItem } from "../../lib/apiClient";
 
 export default function CheckResultCard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,9 +45,26 @@ export default function CheckResultCard() {
   const [watchedIdentifier, setWatchedIdentifier] = useState("");
 
   useEffect(() => {
-    function updateSearchResults() {
+    async function updateSearchResults() {
       const queryValue = new URLSearchParams(window.location.search).get("q") || "";
-      const allReports = getAllReportsForBrowser();
+      const localReports = getAllReportsForBrowser();
+      let allReports = localReports;
+
+      try {
+        const result = await apiRequest(
+          `/reports?search=${encodeURIComponent(queryValue)}&limit=50`,
+        );
+        const apiReports = Array.isArray(result.reports)
+          ? result.reports.map(normalizeApiReport)
+          : [];
+
+        if (apiReports.length > 0) {
+          allReports = [...apiReports, ...localReports];
+        }
+      } catch (_error) {
+        allReports = localReports;
+      }
+
       const reports = searchReports(allReports, queryValue).sort(
         (firstReport, secondReport) =>
           getRiskRank(secondReport.riskLevel) - getRiskRank(firstReport.riskLevel),
