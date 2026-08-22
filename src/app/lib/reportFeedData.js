@@ -395,6 +395,8 @@ export function normalizeApiReport(report) {
     reviewerName: report?.reviewedBy?.name || "",
     reviewedAt: report?.reviewedAt || null,
     moderationNote: report?.moderationNote || "",
+    ownerName: report?.owner?.name || report?.ownerName || "Community member",
+    ownerEmail: report?.owner?.email || report?.ownerEmail || "",
     evidenceFileSummaries: evidenceFiles.map((file) => ({
       name: file.originalName || "Evidence file",
       size: Number(file.size) || 0,

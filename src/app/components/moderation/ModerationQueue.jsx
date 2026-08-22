@@ -123,6 +123,10 @@ export default function ModerationQueue() {
                     <p className="mt-2 text-sm text-slate-500">
                       {report.fraudCategory || "Other"} · {report.platform || "Unknown platform"} · {report.location || "Location not provided"}
                     </p>
+                    <p className="mt-2 text-sm font-semibold text-slate-600">
+                      Reported by {report.ownerName || "Community member"}
+                      {report.ownerEmail ? ` (${report.ownerEmail})` : ""}
+                    </p>
                     <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-700">{report.story}</p>
                     <p className="mt-3 text-xs text-slate-500">
                       Report ID: {reportId}
@@ -136,6 +140,21 @@ export default function ModerationQueue() {
                       <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
                         Note: {report.moderationNote}
                       </p>
+                    )}
+                    {report.evidenceFileSummaries?.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {report.evidenceFileSummaries.map((file) => (
+                          <a
+                            key={file.url || file.name}
+                            href={file.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50"
+                          >
+                            Open evidence: {file.name}
+                          </a>
+                        ))}
+                      </div>
                     )}
                   </div>
 
