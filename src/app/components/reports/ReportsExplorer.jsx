@@ -87,6 +87,10 @@ export default function ReportsExplorer() {
   const [exportStatus, setExportStatus] = useState("");
   const [hasLoadedUrlFilters, setHasLoadedUrlFilters] = useState(false);
   const [recentlyViewedReports, setRecentlyViewedReports] = useState([]);
+  const [apiPage, setApiPage] = useState(1);
+  const [apiTotal, setApiTotal] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isUsingApiReports, setIsUsingApiReports] = useState(false);
 
   useEffect(() => {
     const browserReports = getAllReportsForBrowser();
@@ -98,15 +102,45 @@ export default function ReportsExplorer() {
           : [];
 
         setReports(apiReports.length > 0 ? apiReports : browserReports);
+        setApiPage(1);
+        setApiTotal(Number(result.total) || apiReports.length);
+        setIsUsingApiReports(apiReports.length > 0);
       })
       .catch(() => {
         setReports(browserReports);
+        setApiPage(1);
+        setApiTotal(0);
+        setIsUsingApiReports(false);
       });
     setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
     setFilterPresets(getSavedFilterPresets());
     applyUrlFilters();
     setHasLoadedUrlFilters(true);
   }, []);
+
+  async function loadMoreReports() {
+    if (isLoadingMore || !isUsingApiReports || reports.length >= apiTotal) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    try {
+      const nextPage = apiPage + 1;
+      const result = await apiRequest(`/reports?page=${nextPage}&limit=50`);
+      const nextReports = Array.isArray(result.reports)
+        ? result.reports.map(normalizeApiReport)
+        : [];
+
+      setReports((currentReports) => [...currentReports, ...nextReports]);
+      setApiPage(nextPage);
+      setApiTotal(Number(result.total) || apiTotal);
+    } catch (_error) {
+      // Keep the reports already loaded when another page is unavailable.
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
 
   useEffect(() => {
     if (!hasLoadedUrlFilters) {
@@ -612,6 +646,16 @@ export default function ReportsExplorer() {
               </p>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                {isUsingApiReports && reports.length < apiTotal && (
+                  <button
+                    type="button"
+                    onClick={loadMoreReports}
+                    disabled={isLoadingMore}
+                    className="font-black text-[#009879] transition hover:text-[#007f66] disabled:text-slate-400"
+                  >
+                    {isLoadingMore ? "Loading..." : "Load more reports"}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={copyFilterLink}
