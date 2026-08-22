@@ -12,6 +12,7 @@ import {
   PencilLine,
   ShieldCheck,
   Star,
+  Users,
   UserRound,
 } from "lucide-react";
 import {
@@ -305,7 +306,7 @@ export default function ProfileDashboard() {
             </form>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
             <ProfileStat
               icon={<FileText size={21} />}
               label="Submitted reports"
@@ -335,6 +336,12 @@ export default function ProfileDashboard() {
               label="Unread alerts"
               value={activityStats.unreadNotifications}
               href="/notifications"
+            />
+            <ProfileStat
+              icon={<Users size={21} />}
+              label="Connected reports"
+              value={activityStats.connectedReports}
+              href="/my-reports"
             />
           </div>
 
@@ -437,6 +444,7 @@ function createProfileStats(demoUser) {
       watchlistItems: 0,
       recentlyViewedReports: 0,
       unreadNotifications: 0,
+      connectedReports: 0,
       commentsReceived: 0,
       helpfulVotes: 0,
     };
@@ -456,6 +464,9 @@ function createProfileStats(demoUser) {
     watchlistItems: getWatchlistFromBrowser().length,
     recentlyViewedReports: getRecentlyViewedReportsFromBrowser().length,
     unreadNotifications: getUnreadNotificationCount(demoUser),
+    connectedReports: submittedReports.filter(
+      (report) => report.relatedReportId || (report.followUpCount || 0) > 0,
+    ).length,
     commentsReceived: ownedReportIds.reduce(
       (totalComments, reportId) =>
         totalComments + (savedComments[reportId] || []).length,
