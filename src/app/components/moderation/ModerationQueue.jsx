@@ -12,6 +12,7 @@ export default function ModerationQueue() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [notes, setNotes] = useState({});
 
   const loadReports = useCallback(async () => {
     setIsLoading(true);
@@ -39,7 +40,7 @@ export default function ModerationQueue() {
     try {
       await apiRequest(`/reports/${reportId}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify({ status: nextStatus, moderationNote: notes[reportId] || "" }),
       });
       setReports((currentReports) =>
         currentReports.filter((report) => report.reportId !== reportId),
@@ -131,10 +132,33 @@ export default function ModerationQueue() {
                         Reviewed by {report.reviewerName || "moderator"} on {new Date(report.reviewedAt).toLocaleString()}
                       </p>
                     )}
+                    {report.moderationNote && (
+                      <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                        Note: {report.moderationNote}
+                      </p>
+                    )}
                   </div>
 
                   {status === "Under Review" && (
-                    <div className="flex shrink-0 items-start gap-2">
+                    <div className="flex shrink-0 flex-col items-stretch gap-2 md:w-64">
+                      <label className="text-xs font-semibold text-slate-600" htmlFor={`moderation-note-${reportId}`}>
+                        Review note (optional)
+                      </label>
+                      <textarea
+                        id={`moderation-note-${reportId}`}
+                        value={notes[reportId] || ""}
+                        onChange={(event) =>
+                          setNotes((currentNotes) => ({
+                            ...currentNotes,
+                            [reportId]: event.target.value,
+                          }))
+                        }
+                        maxLength={1000}
+                        rows={3}
+                        placeholder="Explain the decision..."
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 outline-none focus:border-emerald-500"
+                      />
+                      <div className="flex gap-2">
                       <button
                         type="button"
                         disabled={isBusy}
@@ -151,6 +175,7 @@ export default function ModerationQueue() {
                       >
                         Reject
                       </button>
+                      </div>
                     </div>
                   )}
                 </div>
