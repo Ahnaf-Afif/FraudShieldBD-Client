@@ -50,3 +50,26 @@ export async function syncWatchlistItem(item) {
     }),
   });
 }
+
+function isApiReportId(reportId) {
+  return /^[a-f\d]{24}$/i.test(String(reportId || ""));
+}
+
+export function syncReportLike(reportId) {
+  if (!isApiReportId(reportId)) {
+    return Promise.resolve(null);
+  }
+
+  return apiRequest(`/reports/${reportId}/like`, { method: "POST" });
+}
+
+export function syncReportComment(reportId, text) {
+  if (!isApiReportId(reportId)) {
+    return Promise.resolve(null);
+  }
+
+  return apiRequest(`/reports/${reportId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+}

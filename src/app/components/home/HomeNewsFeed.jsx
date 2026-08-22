@@ -62,7 +62,12 @@ import {
   RECENT_SEARCHES_UPDATED_EVENT,
   saveRecentSearch,
 } from "../../lib/recentSearches";
-import { apiRequest, syncWatchlistItem } from "../../lib/apiClient";
+import {
+  apiRequest,
+  syncReportComment,
+  syncReportLike,
+  syncWatchlistItem,
+} from "../../lib/apiClient";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -292,6 +297,7 @@ export default function HomeNewsFeed() {
       };
 
       saveReportReactions(updatedReactions);
+      syncReportLike(reportId).catch(() => {});
 
       return updatedReactions;
     });
@@ -375,6 +381,7 @@ export default function HomeNewsFeed() {
       };
 
       saveReportComments(updatedComments);
+      syncReportComment(reportId, commentText).catch(() => {});
 
       return updatedComments;
     });
