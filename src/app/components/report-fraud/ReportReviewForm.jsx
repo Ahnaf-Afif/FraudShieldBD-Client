@@ -23,6 +23,7 @@ export default function ReportReviewForm({
   onSaveDraft,
   onResetForm,
   onDiscardDraft,
+  isSubmitting,
 }) {
   const [copiedReportId, setCopiedReportId] = useState(false);
 
@@ -506,12 +507,22 @@ export default function ReportReviewForm({
 
         <button
           type="submit"
-          disabled={!canSubmitReport || isReportSubmitted}
+          disabled={!canSubmitReport || isReportSubmitted || isSubmitting}
           className="rounded-xl bg-[#009879] px-6 py-3 font-bold text-white transition hover:bg-[#007f66] active:bg-slate-400 active:text-slate-100 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:bg-slate-300"
         >
-          {isReportSubmitted ? "Submitted" : "Submit Report"}
+          {isReportSubmitted
+            ? "Submitted"
+            : isSubmitting
+              ? "Submitting..."
+              : "Submit Report"}
         </button>
       </div>
+
+      {submitStatus.startsWith("server:") && (
+        <p className="mt-3 text-sm font-semibold text-red-600">
+          {submitStatus.slice("server:".length)}
+        </p>
+      )}
 
       {isReportSubmitted && (
         <p className="mt-3 text-sm font-semibold text-[#009879]">

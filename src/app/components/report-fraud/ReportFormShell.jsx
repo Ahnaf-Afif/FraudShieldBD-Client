@@ -25,6 +25,7 @@ import {
   getDemoSession,
 } from "../../lib/demoSession";
 import { notifyLocalDataUpdated } from "../../lib/localDataEvents";
+import { apiRequest } from "../../lib/apiClient";
 
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
 const AUTO_SAVE_DELAY = 900;
@@ -70,6 +71,7 @@ export default function ReportFormShell() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [demoUser, setDemoUser] = useState(null);
   const [relatedReportSummary, setRelatedReportSummary] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const didLoadInitialData = useRef(false);
 
   useEffect(() => {
@@ -179,7 +181,7 @@ export default function ReportFormShell() {
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const validationResult = validateReportBeforeSubmit(reportData);
@@ -206,6 +208,27 @@ export default function ReportFormShell() {
       statusTime: submittedAt,
       demoUser,
     });
+
+    const hasApiSession = Boolean(
+      window.localStorage.getItem("fraudshield-token"),
+    );
+
+    if (hasApiSession) {
+      setIsSubmitting(true);
+
+      try {
+        await apiRequest("/reports", {
+          method: "POST",
+          body: JSON.stringify(createApiReportPayload(submittedReportPayload)),
+        });
+      } catch (error) {
+        setSubmitStatus(`server:${error.message || "Report submission failed."}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      setIsSubmitting(false);
+    }
 
     saveSubmittedReport(submittedReportPayload);
     console.log("Report data:", submittedReportPayload);
@@ -324,6 +347,7 @@ export default function ReportFormShell() {
           onSaveDraft={handleSaveDraft}
           onResetForm={handleResetForm}
           onDiscardDraft={handleDiscardDraft}
+          isSubmitting={isSubmitting}
         />
       </form>
 
@@ -347,6 +371,31 @@ export default function ReportFormShell() {
       </aside>
     </section>
   );
+}
+
+function createApiReportPayload(report) {
+  const identifiers = [
+    ["Phone Number", report.phoneOrPaymentNumber],
+    ["Facebook Page", report.facebookLink],
+    ["Website", report.websiteLink],
+    ["Business", report.businessName],
+  ]
+    .filter(([, value]) => String(value || "").trim())
+    .map(([type, value]) => ({ type, value: String(value).trim() }));
+
+  return {
+    title: report.title,
+    fraudCategory: report.fraudCategory,
+    platform: report.platform,
+    location: report.location,
+    story: report.story,
+    preventionAdvice: report.preventionAdvice,
+    identifiers,
+    riskLevel: report.riskLevel,
+    relatedReportId: /^[a-f\d]{24}$/i.test(report.relatedReportId || "")
+      ? report.relatedReportId
+      : undefined,
+  };
 }
 
 function RelatedReportPrefillNotice({ relatedReport, onClearContext }) {
