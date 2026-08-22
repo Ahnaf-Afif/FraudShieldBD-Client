@@ -98,16 +98,28 @@ export default function MyReportsDashboard() {
     notifyLocalDataUpdated();
   }
 
-  function removeSubmittedReport(reportId) {
+  async function removeSubmittedReport(reportId) {
     const shouldDelete = window.confirm(
-      "Delete this report from your local MVP data? This cannot be undone.",
+      "Delete this report? This cannot be undone.",
     );
 
     if (!shouldDelete) {
       return;
     }
 
-    deleteSubmittedReport(reportId);
+    const isApiReport = /^[a-f\d]{24}$/i.test(String(reportId || ""));
+
+    if (isApiReport && window.localStorage.getItem("fraudshield-token")) {
+      try {
+        await apiRequest(`/reports/${reportId}`, { method: "DELETE" });
+      } catch (error) {
+        window.alert(error.message || "Could not delete this report.");
+        return;
+      }
+    } else {
+      deleteSubmittedReport(reportId);
+    }
+
     removeWatchlistItemsByReportId(reportId);
     loadReports();
   }
