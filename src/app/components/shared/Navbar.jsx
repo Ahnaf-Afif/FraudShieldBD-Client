@@ -51,6 +51,10 @@ const accountLinks = [
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
+function canModerate(user) {
+  return ["Moderator", "Admin"].includes(user?.role);
+}
+
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [demoUser, setDemoUser] = useState(null);
@@ -385,7 +389,7 @@ function DesktopUserMenu({ user, unreadCount, activitySummary, onLogout }) {
           </div>
 
           <div className="p-2">
-            {accountLinks.map((link) => (
+            {[...(canModerate(user) ? [{ label: "Moderation Queue", href: "/moderation", icon: ListChecks }] : []), ...accountLinks].map((link) => (
               <AccountMenuLink
                 key={link.href}
                 link={link}
@@ -472,6 +476,16 @@ function MobileUserMenu({ user, unreadCount, activitySummary, onLogout }) {
         Notifications
         <InlineNotificationBadge unreadCount={unreadCount} />
       </Link>
+
+      {canModerate(user) && (
+        <Link
+          href="/moderation"
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 text-sm font-black text-emerald-700"
+        >
+          <ListChecks size={17} />
+          Moderation Queue
+        </Link>
+      )}
 
       <Link
         href="/settings"
