@@ -126,6 +126,11 @@ export default function ModerationQueue() {
                     <p className="mt-3 text-xs text-slate-500">
                       Report ID: {reportId}
                     </p>
+                    {report.reviewedAt && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Reviewed by {report.reviewerName || "moderator"} on {new Date(report.reviewedAt).toLocaleString()}
+                      </p>
+                    )}
                   </div>
 
                   {status === "Under Review" && (
