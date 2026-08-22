@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../../lib/apiClient";
 import { normalizeApiReport } from "../../lib/reportFeedData";
+import { getDemoSession } from "../../lib/demoSession";
 
 const statuses = ["Under Review", "Published", "Rejected"];
 
@@ -13,8 +14,20 @@ export default function ModerationQueue() {
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
   const [notes, setNotes] = useState({});
+  const [canAccessQueue, setCanAccessQueue] = useState(null);
 
   const loadReports = useCallback(async () => {
+    const session = getDemoSession();
+    const hasAccess = ["Moderator", "Admin"].includes(session?.role);
+    setCanAccessQueue(hasAccess);
+
+    if (!hasAccess) {
+      setReports([]);
+      setError("Only moderators and administrators can access the moderation queue.");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -59,6 +72,17 @@ export default function ModerationQueue() {
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      {canAccessQueue === false && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
+          <h1 className="text-xl font-bold">Moderator access required</h1>
+          <p className="mt-2 text-sm">
+            Sign in with a moderator or administrator account to review reports.
+          </p>
+        </div>
+      )}
+
+      {canAccessQueue !== false && (
+        <>
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-600">
@@ -207,6 +231,8 @@ export default function ModerationQueue() {
             );
           })}
         </div>
+      )}
+        </>
       )}
     </main>
   );
