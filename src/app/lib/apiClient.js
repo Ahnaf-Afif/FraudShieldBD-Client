@@ -1,5 +1,8 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const configuredApiUrl =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_URL = configuredApiUrl.endsWith("/api")
+  ? configuredApiUrl
+  : `${configuredApiUrl}/api`;
 
 export async function apiRequest(path, options = {}) {
   const token =
