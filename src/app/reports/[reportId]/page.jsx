@@ -42,6 +42,7 @@ import {
   getSavedReportReactions,
   getSavedReportShares,
   maskIdentifier,
+  normalizeApiReport,
   saveRecentlyViewedReport,
   saveReportComments,
   saveReportReactions,
@@ -54,6 +55,7 @@ import {
 } from "../../lib/demoSession";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import {
+  apiRequest,
   syncReportComment,
   syncReportLike,
   syncWatchlistItem,
@@ -87,9 +89,18 @@ export default function ReportDetailsPage() {
   const [editingCommentError, setEditingCommentError] = useState("");
   const [pendingDeleteCommentId, setPendingDeleteCommentId] = useState("");
 
-  function refreshReportDetails() {
+  async function refreshReportDetails() {
     const browserReports = getAllReportsForBrowser();
-    const matchedReport = getReportByIdFromBrowser(reportId);
+    let matchedReport = getReportByIdFromBrowser(reportId);
+
+    if (/^[a-f\d]{24}$/i.test(String(reportId || ""))) {
+      try {
+        const result = await apiRequest(`/reports/${reportId}`);
+        matchedReport = normalizeApiReport(result.report);
+      } catch (_error) {
+        matchedReport = getReportByIdFromBrowser(reportId);
+      }
+    }
 
     setAllReports(browserReports);
     setReport(matchedReport || null);
