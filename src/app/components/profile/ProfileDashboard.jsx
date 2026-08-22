@@ -32,6 +32,7 @@ import {
 import { getWatchlistFromBrowser } from "../../lib/watchlistData";
 import { getUnreadNotificationCount } from "../../lib/notificationData";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
+import { apiRequest } from "../../lib/apiClient";
 import AuthRequiredState from "../shared/AuthRequiredState";
 
 const roleOptions = [
@@ -98,7 +99,7 @@ export default function ProfileDashboard() {
     }));
   }
 
-  function saveProfile(event) {
+  async function saveProfile(event) {
     event.preventDefault();
 
     if (!formData.name.trim()) {
@@ -106,15 +107,30 @@ export default function ProfileDashboard() {
       return;
     }
 
-    const nextSession = updateDemoSession({
-      name: formData.name.trim(),
-      role: formData.role,
-      location: formData.location.trim(),
-      bio: formData.bio.trim(),
-    });
+    try {
+      const hasApiSession = Boolean(
+        window.localStorage.getItem("fraudshield-token"),
+      );
+      const profileResult = hasApiSession
+        ? await apiRequest("/auth/me", {
+            method: "PATCH",
+            body: JSON.stringify({
+              name: formData.name.trim(),
+              location: formData.location.trim(),
+              bio: formData.bio.trim(),
+            }),
+          })
+        : { user: formData };
+      const nextSession = updateDemoSession({
+        ...profileResult.user,
+        role: formData.role,
+      });
 
-    setDemoUser(nextSession);
-    setSaveStatus("saved");
+      setDemoUser(nextSession);
+      setSaveStatus("saved");
+    } catch (error) {
+      setSaveStatus(error.message || "profile-error");
+    }
   }
 
   if (!demoUser) {
@@ -299,9 +315,16 @@ export default function ProfileDashboard() {
 
                 {saveStatus === "saved" && (
                   <p className="text-sm font-black text-[#009879]">
-                    Profile updated locally.
+                    Profile updated successfully.
                   </p>
                 )}
+                {saveStatus &&
+                  saveStatus !== "saved" &&
+                  saveStatus !== "name-error" && (
+                    <p className="text-sm font-black text-red-600">
+                      {saveStatus}
+                    </p>
+                  )}
               </div>
             </form>
           </div>
