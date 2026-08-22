@@ -53,7 +53,11 @@ import {
   getDemoSession,
 } from "../../lib/demoSession";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
-import { syncWatchlistItem } from "../../lib/apiClient";
+import {
+  syncReportComment,
+  syncReportLike,
+  syncWatchlistItem,
+} from "../../lib/apiClient";
 import {
   addToWatchlist,
   isIdentifierWatched,
@@ -189,6 +193,7 @@ export default function ReportDetailsPage() {
     };
 
     saveReportReactions(updatedReactions);
+    syncReportLike(report.reportId).catch(() => {});
     setReaction(nextReaction);
   }
 
@@ -261,6 +266,7 @@ export default function ReportDetailsPage() {
     };
 
     saveReportComments(updatedComments);
+    syncReportComment(report.reportId, commentText).catch(() => {});
     setComments(nextComments);
     setCommentDraft("");
     setCommentError("");
