@@ -144,7 +144,7 @@ export default function HomeNewsFeed() {
     () =>
       activeFilter === "All"
         ? reports
-        : reports.filter((report) => report.fraudCategory === activeFilter),
+        : reports.filter((report) => matchesFeedFilter(report, activeFilter)),
     [activeFilter, reports],
   );
   const searchedReports = useMemo(
@@ -208,8 +208,8 @@ export default function HomeNewsFeed() {
       return;
     }
 
-    const activeFilterStillExists = reports.some(
-      (report) => report.fraudCategory === activeFilter,
+    const activeFilterStillExists = reports.some((report) =>
+      matchesFeedFilter(report, activeFilter),
     );
 
     if (activeFilterStillExists) {
@@ -1699,6 +1699,9 @@ function createFeedFilterOptions(reports, activeFilter) {
     .sort((firstCategory, secondCategory) => secondCategory[1] - firstCategory[1])
     .slice(0, 5)
     .map(([label, count]) => ({ label, count }));
+  const connectedCount = reports.filter(
+    (report) => report.relatedReportId || (report.followUpCount || 0) > 0,
+  ).length;
   const activeFilterAlreadyVisible = popularCategories.some(
     (category) => category.label === activeFilter,
   );
@@ -1711,9 +1714,20 @@ function createFeedFilterOptions(reports, activeFilter) {
 
   return [
     { label: "All", count: reports.length },
+    { label: "Connected", count: connectedCount },
     ...activeFilterOption,
     ...popularCategories,
   ];
+}
+
+function matchesFeedFilter(report, activeFilter) {
+  if (activeFilter === "Connected") {
+    return Boolean(
+      report.relatedReportId || (report.followUpCount || 0) > 0,
+    );
+  }
+
+  return report.fraudCategory === activeFilter;
 }
 
 function getRiskSortValue(riskLevel) {
