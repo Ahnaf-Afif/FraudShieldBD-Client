@@ -265,8 +265,9 @@ export default function NotificationsDashboard() {
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm">
             <h2 className="font-black text-[#06285c]">MVP note</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              These are generated from browser data. Backend notifications will
-              replace this later.
+              Report status, comment, like, and moderation alerts are synced
+              from the server. Local activity alerts remain available as a
+              fallback when the API is unavailable.
             </p>
           </div>
 

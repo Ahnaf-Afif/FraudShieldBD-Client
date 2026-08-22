@@ -1433,7 +1433,7 @@ function formatEvidenceSummary(report) {
         ? ` ${fileCount} evidence file${fileCount === 1 ? "" : "s"} were attached.`
         : "";
 
-    return `${report.evidenceType} was reported.${fileText} Uploaded file previews are not stored in this local MVP after browser refresh.`;
+    return `${report.evidenceType} was reported.${fileText} Uploaded evidence is stored securely for authorized review.`;
   }
 
   return "No evidence type was added. Treat this report as community-submitted information and verify before taking action.";
