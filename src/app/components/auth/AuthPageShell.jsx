@@ -21,6 +21,7 @@ import {
   getDemoSession,
   saveDemoSession,
 } from "../../lib/demoSession";
+import { apiRequest } from "../../lib/apiClient";
 
 const trustPoints = [
   "Report scams and track review status",
@@ -42,6 +43,7 @@ export default function AuthPageShell({ mode }) {
     agreeToTerms: false,
   });
   const [formStatus, setFormStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setExistingSession(getDemoSession());
@@ -56,7 +58,7 @@ export default function AuthPageShell({ mode }) {
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     const validationStatus = validateAuthForm({
       formData,
@@ -68,20 +70,38 @@ export default function AuthPageShell({ mode }) {
       return;
     }
 
-    saveDemoSession({
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-    });
-    setFormStatus(isRegisterMode ? "register-ready" : "login-ready");
+    setIsSubmitting(true);
 
-    setTimeout(() => {
-      router.push(redirectPath);
-    }, 700);
+    try {
+      const result = await apiRequest(
+        isRegisterMode ? "/auth/register" : "/auth/login",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            ...(isRegisterMode ? { name: formData.name } : {}),
+            email: formData.email,
+            password: formData.password,
+          }),
+        },
+      );
+
+      window.localStorage.setItem("fraudshield-token", result.token);
+      saveDemoSession(result.user);
+      setFormStatus(isRegisterMode ? "register-ready" : "login-ready");
+
+      setTimeout(() => {
+        router.push(redirectPath);
+      }, 700);
+    } catch (error) {
+      setFormStatus(`server:${error.message || "Authentication failed."}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function switchDemoAccount() {
     clearDemoSession();
+    window.localStorage.removeItem("fraudshield-token");
     setExistingSession(null);
     setFormStatus("session-cleared");
   }
@@ -287,9 +307,14 @@ export default function AuthPageShell({ mode }) {
 
             <button
               type="submit"
+              disabled={isSubmitting}
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#009879] px-5 font-black text-white transition hover:bg-[#007f66] active:bg-slate-400"
             >
-              {isRegisterMode ? "Create Account" : "Login"}
+              {isSubmitting
+                ? "Connecting..."
+                : isRegisterMode
+                  ? "Create Account"
+                  : "Login"}
               <ArrowRight size={18} />
             </button>
           </form>
@@ -524,6 +549,10 @@ function AuthStatusMessage({ status, mode }) {
     status === "login-ready" ||
     status === "register-ready" ||
     status === "session-cleared";
+  const message = status.startsWith("server:")
+    ? status.slice("server:".length)
+    : messages[status] ||
+      `The ${mode === "register" ? "registration" : "login"} form needs attention.`;
 
   return (
     <div
@@ -533,8 +562,7 @@ function AuthStatusMessage({ status, mode }) {
           : "border-red-200 bg-red-50 text-red-600"
       }`}
     >
-      {messages[status] ||
-        `The ${mode === "register" ? "registration" : "login"} form needs attention.`}
+      {message}
     </div>
   );
 }

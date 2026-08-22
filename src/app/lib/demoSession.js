@@ -55,6 +55,7 @@ export function updateDemoSession(updates) {
 
 export function clearDemoSession() {
   localStorage.removeItem(DEMO_SESSION_KEY);
+  localStorage.removeItem("fraudshield-token");
   window.dispatchEvent(new Event(DEMO_SESSION_UPDATED_EVENT));
 }
 
