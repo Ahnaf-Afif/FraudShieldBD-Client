@@ -385,6 +385,7 @@ export function normalizeSubmittedReport(report) {
 
 export function normalizeApiReport(report) {
   const identifiers = Array.isArray(report?.identifiers) ? report.identifiers : [];
+  const evidenceFiles = Array.isArray(report?.evidence) ? report.evidence : [];
   const getIdentifier = (type) =>
     identifiers.find((identifier) => identifier.type === type)?.value || "";
 
@@ -394,6 +395,13 @@ export function normalizeApiReport(report) {
     reviewerName: report?.reviewedBy?.name || "",
     reviewedAt: report?.reviewedAt || null,
     moderationNote: report?.moderationNote || "",
+    evidenceFileSummaries: evidenceFiles.map((file) => ({
+      name: file.originalName || "Evidence file",
+      size: Number(file.size) || 0,
+      type: file.resourceType === "raw" ? "application/pdf" : "image/*",
+      url: file.url || "",
+      resourceType: file.resourceType || "image",
+    })),
     ownerId: report?.owner?._id || report?.owner || report?.ownerId || "",
     submittedAt: report?.createdAt || report?.submittedAt || "Recently",
     phoneOrPaymentNumber:

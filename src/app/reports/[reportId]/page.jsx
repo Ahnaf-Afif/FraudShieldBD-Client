@@ -97,6 +97,18 @@ export default function ReportDetailsPage() {
       try {
         const result = await apiRequest(`/reports/${reportId}`);
         matchedReport = normalizeApiReport(result.report);
+
+        if (window.localStorage.getItem("fraudshield-token")) {
+          try {
+            const evidenceResult = await apiRequest(`/reports/${reportId}/evidence`);
+            matchedReport = normalizeApiReport({
+              ...result.report,
+              evidence: evidenceResult.evidence || [],
+            });
+          } catch (_evidenceError) {
+            // Public visitors should see the report without private evidence.
+          }
+        }
       } catch (_error) {
         matchedReport = getReportByIdFromBrowser(reportId);
       }
@@ -1135,16 +1147,19 @@ function EvidenceFilesPanel({ report }) {
         <div>
           <h2 className="font-black text-[#06285c]">Evidence files</h2>
           <p className="mt-1 text-sm font-semibold text-slate-500">
-            File previews stay in the browser during upload. This report keeps
-            the file metadata for review.
+            Uploaded evidence is available for review. Open a file to inspect
+            the original image or document.
           </p>
         </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {fileSummaries.map((file) => (
-          <div
-            key={`${file.name}-${file.size}-${file.lastModified}`}
+          <a
+            key={file.url || `${file.name}-${file.size}-${file.lastModified || "saved"}`}
+            href={file.url || undefined}
+            target={file.url ? "_blank" : undefined}
+            rel={file.url ? "noreferrer" : undefined}
             className="rounded-xl bg-slate-50 p-4"
           >
             <p className="break-words text-sm font-black text-[#06285c]">
@@ -1153,7 +1168,12 @@ function EvidenceFilesPanel({ report }) {
             <p className="mt-1 text-xs font-semibold text-slate-500">
               {formatFileSize(file.size)} • {formatFileType(file.type)}
             </p>
-          </div>
+            {file.url && (
+              <span className="mt-2 inline-flex text-xs font-black text-[#0b63f6]">
+                Open preview <ExternalLink size={13} className="ml-1" />
+              </span>
+            )}
+          </a>
         ))}
       </div>
     </section>
