@@ -33,6 +33,7 @@ import {
   removeFromWatchlist,
 } from "../../lib/watchlistData";
 import { copyTextToClipboard } from "../../lib/clipboard";
+import { syncWatchlistItem } from "../../lib/apiClient";
 
 export default function CheckResultCard() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,24 +105,25 @@ export default function CheckResultCard() {
     }, 1600);
   }
 
-  function toggleWatchSearchQuery() {
+  async function toggleWatchSearchQuery() {
     if (isIdentifierWatched(searchQuery)) {
       removeFromWatchlist(searchQuery);
       setWatchedIdentifier("");
       return;
     }
 
-    addToWatchlist({
+    const item = addToWatchlist({
       identifier: searchQuery,
       type: detectIdentifierType(searchQuery),
       riskLevel: "Unknown",
       reportId: "",
       title: "Watched search with no matching report yet",
     });
+    syncWatchlistItem(item).catch(() => {});
     setWatchedIdentifier(searchQuery);
   }
 
-  function toggleWatchIdentifier(report) {
+  async function toggleWatchIdentifier(report) {
     const primaryIdentifier = getPrimaryIdentifier(report);
 
     if (isIdentifierWatched(primaryIdentifier)) {
@@ -130,13 +132,14 @@ export default function CheckResultCard() {
       return;
     }
 
-    addToWatchlist({
+    const item = addToWatchlist({
       identifier: primaryIdentifier,
       type: getEntityType(report),
       riskLevel: report.riskLevel,
       reportId: report.reportId,
       title: report.title,
     });
+    syncWatchlistItem(item).catch(() => {});
     setWatchedIdentifier(primaryIdentifier);
   }
 

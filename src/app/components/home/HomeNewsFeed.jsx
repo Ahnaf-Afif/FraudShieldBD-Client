@@ -62,7 +62,7 @@ import {
   RECENT_SEARCHES_UPDATED_EVENT,
   saveRecentSearch,
 } from "../../lib/recentSearches";
-import { apiRequest } from "../../lib/apiClient";
+import { apiRequest, syncWatchlistItem } from "../../lib/apiClient";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -483,13 +483,14 @@ export default function HomeNewsFeed() {
       return;
     }
 
-    addToWatchlist({
+    const item = addToWatchlist({
       identifier,
       type: getEntityType(report),
       riskLevel: report.riskLevel,
       reportId: report.reportId,
       title: report.title,
     });
+    syncWatchlistItem(item).catch(() => {});
     setWatchedIdentifiers(createWatchedIdentifierMap());
   }
 

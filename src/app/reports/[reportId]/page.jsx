@@ -53,6 +53,7 @@ import {
   getDemoSession,
 } from "../../lib/demoSession";
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
+import { syncWatchlistItem } from "../../lib/apiClient";
 import {
   addToWatchlist,
   isIdentifierWatched,
@@ -341,13 +342,14 @@ export default function ReportDetailsPage() {
       return;
     }
 
-    addToWatchlist({
+    const item = addToWatchlist({
       identifier,
       type: getIdentifierLabel(report),
       riskLevel: report.riskLevel,
       reportId: report.reportId,
       title: report.title,
     });
+    syncWatchlistItem(item).catch(() => {});
     setIsWatched(true);
   }
 

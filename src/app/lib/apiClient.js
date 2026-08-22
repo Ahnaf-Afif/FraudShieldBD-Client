@@ -33,3 +33,20 @@ export async function apiRequest(path, options = {}) {
 export function getApiUrl() {
   return API_URL;
 }
+
+export async function syncWatchlistItem(item) {
+  if (typeof window === "undefined" || !window.localStorage.getItem("fraudshield-token")) {
+    return null;
+  }
+
+  return apiRequest("/watchlist", {
+    method: "POST",
+    body: JSON.stringify({
+      identifier: item.identifier,
+      type: item.type,
+      riskLevel: item.riskLevel,
+      reportId: item.reportId,
+      title: item.title,
+    }),
+  });
+}
