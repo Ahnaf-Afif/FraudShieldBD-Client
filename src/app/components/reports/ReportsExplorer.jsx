@@ -55,6 +55,12 @@ const identifierOptions = [
   "Website",
   "Business",
 ];
+const connectionOptions = [
+  "All Report Connections",
+  "Standalone Reports",
+  "Related Reports",
+  "Reports With Follow-ups",
+];
 const REPORT_FILTER_PRESETS_KEY = "fraudshield-report-filter-presets";
 
 export default function ReportsExplorer() {
@@ -66,6 +72,9 @@ export default function ReportsExplorer() {
     "All Identifier Types",
   );
   const [locationFilter, setLocationFilter] = useState("All Locations");
+  const [connectionFilter, setConnectionFilter] = useState(
+    "All Report Connections",
+  );
   const [sortMode, setSortMode] = useState("Newest First");
   const [viewMode, setViewMode] = useState("List");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -98,6 +107,7 @@ export default function ReportsExplorer() {
       riskFilter,
       identifierFilter,
       locationFilter,
+      connectionFilter,
       sortMode,
     });
 
@@ -107,6 +117,7 @@ export default function ReportsExplorer() {
     hasLoadedUrlFilters,
     identifierFilter,
     locationFilter,
+    connectionFilter,
     riskFilter,
     searchValue,
     sortMode,
@@ -138,6 +149,7 @@ export default function ReportsExplorer() {
           ? true
           : (report.location || "Bangladesh") === locationFilter,
       )
+      .filter((report) => matchesConnectionFilter(report, connectionFilter))
       .sort((firstReport, secondReport) => {
         if (sortMode === "Most Reports") {
           return (
@@ -159,6 +171,7 @@ export default function ReportsExplorer() {
     categoryFilter,
     identifierFilter,
     locationFilter,
+    connectionFilter,
     reports,
     riskFilter,
     searchValue,
@@ -178,6 +191,7 @@ export default function ReportsExplorer() {
     riskFilter,
     identifierFilter,
     locationFilter,
+    connectionFilter,
     sortMode,
   });
   const highestRiskMatch = getHighestRiskReport(filteredReports);
@@ -188,6 +202,7 @@ export default function ReportsExplorer() {
     setRiskFilter("All Risk Levels");
     setIdentifierFilter("All Identifier Types");
     setLocationFilter("All Locations");
+    setConnectionFilter("All Report Connections");
     setSortMode("Newest First");
     setPresetStatus("");
     setShareStatus("");
@@ -215,6 +230,10 @@ export default function ReportsExplorer() {
       setLocationFilter("All Locations");
     }
 
+    if (filterKey === "connection") {
+      setConnectionFilter("All Report Connections");
+    }
+
     if (filterKey === "sort") {
       setSortMode("Newest First");
     }
@@ -232,6 +251,9 @@ export default function ReportsExplorer() {
     setRiskFilter(searchParams.get("risk") || "All Risk Levels");
     setIdentifierFilter(searchParams.get("type") || "All Identifier Types");
     setLocationFilter(searchParams.get("location") || "All Locations");
+    setConnectionFilter(
+      searchParams.get("connection") || "All Report Connections",
+    );
     setSortMode(searchParams.get("sort") || "Newest First");
   }
 
@@ -242,6 +264,7 @@ export default function ReportsExplorer() {
       riskFilter,
       identifierFilter,
       locationFilter,
+      connectionFilter,
       sortMode,
     })}`;
 
@@ -294,6 +317,7 @@ export default function ReportsExplorer() {
       riskFilter,
       identifierFilter,
       locationFilter,
+      connectionFilter,
       sortMode,
       createdAt: new Date().toLocaleString(),
     };
@@ -311,6 +335,10 @@ export default function ReportsExplorer() {
     setRiskFilter(preset.riskFilter);
     setIdentifierFilter(preset.identifierFilter);
     setLocationFilter(preset.locationFilter);
+    setConnectionFilter(preset.connectionFilter || "All Report Connections");
+    setConnectionFilter(
+      preset.connectionFilter || "All Report Connections",
+    );
     setSortMode(preset.sortMode);
     setPresetStatus(`applied:${preset.name}`);
     setMobileFiltersOpen(false);
@@ -382,6 +410,7 @@ export default function ReportsExplorer() {
               riskFilter={riskFilter}
               identifierFilter={identifierFilter}
               locationFilter={locationFilter}
+              connectionFilter={connectionFilter}
               dynamicCategoryOptions={dynamicCategoryOptions}
               categoryCounts={categoryCounts}
               riskCounts={riskCounts}
@@ -392,6 +421,7 @@ export default function ReportsExplorer() {
               onRiskChange={setRiskFilter}
               onIdentifierChange={setIdentifierFilter}
               onLocationChange={setLocationFilter}
+              onConnectionChange={setConnectionFilter}
               onClearFilters={clearFilters}
             />
           </div>
@@ -676,6 +706,7 @@ function FiltersPanel({
   riskFilter,
   identifierFilter,
   locationFilter,
+  connectionFilter,
   dynamicCategoryOptions,
   categoryCounts,
   riskCounts,
@@ -686,6 +717,7 @@ function FiltersPanel({
   onRiskChange,
   onIdentifierChange,
   onLocationChange,
+  onConnectionChange,
   onClearFilters,
 }) {
   return (
@@ -738,6 +770,15 @@ function FiltersPanel({
         counts={locationCounts}
         totalCount={reports.length}
         onChange={onLocationChange}
+      />
+
+      <FilterGroup
+        title="Report Connection"
+        value={connectionFilter}
+        options={connectionOptions}
+        counts={createConnectionCountMap(reports)}
+        totalCount={reports.length}
+        onChange={onConnectionChange}
       />
     </div>
   );
@@ -1248,12 +1289,40 @@ function createLocationOptions(reports) {
   return ["All Locations", ...new Set(locations)];
 }
 
+function createConnectionCountMap(reports) {
+  return {
+    "Standalone Reports": reports.filter((report) => !report.relatedReportId)
+      .length,
+    "Related Reports": reports.filter((report) => report.relatedReportId).length,
+    "Reports With Follow-ups": reports.filter(
+      (report) => (report.followUpCount || 0) > 0,
+    ).length,
+  };
+}
+
+function matchesConnectionFilter(report, connectionFilter) {
+  if (connectionFilter === "Standalone Reports") {
+    return !report.relatedReportId;
+  }
+
+  if (connectionFilter === "Related Reports") {
+    return Boolean(report.relatedReportId);
+  }
+
+  if (connectionFilter === "Reports With Follow-ups") {
+    return (report.followUpCount || 0) > 0;
+  }
+
+  return true;
+}
+
 function createActiveFilters({
   searchValue,
   categoryFilter,
   riskFilter,
   identifierFilter,
   locationFilter,
+  connectionFilter,
   sortMode,
 }) {
   return [
@@ -1285,6 +1354,12 @@ function createActiveFilters({
       ? {
           key: "location",
           label: locationFilter,
+        }
+      : null,
+    connectionFilter !== "All Report Connections"
+      ? {
+          key: "connection",
+          label: connectionFilter,
         }
       : null,
     sortMode !== "Newest First"
@@ -1330,6 +1405,10 @@ function formatPresetSummary(preset) {
       ? preset.identifierFilter
       : null,
     preset.locationFilter !== "All Locations" ? preset.locationFilter : null,
+    preset.connectionFilter &&
+    preset.connectionFilter !== "All Report Connections"
+      ? preset.connectionFilter
+      : null,
     preset.sortMode !== "Newest First" ? preset.sortMode : null,
   ]
     .filter(Boolean)
@@ -1355,6 +1434,7 @@ function createFilterUrl({
   riskFilter,
   identifierFilter,
   locationFilter,
+  connectionFilter,
   sortMode,
 }) {
   const searchParams = new URLSearchParams();
@@ -1377,6 +1457,10 @@ function createFilterUrl({
 
   if (locationFilter !== "All Locations") {
     searchParams.set("location", locationFilter);
+  }
+
+  if (connectionFilter !== "All Report Connections") {
+    searchParams.set("connection", connectionFilter);
   }
 
   if (sortMode !== "Newest First") {
