@@ -73,3 +73,13 @@ export function syncReportComment(reportId, text) {
     body: JSON.stringify({ text }),
   });
 }
+
+export function uploadEvidenceFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return apiRequest("/uploads", {
+    method: "POST",
+    body: formData,
+  });
+}

@@ -25,7 +25,7 @@ import {
   getDemoSession,
 } from "../../lib/demoSession";
 import { notifyLocalDataUpdated } from "../../lib/localDataEvents";
-import { apiRequest } from "../../lib/apiClient";
+import { apiRequest, uploadEvidenceFile } from "../../lib/apiClient";
 
 const MIN_PREVENTION_ADVICE_LENGTH = 20;
 const AUTO_SAVE_DELAY = 900;
@@ -217,9 +217,14 @@ export default function ReportFormShell() {
       setIsSubmitting(true);
 
       try {
+        const uploadedEvidence = await Promise.all(
+          reportData.evidenceFiles.map(uploadEvidenceFile),
+        );
         await apiRequest("/reports", {
           method: "POST",
-          body: JSON.stringify(createApiReportPayload(submittedReportPayload)),
+          body: JSON.stringify(
+            createApiReportPayload(submittedReportPayload, uploadedEvidence),
+          ),
         });
       } catch (error) {
         setSubmitStatus(`server:${error.message || "Report submission failed."}`);
@@ -373,7 +378,7 @@ export default function ReportFormShell() {
   );
 }
 
-function createApiReportPayload(report) {
+function createApiReportPayload(report, evidence = []) {
   const identifiers = [
     ["Phone Number", report.phoneOrPaymentNumber],
     ["Facebook Page", report.facebookLink],
@@ -391,6 +396,7 @@ function createApiReportPayload(report) {
     story: report.story,
     preventionAdvice: report.preventionAdvice,
     identifiers,
+    evidence,
     riskLevel: report.riskLevel,
     relatedReportId: /^[a-f\d]{24}$/i.test(report.relatedReportId || "")
       ? report.relatedReportId
