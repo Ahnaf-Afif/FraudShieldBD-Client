@@ -77,11 +77,8 @@ export default function Navbar() {
 
       if (window.localStorage.getItem("fraudshield-token")) {
         try {
-          const result = await apiRequest("/notifications");
-          const unreadServerCount = (result.notifications || []).filter(
-            (notification) => !notification.isRead,
-          ).length;
-          setUnreadCount(unreadServerCount);
+          const result = await apiRequest("/notifications/unread-count");
+          setUnreadCount(Number(result.count) || 0);
         } catch (_error) {
           // Keep the local unread count when the API is unavailable.
         }
