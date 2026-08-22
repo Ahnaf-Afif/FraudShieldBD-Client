@@ -1392,6 +1392,8 @@ function createReportsCsv(reports) {
   const rows = reports.map((report) => [
     report.reportId,
     report.title,
+    report.relatedReportId || "",
+    report.relatedReportTitle || "",
     report.fraudCategory,
     getEntityType(report),
     getPrimaryIdentifier(report),
@@ -1406,6 +1408,8 @@ function createReportsCsv(reports) {
     [
       "Report ID",
       "Title",
+      "Related Report ID",
+      "Related Report Title",
       "Category",
       "Identifier Type",
       "Identifier",
