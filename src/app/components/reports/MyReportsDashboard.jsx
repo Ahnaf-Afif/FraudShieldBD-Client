@@ -40,7 +40,7 @@ import { removeWatchlistItemsByReportId } from "../../lib/watchlistData";
 import AuthRequiredState from "../shared/AuthRequiredState";
 import { copyTextToClipboard } from "../../lib/clipboard";
 
-const tabs = ["All", "Submitted", "Draft"];
+const tabs = ["All", "Submitted", "Connected", "Draft"];
 const riskFilters = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
 
 export default function MyReportsDashboard() {
@@ -121,7 +121,13 @@ export default function MyReportsDashboard() {
 
     return items
       .filter((report) =>
-        activeTab === "All" ? true : report.dashboardStatus === activeTab,
+        activeTab === "All"
+          ? true
+          : activeTab === "Connected"
+            ? Boolean(
+                report.relatedReportId || (report.followUpCount || 0) > 0,
+              )
+            : report.dashboardStatus === activeTab,
       )
       .filter((report) =>
         riskFilter === "All Risk Levels" || report.dashboardStatus === "Draft"
@@ -151,7 +157,9 @@ export default function MyReportsDashboard() {
     isOwnedByUser(report, demoUser),
   ).length;
   const connectedReportCount = submittedReports.filter(
-    (report) => isOwnedByUser(report, demoUser) && report.relatedReportId,
+    (report) =>
+      isOwnedByUser(report, demoUser) &&
+      (report.relatedReportId || (report.followUpCount || 0) > 0),
   ).length;
   const draftCount =
     draftReport && isOwnedByUser(draftReport, demoUser) ? 1 : 0;
