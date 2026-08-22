@@ -383,6 +383,23 @@ export function normalizeSubmittedReport(report) {
   };
 }
 
+export function normalizeApiReport(report) {
+  const identifiers = Array.isArray(report?.identifiers) ? report.identifiers : [];
+  const getIdentifier = (type) =>
+    identifiers.find((identifier) => identifier.type === type)?.value || "";
+
+  return normalizeSubmittedReport({
+    ...report,
+    reportId: report?._id || report?.reportId,
+    submittedAt: report?.createdAt || report?.submittedAt || "Recently",
+    phoneOrPaymentNumber:
+      report?.phoneOrPaymentNumber || getIdentifier("Phone Number"),
+    facebookLink: report?.facebookLink || getIdentifier("Facebook Page"),
+    websiteLink: report?.websiteLink || getIdentifier("Website"),
+    businessName: report?.businessName || getIdentifier("Business"),
+  });
+}
+
 export function getRiskStyle(riskLevel) {
   if (riskLevel === "High Risk") {
     return "bg-red-100 text-red-600";

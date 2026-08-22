@@ -32,6 +32,7 @@ import {
   getSavedReportReactions,
   getSavedReportShares,
   maskIdentifier,
+  normalizeApiReport,
   saveReportComments,
   saveReportReactions,
   saveReportShares,
@@ -61,6 +62,7 @@ import {
   RECENT_SEARCHES_UPDATED_EVENT,
   saveRecentSearch,
 } from "../../lib/recentSearches";
+import { apiRequest } from "../../lib/apiClient";
 
 const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
@@ -88,8 +90,20 @@ export default function HomeNewsFeed() {
   );
   const loadMoreRef = useRef(null);
 
-  function refreshFeedState() {
-    setReports(getAllReportsForBrowser());
+  async function refreshFeedState() {
+    const localReports = getAllReportsForBrowser();
+
+    try {
+      const result = await apiRequest("/reports?limit=50");
+      const apiReports = Array.isArray(result.reports)
+        ? result.reports.map(normalizeApiReport)
+        : [];
+
+      setReports(apiReports.length > 0 ? [...apiReports, ...demoReports] : localReports);
+    } catch (_error) {
+      setReports(localReports);
+    }
+
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
     setReportReactions(getSavedReportReactions());
     setReportComments(getSavedReportComments());
