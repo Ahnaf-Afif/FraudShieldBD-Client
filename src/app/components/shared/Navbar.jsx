@@ -35,6 +35,7 @@ import {
   normalizeSubmittedReport,
 } from "../../lib/reportFeedData";
 import { getWatchlistFromBrowser } from "../../lib/watchlistData";
+import { apiRequest } from "../../lib/apiClient";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -67,12 +68,24 @@ export default function Navbar() {
   const pathname = usePathname();
 
   useEffect(() => {
-    function updateDemoUser() {
+    async function updateDemoUser() {
       const currentUser = getDemoSession();
 
       setDemoUser(currentUser);
       setUnreadCount(getUnreadNotificationCount(currentUser));
       setActivitySummary(createNavbarActivitySummary(currentUser));
+
+      if (window.localStorage.getItem("fraudshield-token")) {
+        try {
+          const result = await apiRequest("/notifications");
+          const unreadServerCount = (result.notifications || []).filter(
+            (notification) => !notification.isRead,
+          ).length;
+          setUnreadCount(unreadServerCount);
+        } catch (_error) {
+          // Keep the local unread count when the API is unavailable.
+        }
+      }
     }
 
     updateDemoUser();
