@@ -31,6 +31,11 @@ export default function ModerationQueue() {
 
   useEffect(() => {
     loadReports();
+    const queueRefreshTimer = window.setInterval(loadReports, 30000);
+
+    return () => {
+      window.clearInterval(queueRefreshTimer);
+    };
   }, [loadReports]);
 
   async function changeStatus(reportId, nextStatus) {
