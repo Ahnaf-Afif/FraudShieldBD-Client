@@ -69,6 +69,22 @@ import { copyTextToClipboard, shareOrCopyLink } from "../../lib/clipboard";
 
 const MIN_COMMENT_LENGTH = 3;
 
+function isApiCommentId(commentId) {
+  return /^[a-f\d]{24}$/i.test(String(commentId || ""));
+}
+
+function normalizeDetailComment(comment) {
+  return {
+    ...comment,
+    id: comment._id || comment.id,
+    createdAt: comment.createdAt || "Recently",
+    authorName: comment.author?.name || comment.authorName || "Community member",
+    authorEmail: comment.author?.email || comment.authorEmail || "",
+    authorRole: comment.author?.role || comment.authorRole || "Reporter",
+    authorInitials: String(comment.author?.name || comment.authorName || "U").slice(0, 1),
+  };
+}
+
 export default function ReportDetailsPage() {
   const { reportId } = useParams();
   const [report, setReport] = useState(null);
@@ -136,14 +152,7 @@ export default function ReportDetailsPage() {
         nextReaction = { ...nextReaction, likes: engagement.likes || 0 };
         setCommentPage(Number(engagement.page) || 1);
         setTotalComments(Number(engagement.totalComments) || 0);
-        nextComments = (engagement.comments || []).map((comment) => ({
-          ...comment,
-          id: comment._id || comment.id,
-          createdAt: comment.createdAt || "Recently",
-          authorName: comment.author?.name || "Community member",
-          authorRole: comment.author?.role || "Reporter",
-          authorInitials: String(comment.author?.name || "U").slice(0, 1),
-        }));
+        nextComments = (engagement.comments || []).map(normalizeDetailComment);
       } catch (_error) {
         // Keep local engagement if the API is temporarily unavailable.
       }
@@ -177,14 +186,7 @@ export default function ReportDetailsPage() {
       const engagement = await apiRequest(
         `/reports/${reportId}/engagement?page=${nextPage}&limit=100`,
       );
-      const olderComments = (engagement.comments || []).map((comment) => ({
-        ...comment,
-        id: comment._id || comment.id,
-        createdAt: comment.createdAt || "Recently",
-        authorName: comment.author?.name || "Community member",
-        authorRole: comment.author?.role || "Reporter",
-        authorInitials: String(comment.author?.name || "U").slice(0, 1),
-      }));
+      const olderComments = (engagement.comments || []).map(normalizeDetailComment);
 
       setComments((currentComments) => {
         const currentIds = new Set(currentComments.map((comment) => comment.id));
@@ -384,7 +386,7 @@ export default function ReportDetailsPage() {
     setPendingDeleteCommentId("");
   }
 
-  function saveEditedComment() {
+  async function saveEditedComment() {
     const cleanEditedComment = editingCommentDraft.trim();
 
     if (cleanEditedComment.length < MIN_COMMENT_LENGTH) {
@@ -392,6 +394,29 @@ export default function ReportDetailsPage() {
         `Write at least ${MIN_COMMENT_LENGTH} characters before saving.`,
       );
       return;
+    }
+
+    if (isApiCommentId(editingCommentId)) {
+      try {
+        const result = await apiRequest(
+          `/reports/${report.reportId}/comments/${editingCommentId}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({ text: cleanEditedComment }),
+          },
+        );
+        const updatedComment = normalizeDetailComment(result.comment);
+        setComments((currentComments) =>
+          currentComments.map((comment) =>
+            comment.id === editingCommentId ? updatedComment : comment,
+          ),
+        );
+        cancelEditingComment();
+        return;
+      } catch (error) {
+        setEditingCommentError(error.message || "Could not edit this comment.");
+        return;
+      }
     }
 
     const nextComments = comments.map((comment) => {
@@ -415,7 +440,19 @@ export default function ReportDetailsPage() {
     cancelEditingComment();
   }
 
-  function deleteComment(commentId) {
+  async function deleteComment(commentId) {
+    if (isApiCommentId(commentId)) {
+      try {
+        await apiRequest(
+          `/reports/${report.reportId}/comments/${commentId}`,
+          { method: "DELETE" },
+        );
+      } catch (error) {
+        setCommentError(error.message || "Could not delete this comment.");
+        return;
+      }
+    }
+
     const nextComments = comments.filter((comment) => comment.id !== commentId);
     const updatedComments = {
       ...getSavedReportComments(),
