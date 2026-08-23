@@ -22,6 +22,7 @@ export function saveDemoSession(user) {
     id: user.id || user._id || "",
     name: user.name || getNameFromEmail(user.email),
     email: user.email.trim().toLowerCase(),
+    emailVerified: Boolean(user.emailVerified),
     role: user.role || "Community Member",
     signedInAt: new Date().toLocaleString(),
   };
@@ -45,6 +46,10 @@ export function updateDemoSession(updates) {
     name: updates.name || currentSession.name,
     role: updates.role || currentSession.role,
     email: currentSession.email,
+    emailVerified:
+      updates.emailVerified === undefined
+        ? Boolean(currentSession.emailVerified)
+        : Boolean(updates.emailVerified),
     updatedAt: new Date().toLocaleString(),
   };
 
@@ -116,5 +121,6 @@ function normalizeDemoSession(session) {
     name: session.name || getNameFromEmail(session.email),
     email: session.email.trim().toLowerCase(),
     role: session.role || "Community Member",
+    emailVerified: Boolean(session.emailVerified),
   };
 }

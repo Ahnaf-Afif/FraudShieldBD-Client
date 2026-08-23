@@ -44,10 +44,28 @@ export default function ProfileDashboard() {
     bio: "",
   });
   const [saveStatus, setSaveStatus] = useState("");
+  const [verificationStatus, setVerificationStatus] = useState("");
 
   useEffect(() => {
-    function refreshProfile() {
+    async function refreshProfile() {
       const currentUser = getDemoSession();
+
+      if (currentUser && window.localStorage.getItem("fraudshield-token")) {
+        try {
+          const result = await apiRequest("/auth/me");
+          updateDemoSession(result.user);
+          setDemoUser(getDemoSession());
+          setFormData({
+            name: result.user.name || "",
+            role: result.user.role || "Community Member",
+            location: result.user.location || "",
+            bio: result.user.bio || "",
+          });
+          return;
+        } catch (_error) {
+          // Keep the cached session visible if the server is temporarily unavailable.
+        }
+      }
 
       setDemoUser(currentUser);
       setFormData({
@@ -69,6 +87,17 @@ export default function ProfileDashboard() {
       window.removeEventListener("storage", refreshProfile);
     };
   }, []);
+
+  async function resendVerificationEmail() {
+    setVerificationStatus("sending");
+
+    try {
+      const result = await apiRequest("/auth/resend-verification", { method: "POST" });
+      setVerificationStatus(result.message);
+    } catch (error) {
+      setVerificationStatus(error.message || "Could not send a verification email.");
+    }
+  }
 
   const activityStats = useMemo(() => createProfileStats(demoUser), [demoUser]);
   const profileCompletion = useMemo(
@@ -205,6 +234,33 @@ export default function ProfileDashboard() {
               A complete profile helps moderators understand who is reporting
               and makes community reports easier to trust.
             </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-black text-[#06285c]">Email verification</h2>
+              <span className={`rounded-full px-3 py-1 text-xs font-black ${demoUser.emailVerified ? "bg-[#e9f8f4] text-[#009879]" : "bg-orange-50 text-orange-600"}`}>
+                {demoUser.emailVerified ? "Verified" : "Pending"}
+              </span>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {demoUser.emailVerified
+                ? "Your email address is verified and can be used for account recovery."
+                : "Verify your email to make password recovery and account ownership safer."}
+            </p>
+            {!demoUser.emailVerified && (
+              <button
+                type="button"
+                onClick={resendVerificationEmail}
+                disabled={verificationStatus === "sending"}
+                className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl border border-[#bfe8dc] px-4 text-sm font-black text-[#009879] transition hover:bg-[#f0fbf7] disabled:cursor-wait disabled:opacity-60"
+              >
+                {verificationStatus === "sending" ? "Sending..." : "Resend verification email"}
+              </button>
+            )}
+            {verificationStatus && verificationStatus !== "sending" && (
+              <p className="mt-3 text-sm font-semibold text-[#007f66]">{verificationStatus}</p>
+            )}
           </div>
 
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm">
@@ -518,11 +574,13 @@ function calculateTrustScore(stats, completion) {
 function createVerificationItems(user, stats) {
   return [
     {
-      label: "Account email exists",
+      label: "Email address verified",
       description: user?.email
-        ? `${user.email} is attached to this local profile.`
+        ? user.emailVerified
+          ? `${user.email} is verified for this account.`
+          : `${user.email} is attached, but still needs verification.`
         : "Login or register to attach an email.",
-      isComplete: Boolean(user?.email),
+      isComplete: Boolean(user?.email && user.emailVerified),
     },
     {
       label: "Profile details added",
