@@ -151,6 +151,8 @@ export default function HomeNewsFeed() {
   }
 
   useEffect(() => {
+    // Synchronize browser storage and the feed API with the mounted page.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshFeedState();
     refreshRecentFeedSearches();
 
@@ -232,6 +234,8 @@ export default function HomeNewsFeed() {
   });
 
   useEffect(() => {
+    // Reset infinite-scroll position when the visible feed changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleReportCount(INITIAL_VISIBLE_REPORTS);
   }, [activeFilter, feedSearch, reports, sortMode]);
 
@@ -264,6 +268,8 @@ export default function HomeNewsFeed() {
       return;
     }
 
+    // Keep a removed filter from leaving the feed in an invalid state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveFilter("All");
     saveFeedPreferences({
       activeFilter: "All",
@@ -298,6 +304,8 @@ export default function HomeNewsFeed() {
     return () => {
       observer.disconnect();
     };
+  // loadMoreReports is intentionally called by the observer callback.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedReports.length, hasMoreReports]);
 
   async function loadMoreReports() {
