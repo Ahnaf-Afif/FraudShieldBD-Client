@@ -42,7 +42,7 @@ import AuthRequiredState from "../shared/AuthRequiredState";
 import { copyTextToClipboard } from "../../lib/clipboard";
 import { apiRequest } from "../../lib/apiClient";
 
-const tabs = ["All", "Submitted", "Connected", "Draft"];
+const tabs = ["All", "Under Review", "Published", "Rejected", "Connected", "Draft"];
 const riskFilters = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
 
 export default function MyReportsDashboard() {
@@ -135,7 +135,7 @@ export default function MyReportsDashboard() {
     const items = [
       ...ownedSubmittedReports.map((report) => ({
         ...report,
-        dashboardStatus: "Submitted",
+        dashboardStatus: getDashboardStatus(report),
       })),
       ...(ownedDraft
         ? [
@@ -196,7 +196,9 @@ export default function MyReportsDashboard() {
   );
   const incompleteDraftCount =
     draftCount > 0 && getDraftCompletionPercent(draftReport) < 100 ? 1 : 0;
-  const submittedReviewCount = submittedCount;
+  const submittedReviewCount = submittedReports.filter(
+    (report) => isOwnedByUser(report, demoUser) && getDashboardStatus(report) === "Under Review",
+  ).length;
   const hasActiveFilters =
     activeTab !== "All" || riskFilter !== "All Risk Levels" || searchValue.trim();
 
@@ -479,6 +481,7 @@ function ActionQueueItem({ label, value, tone }) {
 function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
   const [copiedReportId, setCopiedReportId] = useState(false);
   const isDraft = report.dashboardStatus === "Draft";
+  const statusStyle = getStatusStyle(report.dashboardStatus);
   const riskStyle = getRiskStyle(report.riskLevel);
   const identifier = getPrimaryIdentifier(report);
   const href = isDraft ? "/report-fraud" : `/reports/${report.reportId}`;
@@ -508,12 +511,15 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
                 {report.title || "Untitled report draft"}
               </h2>
               <span
-                className={`rounded-full px-3 py-1 text-xs font-black ${
-                  isDraft ? "bg-blue-50 text-blue-600" : riskStyle
-                }`}
+                className={`rounded-full px-3 py-1 text-xs font-black ${isDraft ? "bg-blue-50 text-blue-600" : statusStyle}`}
               >
-                {isDraft ? "Draft" : report.riskLevel}
+                {report.dashboardStatus}
               </span>
+              {!isDraft && (
+                <span className={`rounded-full px-3 py-1 text-xs font-black ${riskStyle}`}>
+                  {report.riskLevel}
+                </span>
+              )}
             </div>
 
             <p className="mt-1 text-sm font-semibold text-slate-500">
@@ -634,6 +640,8 @@ function MyReportRow({ report, onDiscardDraft, onDeleteSubmitted }) {
 }
 
 function StatusTimeline({ report }) {
+  const isPublished = report.dashboardStatus === "Published";
+  const isRejected = report.dashboardStatus === "Rejected";
   const steps = [
     {
       label: "Submitted",
@@ -642,13 +650,17 @@ function StatusTimeline({ report }) {
     },
     {
       label: "Review queue",
-      text: "Ready for moderator workflow",
-      isComplete: true,
+      text: isRejected ? "Moderation finished with a rejection." : "Waiting for moderator review.",
+      isComplete: isPublished || isRejected,
     },
     {
       label: "Public warning",
-      text: "Visible in your synced reports",
-      isComplete: true,
+      text: isPublished
+        ? "Published for the community to read."
+        : isRejected
+          ? report.moderationNote || "This report was not published."
+          : "It will appear publicly after approval.",
+      isComplete: isPublished,
     },
   ];
 
@@ -671,6 +683,19 @@ function StatusTimeline({ report }) {
       </div>
     </div>
   );
+}
+
+function getDashboardStatus(report) {
+  if (report?.status === "Published") return "Published";
+  if (report?.status === "Rejected") return "Rejected";
+  if (report?.status === "Under Review") return "Under Review";
+  return "Under Review";
+}
+
+function getStatusStyle(status) {
+  if (status === "Published") return "bg-[#e9f8f4] text-[#009879]";
+  if (status === "Rejected") return "bg-red-50 text-red-600";
+  return "bg-orange-50 text-orange-600";
 }
 
 function CheckCircleIcon({ isComplete }) {
