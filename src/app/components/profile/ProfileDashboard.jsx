@@ -344,6 +344,7 @@ export default function ProfileDashboard() {
                 </span>
                 <input
                   value={formData.location}
+                  maxLength={120}
                   onChange={(event) =>
                     updateField("location", event.target.value)
                   }

@@ -243,6 +243,7 @@ export default function AuthPageShell({ mode }) {
                 value={formData.name}
                 onChange={(value) => updateField("name", value)}
                 placeholder="Your full name"
+                maxLength={80}
               />
             )}
 
@@ -506,6 +507,7 @@ function AuthField({
   value,
   onChange,
   placeholder,
+  maxLength,
   rightAction,
 }) {
   return (
@@ -520,6 +522,7 @@ function AuthField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
+          maxLength={maxLength}
           className="w-full min-w-0 text-sm font-semibold text-[#06285c] outline-none"
         />
         {rightAction}
