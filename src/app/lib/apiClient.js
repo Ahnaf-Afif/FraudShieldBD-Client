@@ -10,16 +10,22 @@ export async function apiRequest(path, options = {}) {
       ? ""
       : window.localStorage.getItem("fraudshield-token") || "";
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      ...(options.body instanceof FormData
-        ? {}
-        : { "Content-Type": "application/json" }),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
-  });
+  let response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        ...(options.body instanceof FormData
+          ? {}
+          : { "Content-Type": "application/json" }),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      },
+    });
+  } catch (_error) {
+    throw new Error("The FraudShield server is unavailable. Please try again shortly.");
+  }
 
   const data = await response.json().catch(() => ({}));
 
