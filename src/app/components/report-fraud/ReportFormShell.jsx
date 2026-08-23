@@ -198,10 +198,6 @@ export default function ReportFormShell() {
     const newReportId = reportId || createReportId();
     const submittedAt = new Date().toLocaleString();
 
-    localStorage.removeItem(REPORT_DRAFT_KEY);
-    notifyLocalDataUpdated();
-    setHasSavedDraft(false);
-    setHasUnsavedChanges(false);
     setReportId(newReportId);
     setStatusTime(submittedAt);
 
@@ -246,6 +242,10 @@ export default function ReportFormShell() {
       setIsSubmitting(false);
     }
 
+    localStorage.removeItem(REPORT_DRAFT_KEY);
+    notifyLocalDataUpdated();
+    setHasSavedDraft(false);
+    setHasUnsavedChanges(false);
     saveSubmittedReport(submittedReportPayload);
     console.log("Report data:", submittedReportPayload);
 
