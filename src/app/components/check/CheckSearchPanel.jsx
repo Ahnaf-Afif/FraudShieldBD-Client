@@ -27,6 +27,8 @@ export default function CheckSearchPanel() {
     const queryValue = new URLSearchParams(window.location.search).get("q");
 
     if (queryValue) {
+      // Hydrate the search field from the browser URL after SSR.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchValue(queryValue);
     }
   }, []);
