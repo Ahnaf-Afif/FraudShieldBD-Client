@@ -213,7 +213,9 @@ export default function NotificationsDashboard() {
         isRead: true,
       })),
     );
-    apiRequest("/notifications/read-all", { method: "PATCH" }).catch(() => {});
+    if (window.localStorage.getItem("fraudshield-token")) {
+      apiRequest("/notifications/read-all", { method: "PATCH" }).catch(() => {});
+    }
   }
 
   function markOneRead(notificationId) {
@@ -271,8 +273,7 @@ export default function NotificationsDashboard() {
               Notifications
             </h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Local MVP alerts from reports, watchlist items, drafts and recent
-              checks.
+              Report, watchlist, draft, security, and recent-check alerts.
             </p>
 
             <div className="mt-5 grid gap-3">
