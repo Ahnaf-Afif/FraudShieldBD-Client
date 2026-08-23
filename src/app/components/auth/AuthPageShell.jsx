@@ -39,7 +39,6 @@ export default function AuthPageShell({ mode }) {
     name: "",
     email: "",
     password: "",
-    role: "Community Member",
     agreeToTerms: false,
   });
   const [formStatus, setFormStatus] = useState("");
@@ -283,23 +282,6 @@ export default function AuthPageShell({ mode }) {
                   Forgot password?
                 </Link>
               </div>
-            )}
-
-            {isRegisterMode && (
-              <label className="block">
-                <span className="mb-2 block text-sm font-black text-[#06285c]">
-                  Account type
-                </span>
-                <select
-                  value={formData.role}
-                  onChange={(event) => updateField("role", event.target.value)}
-                  className="min-h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
-                >
-                  <option>Community Member</option>
-                  <option>Business Owner</option>
-                  <option>Moderator Applicant</option>
-                </select>
-              </label>
             )}
 
             {isRegisterMode && (
