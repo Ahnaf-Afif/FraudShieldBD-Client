@@ -35,13 +35,6 @@ import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import { apiRequest } from "../../lib/apiClient";
 import AuthRequiredState from "../shared/AuthRequiredState";
 
-const roleOptions = [
-  "Community Member",
-  "Verified Reporter",
-  "Safety Volunteer",
-  "Moderator Trainee",
-];
-
 export default function ProfileDashboard() {
   const [demoUser, setDemoUser] = useState(null);
   const [formData, setFormData] = useState({
@@ -123,7 +116,7 @@ export default function ProfileDashboard() {
         : { user: formData };
       const nextSession = updateDemoSession({
         ...profileResult.user,
-        role: formData.role,
+        role: profileResult.user.role || demoUser.role || "Community Member",
       });
 
       setDemoUser(nextSession);
@@ -258,20 +251,15 @@ export default function ProfileDashboard() {
                 </p>
               )}
 
-              <label>
+              <div>
                 <span className="mb-2 block text-sm font-bold text-[#06285c]">
-                  Role label
+                  Account role
                 </span>
-                <select
-                  value={formData.role}
-                  onChange={(event) => updateField("role", event.target.value)}
-                  className="min-h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
-                >
-                  {roleOptions.map((role) => (
-                    <option key={role}>{role}</option>
-                  ))}
-                </select>
-              </label>
+                <div className="flex min-h-12 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-[#06285c]">
+                  <span>{formData.role || "Community Member"}</span>
+                  <span className="text-xs font-bold text-slate-400">Managed by Admin</span>
+                </div>
+              </div>
 
               <label>
                 <span className="mb-2 block text-sm font-bold text-[#06285c]">
