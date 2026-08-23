@@ -117,6 +117,7 @@ export default function HomeNewsFeed() {
     INITIAL_VISIBLE_REPORTS,
   );
   const [feedActionError, setFeedActionError] = useState("");
+  const [feedApiError, setFeedApiError] = useState("");
   const loadMoreRef = useRef(null);
 
   async function refreshFeedState() {
@@ -134,16 +135,22 @@ export default function HomeNewsFeed() {
       setApiPage(1);
       setApiTotal(Number(result.total) || apiReports.length);
       setIsUsingApiFeed(apiReports.length > 0);
+      setFeedApiError("");
       setReports(
         apiReports.length > 0
           ? mergeFeedReports(apiReports, demoReports)
           : localReports,
       );
-    } catch (_error) {
+    } catch (error) {
       setApiPage(1);
       setApiTotal(0);
       setIsUsingApiFeed(false);
       setReports(localReports);
+      setFeedApiError(
+        error?.status === 429
+          ? "The feed is temporarily rate-limited. Showing saved reports for now."
+          : "The live feed is temporarily unavailable. Showing saved reports for now.",
+      );
     }
 
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
@@ -714,6 +721,11 @@ export default function HomeNewsFeed() {
         {feedActionError && (
           <p className="mt-3 text-sm font-bold text-red-600" role="alert">
             {feedActionError}
+          </p>
+        )}
+        {feedApiError && (
+          <p className="mt-2 text-sm font-semibold text-orange-700" role="status">
+            {feedApiError}
           </p>
         )}
       </div>
