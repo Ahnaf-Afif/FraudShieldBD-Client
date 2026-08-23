@@ -78,6 +78,14 @@ export async function syncWatchlistItem(item) {
   });
 }
 
+export function deleteWatchlistItem(itemId) {
+  if (!/^[a-f\d]{24}$/i.test(String(itemId || ""))) {
+    return Promise.resolve(null);
+  }
+
+  return apiRequest(`/watchlist/${itemId}`, { method: "DELETE" });
+}
+
 function isApiReportId(reportId) {
   return /^[a-f\d]{24}$/i.test(String(reportId || ""));
 }

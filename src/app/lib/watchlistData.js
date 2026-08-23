@@ -105,6 +105,7 @@ export function normalizeWatchlistItem(item) {
   return {
     ...item,
     id: item.id || `${normalizedIdentifier}-${Date.now()}`,
+    serverId: item.serverId || item._id || "",
     normalizedIdentifier,
     type: item.type || "Unknown",
     riskLevel: item.riskLevel || "Unknown",

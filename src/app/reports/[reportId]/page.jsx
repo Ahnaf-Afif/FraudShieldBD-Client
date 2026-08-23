@@ -56,14 +56,18 @@ import {
 import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import {
   apiRequest,
+  deleteWatchlistItem,
   syncReportComment,
   syncReportLike,
   syncWatchlistItem,
 } from "../../lib/apiClient";
 import {
   addToWatchlist,
+  getWatchlistFromBrowser,
   isIdentifierWatched,
+  normalizeIdentifier,
   removeFromWatchlist,
+  saveWatchlist,
 } from "../../lib/watchlistData";
 import { copyTextToClipboard, shareOrCopyLink } from "../../lib/clipboard";
 
@@ -544,8 +548,21 @@ export default function ReportDetailsPage() {
     }
   }
 
-  function toggleWatchIdentifier() {
+  async function toggleWatchIdentifier() {
     if (isWatched) {
+      const watchedItem = getWatchlistFromBrowser().find(
+        (item) => item.normalizedIdentifier === normalizeIdentifier(identifier),
+      );
+
+      try {
+        if (watchedItem?.serverId) {
+          await deleteWatchlistItem(watchedItem.serverId);
+        }
+      } catch (error) {
+        setCommentError(error.message || "Could not remove this identifier from the watchlist.");
+        return;
+      }
+
       removeFromWatchlist(identifier);
       setIsWatched(false);
       return;
@@ -558,7 +575,23 @@ export default function ReportDetailsPage() {
       reportId: report.reportId,
       title: report.title,
     });
-    syncWatchlistItem(item).catch(() => {});
+    try {
+      const result = await syncWatchlistItem(item);
+      const serverId = result?.item?._id || "";
+
+      if (serverId) {
+        const updatedItems = getWatchlistFromBrowser().map((watchlistItem) =>
+          watchlistItem.normalizedIdentifier === item.normalizedIdentifier
+            ? { ...watchlistItem, serverId }
+            : watchlistItem,
+        );
+        saveWatchlist(updatedItems);
+      }
+    } catch (error) {
+      setCommentError(error.message || "Could not sync this identifier with the server.");
+      return;
+    }
+
     setIsWatched(true);
   }
 
