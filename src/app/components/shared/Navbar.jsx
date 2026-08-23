@@ -13,6 +13,7 @@ import {
   Settings,
   ShieldPlus,
   UserRound,
+  Users,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -416,7 +417,15 @@ function DesktopUserMenu({ user, unreadCount, activitySummary, onLogout }) {
           </div>
 
           <div className="p-2">
-            {[...(canModerate(user) ? [{ label: "Moderation Queue", href: "/moderation", icon: ListChecks }] : []), ...accountLinks].map((link) => (
+            {[
+              ...(canModerate(user)
+                ? [{ label: "Moderation Queue", href: "/moderation", icon: ListChecks }]
+                : []),
+              ...(user.role === "Admin"
+                ? [{ label: "User Roles", href: "/admin/users", icon: Users }]
+                : []),
+              ...accountLinks,
+            ].map((link) => (
               <AccountMenuLink
                 key={link.href}
                 link={link}
@@ -511,6 +520,16 @@ function MobileUserMenu({ user, unreadCount, activitySummary, onLogout }) {
         >
           <ListChecks size={17} />
           Moderation Queue
+        </Link>
+      )}
+
+      {user.role === "Admin" && (
+        <Link
+          href="/admin/users"
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 text-sm font-black text-blue-700"
+        >
+          <Users size={17} />
+          User Roles
         </Link>
       )}
 
