@@ -131,15 +131,21 @@ export default function UserRoleManagement() {
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    <select
-                      value={editableRoles.includes(user.role) ? user.role : "Community Member"}
-                      onChange={(event) => updateRole(user._id, event.target.value)}
-                      className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-[#06285c] outline-none focus:border-[#009879]"
-                    >
-                      {editableRoles.map((role) => (
-                        <option key={role}>{role}</option>
-                      ))}
-                    </select>
+                    {user.role === "Admin" ? (
+                      <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-500">
+                        Protected Admin
+                      </span>
+                    ) : (
+                      <select
+                        value={editableRoles.includes(user.role) ? user.role : "Community Member"}
+                        onChange={(event) => updateRole(user._id, event.target.value)}
+                        className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-[#06285c] outline-none focus:border-[#009879]"
+                      >
+                        {editableRoles.map((role) => (
+                          <option key={role}>{role}</option>
+                        ))}
+                      </select>
+                    )}
                   </td>
                 </tr>
               ))}
