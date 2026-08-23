@@ -111,6 +111,7 @@ export default function HomeNewsFeed() {
   const [apiPage, setApiPage] = useState(1);
   const [apiTotal, setApiTotal] = useState(0);
   const [isLoadingApiPage, setIsLoadingApiPage] = useState(false);
+  const [feedLoadError, setFeedLoadError] = useState("");
   const [isUsingApiFeed, setIsUsingApiFeed] = useState(false);
   const [visibleReportCount, setVisibleReportCount] = useState(
     INITIAL_VISIBLE_REPORTS,
@@ -323,6 +324,7 @@ export default function HomeNewsFeed() {
     }
 
     setIsLoadingApiPage(true);
+    setFeedLoadError("");
 
     try {
       const nextPage = apiPage + 1;
@@ -341,6 +343,7 @@ export default function HomeNewsFeed() {
       setApiTotal(Number(result.total) || apiTotal);
       setVisibleReportCount((currentCount) => currentCount + REPORTS_PER_LOAD);
     } catch (_error) {
+      setFeedLoadError("Could not load more reports. Please try again.");
       setVisibleReportCount((currentCount) =>
         Math.min(currentCount + REPORTS_PER_LOAD, feedReports.length),
       );
@@ -871,14 +874,21 @@ export default function HomeNewsFeed() {
           </div>
 
           {hasMoreReports && (
-            <button
-              type="button"
-              ref={loadMoreRef}
-              onClick={loadMoreReports}
-              className="mt-4 w-full rounded-xl border border-slate-200 bg-white py-3 text-center text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
-            >
-              Load more reports
-            </button>
+            <>
+              {feedLoadError && (
+                <p className="mt-4 text-sm font-bold text-red-600" role="alert">
+                  {feedLoadError}
+                </p>
+              )}
+              <button
+                type="button"
+                ref={loadMoreRef}
+                onClick={loadMoreReports}
+                className="mt-4 w-full rounded-xl border border-slate-200 bg-white py-3 text-center text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
+              >
+                {feedLoadError ? "Try loading again" : "Load more reports"}
+              </button>
+            </>
           )}
 
           {!hasMoreReports && (
