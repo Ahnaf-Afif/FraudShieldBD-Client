@@ -477,11 +477,16 @@ export default function ReportDetailsPage() {
           },
         );
         const updatedComment = normalizeDetailComment(result.comment);
-        setComments((currentComments) =>
-          currentComments.map((comment) =>
+        setComments((currentComments) => {
+          const nextComments = currentComments.map((comment) =>
             comment.id === editingCommentId ? updatedComment : comment,
-          ),
-        );
+          );
+          saveReportComments({
+            ...getSavedReportComments(),
+            [report.reportId]: nextComments,
+          });
+          return nextComments;
+        });
         cancelEditingComment();
         return;
       } catch (error) {
