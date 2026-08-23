@@ -108,31 +108,60 @@ export default function ReportsExplorer() {
 
   // Hydrates browser-only filters and saved preferences once on mount.
   useEffect(() => {
-    const browserReports = getAllReportsForBrowser();
-
-    apiRequest("/reports?limit=50")
-      .then((result) => {
-        const apiReports = Array.isArray(result.reports)
-          ? result.reports.map(normalizeApiReport)
-          : [];
-
-        setReports(apiReports.length > 0 ? apiReports : browserReports);
-        setApiPage(1);
-        setApiTotal(Number(result.total) || apiReports.length);
-        setIsUsingApiReports(apiReports.length > 0);
-      })
-      .catch(() => {
-        setReports(browserReports);
-        setApiPage(1);
-        setApiTotal(0);
-        setIsUsingApiReports(false);
-      });
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
     setFilterPresets(getSavedFilterPresets());
     applyUrlFilters();
     setHasLoadedUrlFilters(true);
   }, []);
+
+  useEffect(() => {
+    if (!hasLoadedUrlFilters) {
+      return;
+    }
+
+    const requestController = new AbortController();
+
+    const loadFilteredReports = async () => {
+      const params = new URLSearchParams({ page: "1", limit: "50" });
+      const cleanSearch = searchValue.trim();
+
+      if (cleanSearch) params.set("search", cleanSearch);
+      if (categoryFilter !== "All Categories") params.set("category", categoryFilter);
+      if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
+      if (locationFilter !== "All Locations") params.set("location", locationFilter);
+
+      try {
+        const result = await apiRequest(`/reports?${params.toString()}`, {
+          signal: requestController.signal,
+        });
+        const apiReports = Array.isArray(result.reports)
+          ? result.reports.map(normalizeApiReport)
+          : [];
+
+        setReports(apiReports);
+        setApiPage(1);
+        setApiTotal(Number(result.total) || apiReports.length);
+        setIsUsingApiReports(true);
+      } catch (error) {
+        if (error?.name === "AbortError") {
+          return;
+        }
+
+        setReports(getAllReportsForBrowser());
+        setApiPage(1);
+        setApiTotal(0);
+        setIsUsingApiReports(false);
+      }
+    };
+
+    const loadTimer = setTimeout(loadFilteredReports, 300);
+
+    return () => {
+      clearTimeout(loadTimer);
+      requestController.abort();
+    };
+  }, [categoryFilter, hasLoadedUrlFilters, locationFilter, riskFilter, searchValue]);
 
   async function loadMoreReports() {
     if (isLoadingMore || !isUsingApiReports || reports.length >= apiTotal) {
@@ -143,7 +172,18 @@ export default function ReportsExplorer() {
 
     try {
       const nextPage = apiPage + 1;
-      const result = await apiRequest(`/reports?page=${nextPage}&limit=50`);
+      const params = new URLSearchParams({
+        page: String(nextPage),
+        limit: "50",
+      });
+      const cleanSearch = searchValue.trim();
+
+      if (cleanSearch) params.set("search", cleanSearch);
+      if (categoryFilter !== "All Categories") params.set("category", categoryFilter);
+      if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
+      if (locationFilter !== "All Locations") params.set("location", locationFilter);
+
+      const result = await apiRequest(`/reports?${params.toString()}`);
       const nextReports = Array.isArray(result.reports)
         ? result.reports.map(normalizeApiReport)
         : [];
