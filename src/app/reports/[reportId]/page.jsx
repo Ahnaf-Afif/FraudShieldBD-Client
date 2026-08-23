@@ -332,7 +332,7 @@ export default function ReportDetailsPage() {
     }, 1600);
   }
 
-  function submitComment() {
+  async function submitComment() {
     const commentText = commentDraft.trim();
 
     if (commentText.length < MIN_COMMENT_LENGTH) {
@@ -342,7 +342,7 @@ export default function ReportDetailsPage() {
       return;
     }
 
-    const newComment = {
+    const localComment = {
       id: `${report.reportId}-${Date.now()}`,
       text: commentText,
       createdAt: "Just now",
@@ -351,6 +351,19 @@ export default function ReportDetailsPage() {
       authorRole: currentAuthor.role,
       authorInitials: currentAuthor.initials,
     };
+
+    let newComment = localComment;
+    let syncError = "";
+
+    if (isApiCommentId(report.reportId) && window.localStorage.getItem("fraudshield-token")) {
+      try {
+        const result = await syncReportComment(report.reportId, commentText);
+        newComment = normalizeDetailComment(result.comment);
+      } catch (error) {
+        syncError = error.message || "Could not sync this comment with the server.";
+      }
+    }
+
     const nextComments = [...comments, newComment];
     const updatedComments = {
       ...getSavedReportComments(),
@@ -358,10 +371,9 @@ export default function ReportDetailsPage() {
     };
 
     saveReportComments(updatedComments);
-    syncReportComment(report.reportId, commentText).catch(() => {});
     setComments(nextComments);
     setCommentDraft("");
-    setCommentError("");
+    setCommentError(syncError);
   }
 
   function startEditingComment(comment) {
