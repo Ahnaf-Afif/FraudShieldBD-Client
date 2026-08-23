@@ -23,6 +23,7 @@ export async function apiRequest(path, options = {}) {
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...options,
+      cache: options.cache || "no-store",
       signal: options.signal || requestController.signal,
       headers: {
         ...(options.body instanceof FormData
