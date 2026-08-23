@@ -110,6 +110,8 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    // Close the mobile menu whenever navigation changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMenuOpen(false);
   }, [pathname]);
 
