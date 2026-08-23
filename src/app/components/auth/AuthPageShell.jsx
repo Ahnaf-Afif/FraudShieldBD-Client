@@ -87,7 +87,13 @@ export default function AuthPageShell({ mode }) {
 
       window.localStorage.setItem("fraudshield-token", result.token);
       saveDemoSession(result.user);
-      setFormStatus(isRegisterMode ? "register-ready" : "login-ready");
+      setFormStatus(
+        isRegisterMode
+          ? result.verificationSent === false
+            ? "register-email-pending"
+            : "register-ready"
+          : "login-ready",
+      );
 
       setTimeout(() => {
         router.push(redirectPath);
@@ -552,6 +558,8 @@ function AuthStatusMessage({ status, mode }) {
       "Logged in for this MVP demo. Redirecting...",
     "register-ready":
       "Account created. Check your inbox to verify your email. Redirecting...",
+    "register-email-pending":
+      "Account created, but the verification email could not be sent yet. You can resend it from your profile.",
   };
   const isSuccess =
     status === "login-ready" ||
