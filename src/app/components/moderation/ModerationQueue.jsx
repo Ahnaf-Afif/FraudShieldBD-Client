@@ -99,9 +99,7 @@ export default function ModerationQueue() {
         method: "PATCH",
         body: JSON.stringify({ status: nextStatus, moderationNote: notes[reportId] || "" }),
       });
-      setReports((currentReports) =>
-        currentReports.filter((report) => report.reportId !== reportId),
-      );
+      await loadReports();
     } catch (requestError) {
       setError(requestError.message || "Could not update this report.");
     } finally {
