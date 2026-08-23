@@ -64,9 +64,11 @@ import {
 } from "../../lib/recentSearches";
 import {
   apiRequest,
+  deleteReportComment,
   syncReportComment,
   syncReportLike,
   syncWatchlistItem,
+  updateReportComment,
 } from "../../lib/apiClient";
 
 const INITIAL_VISIBLE_REPORTS = 3;
@@ -509,6 +511,9 @@ export default function HomeNewsFeed() {
   }
 
   function deleteComment(reportId, commentId) {
+    const existingComment = (reportComments[reportId] || []).find(
+      (comment) => comment.id === commentId,
+    );
     setReportComments((currentComments) => {
       const currentReportComments = currentComments[reportId] || [];
       const updatedReportComments = currentReportComments.filter(
@@ -523,6 +528,25 @@ export default function HomeNewsFeed() {
 
       return updatedComments;
     });
+
+    if (
+      isApiReportId(reportId) &&
+      window.localStorage.getItem("fraudshield-token") &&
+      /^[a-f\d]{24}$/i.test(String(commentId || ""))
+    ) {
+      deleteReportComment(reportId, commentId).catch((error) => {
+        setCommentErrors((currentErrors) => ({
+          ...currentErrors,
+          [reportId]: error.message || "Could not delete this comment on the server.",
+        }));
+        if (existingComment) {
+          setReportComments((currentComments) => ({
+            ...currentComments,
+            [reportId]: [...(currentComments[reportId] || []), existingComment],
+          }));
+        }
+      });
+    }
   }
 
   function editComment(reportId, commentId, nextText) {
@@ -554,6 +578,19 @@ export default function HomeNewsFeed() {
 
       return updatedComments;
     });
+
+    if (
+      isApiReportId(reportId) &&
+      window.localStorage.getItem("fraudshield-token") &&
+      /^[a-f\d]{24}$/i.test(String(commentId || ""))
+    ) {
+      updateReportComment(reportId, commentId, cleanText).catch((error) => {
+        setCommentErrors((currentErrors) => ({
+          ...currentErrors,
+          [reportId]: error.message || "Could not edit this comment on the server.",
+        }));
+      });
+    }
 
     return true;
   }

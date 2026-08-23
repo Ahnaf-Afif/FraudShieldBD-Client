@@ -101,6 +101,19 @@ export function syncReportComment(reportId, text) {
   });
 }
 
+export function updateReportComment(reportId, commentId, text) {
+  return apiRequest(`/reports/${reportId}/comments/${commentId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ text }),
+  });
+}
+
+export function deleteReportComment(reportId, commentId) {
+  return apiRequest(`/reports/${reportId}/comments/${commentId}`, {
+    method: "DELETE",
+  });
+}
+
 export function uploadEvidenceFile(file) {
   const formData = new FormData();
   formData.append("file", file);
