@@ -82,6 +82,7 @@ function normalizeDetailComment(comment) {
     authorEmail: comment.author?.email || comment.authorEmail || "",
     authorRole: comment.author?.role || comment.authorRole || "Reporter",
     authorInitials: String(comment.author?.name || comment.authorName || "U").slice(0, 1),
+    canManage: Boolean(comment.canManage),
   };
 }
 
@@ -726,7 +727,7 @@ export default function ReportDetailsPage() {
                 ) : (
                   comments.map((comment) => {
                     const canManageComment =
-                      comment.authorEmail === currentAuthor.email;
+                      comment.canManage || comment.authorEmail === currentAuthor.email;
                     const isEditingComment = editingCommentId === comment.id;
                     const isConfirmingDelete =
                       pendingDeleteCommentId === comment.id;
