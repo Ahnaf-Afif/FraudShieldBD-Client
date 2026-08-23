@@ -281,9 +281,10 @@ export default function ReportsExplorer() {
   ]);
 
   const filteredReports = useMemo(() => {
-    const searchedReports = searchValue.trim()
-      ? searchReports(reports, searchValue)
-      : reports;
+    const searchedReports =
+      isUsingApiReports || !searchValue.trim()
+        ? reports
+        : searchReports(reports, searchValue);
 
     return searchedReports
       .filter((report) =>
@@ -329,6 +330,7 @@ export default function ReportsExplorer() {
     identifierFilter,
     locationFilter,
     connectionFilter,
+    isUsingApiReports,
     reports,
     riskFilter,
     searchValue,
