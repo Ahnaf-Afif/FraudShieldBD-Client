@@ -77,6 +77,12 @@ function addReportSortParam(params, sortMode) {
   }
 }
 
+function addConnectionParam(params, connectionFilter) {
+  if (connectionFilter !== "All Report Connections") {
+    params.set("connection", connectionFilter);
+  }
+}
+
 export default function ReportsExplorer() {
   const [reports, setReports] = useState([]);
   const [searchValue, setSearchValue] = useState("");
@@ -144,6 +150,7 @@ export default function ReportsExplorer() {
       if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
       if (locationFilter !== "All Locations") params.set("location", locationFilter);
       addIdentifierTypeParam(params, identifierFilter);
+      addConnectionParam(params, connectionFilter);
       addReportSortParam(params, sortMode);
 
       try {
@@ -184,6 +191,7 @@ export default function ReportsExplorer() {
     };
   }, [
     categoryFilter,
+    connectionFilter,
     hasLoadedUrlFilters,
     identifierFilter,
     locationFilter,
@@ -213,6 +221,7 @@ export default function ReportsExplorer() {
       if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
       if (locationFilter !== "All Locations") params.set("location", locationFilter);
       addIdentifierTypeParam(params, identifierFilter);
+      addConnectionParam(params, connectionFilter);
       addReportSortParam(params, sortMode);
 
       const result = await apiRequest(`/reports?${params.toString()}`);
