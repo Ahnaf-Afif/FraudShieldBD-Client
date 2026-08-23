@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
@@ -357,9 +358,12 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
               </div>
 
               {selectedPreview.isImage && (
-                <img
+                <Image
                   src={selectedPreview.previewUrl}
                   alt={selectedPreview.file.name}
+                  width={960}
+                  height={720}
+                  unoptimized
                   className="mx-auto max-h-[72vh] max-w-full rounded-xl object-contain"
                 />
               )}
@@ -515,9 +519,12 @@ function getEvidenceSelectionMessage({
 function PreviewThumb({ previewFile }) {
   if (previewFile.isImage) {
     return (
-      <img
+      <Image
         src={previewFile.previewUrl}
         alt=""
+        width={56}
+        height={56}
+        unoptimized
         className="h-14 w-14 shrink-0 rounded-xl object-cover"
       />
     );
