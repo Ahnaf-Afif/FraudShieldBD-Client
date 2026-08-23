@@ -116,6 +116,7 @@ export default function HomeNewsFeed() {
   const [visibleReportCount, setVisibleReportCount] = useState(
     INITIAL_VISIBLE_REPORTS,
   );
+  const [feedActionError, setFeedActionError] = useState("");
   const loadMoreRef = useRef(null);
 
   async function refreshFeedState() {
@@ -640,7 +641,7 @@ export default function HomeNewsFeed() {
     setFeedSearch(searchValue);
   }
 
-  function toggleFeedWatch(report) {
+  async function toggleFeedWatch(report) {
     const identifier = getPrimaryIdentifier(report);
     const cleanIdentifier = normalizeIdentifier(identifier);
 
@@ -649,6 +650,7 @@ export default function HomeNewsFeed() {
     }
 
     if (watchedIdentifiers[cleanIdentifier]) {
+      setFeedActionError("");
       removeFromWatchlist(identifier);
       setWatchedIdentifiers(createWatchedIdentifierMap());
       return;
@@ -661,7 +663,19 @@ export default function HomeNewsFeed() {
       reportId: report.reportId,
       title: report.title,
     });
-    syncWatchlistItem(item).catch(() => {});
+    try {
+      await syncWatchlistItem(item);
+      setFeedActionError("");
+    } catch (error) {
+      removeFromWatchlist(identifier);
+      setWatchedIdentifiers(createWatchedIdentifierMap());
+      setFeedActionError(
+        error?.status === 429
+          ? "Too many watchlist requests. Please wait and try again."
+          : "Could not save this identifier to your watchlist.",
+      );
+      return;
+    }
     setWatchedIdentifiers(createWatchedIdentifierMap());
   }
 
@@ -697,6 +711,11 @@ export default function HomeNewsFeed() {
           Latest reports shared by the community so people can check before
           they pay.
         </p>
+        {feedActionError && (
+          <p className="mt-3 text-sm font-bold text-red-600" role="alert">
+            {feedActionError}
+          </p>
+        )}
       </div>
 
       <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
