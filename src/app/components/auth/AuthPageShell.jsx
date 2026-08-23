@@ -254,6 +254,7 @@ export default function AuthPageShell({ mode }) {
               value={formData.email}
               onChange={(value) => updateField("email", value)}
               placeholder="you@example.com"
+              maxLength={254}
             />
 
             <AuthField
@@ -350,6 +351,10 @@ function validateAuthForm({ formData, isRegisterMode }) {
 
   if (!isValidEmail(formData.email)) {
     return "invalid-email";
+  }
+
+  if (formData.email.trim().length > 254) {
+    return "long-email";
   }
 
   if (formData.password.length < 8) {
@@ -541,6 +546,7 @@ function AuthStatusMessage({ status, mode }) {
     "long-name": "Your name must contain 80 characters or fewer.",
     "missing-email": "Please enter your email address.",
     "invalid-email": "Please enter a valid email address.",
+    "long-email": "Your email must contain 254 characters or fewer.",
     "short-password": "Password should be at least 8 characters.",
     "weak-password":
       "Use a stronger password with uppercase, lowercase, number and symbol.",
