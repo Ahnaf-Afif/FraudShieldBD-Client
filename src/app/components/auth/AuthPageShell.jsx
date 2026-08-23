@@ -46,6 +46,8 @@ export default function AuthPageShell({ mode }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Hydrate browser-only authentication state after SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setExistingSession(getDemoSession());
     setRedirectPath(getRedirectPathFromUrl());
   }, []);
