@@ -82,6 +82,17 @@ export function markNotificationAsRead(notificationId) {
   window.dispatchEvent(new Event(NOTIFICATION_UPDATED_EVENT));
 }
 
+export function markNotificationAsUnread(notificationId) {
+  if (!notificationId) {
+    return;
+  }
+
+  const readNotifications = getReadNotifications();
+  delete readNotifications[notificationId];
+  localStorage.setItem(NOTIFICATION_READ_KEY, JSON.stringify(readNotifications));
+  window.dispatchEvent(new Event(NOTIFICATION_UPDATED_EVENT));
+}
+
 export function markAllNotificationsAsRead(notifications) {
   const readNotifications = getReadNotifications();
   const safeNotifications = Array.isArray(notifications) ? notifications : [];

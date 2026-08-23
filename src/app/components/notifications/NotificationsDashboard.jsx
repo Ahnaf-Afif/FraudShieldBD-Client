@@ -24,6 +24,7 @@ import {
   getNotificationsForBrowser,
   markAllNotificationsAsRead,
   markNotificationAsRead,
+  markNotificationAsUnread,
   NOTIFICATION_UPDATED_EVENT,
   saveNotificationPreferences,
 } from "../../lib/notificationData";
@@ -106,6 +107,7 @@ export default function NotificationsDashboard() {
   const [serverPage, setServerPage] = useState(1);
   const [serverTotal, setServerTotal] = useState(0);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     async function loadNotifications() {
@@ -218,7 +220,9 @@ export default function NotificationsDashboard() {
     null;
   const hasActiveSearch = Boolean(searchValue.trim());
 
-  function markAllRead() {
+  async function markAllRead() {
+    setActionError("");
+    const previousNotifications = notifications;
     markAllNotificationsAsRead(notifications);
     setNotifications((currentNotifications) =>
       currentNotifications.map((notification) => ({
@@ -227,11 +231,23 @@ export default function NotificationsDashboard() {
       })),
     );
     if (window.localStorage.getItem("fraudshield-token")) {
-      apiRequest("/notifications/read-all", { method: "PATCH" }).catch(() => {});
+      try {
+        await apiRequest("/notifications/read-all", { method: "PATCH" });
+      } catch (error) {
+        previousNotifications.forEach((notification) => {
+          if (!notification.isRead) {
+            markNotificationAsUnread(notification.id);
+          }
+        });
+        setNotifications(previousNotifications);
+        setActionError(error.message || "Could not mark notifications as read.");
+      }
     }
   }
 
-  function markOneRead(notificationId) {
+  async function markOneRead(notificationId) {
+    setActionError("");
+    const previousNotifications = notifications;
     markNotificationAsRead(notificationId);
     setNotifications((currentNotifications) =>
       currentNotifications.map((notification) =>
@@ -242,9 +258,15 @@ export default function NotificationsDashboard() {
     );
 
     if (!String(notificationId).startsWith("local-")) {
-      apiRequest(`/notifications/${notificationId}/read`, {
-        method: "PATCH",
-      }).catch(() => {});
+      try {
+        await apiRequest(`/notifications/${notificationId}/read`, {
+          method: "PATCH",
+        });
+      } catch (error) {
+        markNotificationAsUnread(notificationId);
+        setNotifications(previousNotifications);
+        setActionError(error.message || "Could not mark this notification as read.");
+      }
     }
   }
 
@@ -411,6 +433,12 @@ export default function NotificationsDashboard() {
                 </button>
               </div>
             </div>
+
+            {actionError && (
+              <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                {actionError}
+              </p>
+            )}
 
             <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
               {filters.map((filter) => (
