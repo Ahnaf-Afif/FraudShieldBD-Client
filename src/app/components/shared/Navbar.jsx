@@ -85,11 +85,16 @@ export default function Navbar() {
       }
     }
 
+    function handleInvalidSession() {
+      clearDemoSession();
+      updateDemoUser();
+    }
+
     updateDemoUser();
     window.addEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
     window.addEventListener(LOCAL_DATA_UPDATED_EVENT, updateDemoUser);
     window.addEventListener(NOTIFICATION_UPDATED_EVENT, updateDemoUser);
-    window.addEventListener("fraudshield-auth-invalid", updateDemoUser);
+    window.addEventListener("fraudshield-auth-invalid", handleInvalidSession);
     window.addEventListener("storage", updateDemoUser);
     const notificationRefreshTimer = window.setInterval(updateDemoUser, 30000);
 
@@ -97,7 +102,7 @@ export default function Navbar() {
       window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, updateDemoUser);
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, updateDemoUser);
       window.removeEventListener(NOTIFICATION_UPDATED_EVENT, updateDemoUser);
-      window.removeEventListener("fraudshield-auth-invalid", updateDemoUser);
+      window.removeEventListener("fraudshield-auth-invalid", handleInvalidSession);
       window.removeEventListener("storage", updateDemoUser);
       window.clearInterval(notificationRefreshTimer);
     };
