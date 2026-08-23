@@ -30,7 +30,6 @@ export default function UserRoleManagement() {
 
     if (currentSession?.role === "Admin") {
       // Loading remote admin data is the purpose of this effect.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadUsers();
     }
   }, [loadUsers]);
