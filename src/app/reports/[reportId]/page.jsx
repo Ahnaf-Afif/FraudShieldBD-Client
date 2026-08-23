@@ -75,6 +75,9 @@ export default function ReportDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [reaction, setReaction] = useState({ liked: false, likes: 0 });
   const [comments, setComments] = useState([]);
+  const [commentPage, setCommentPage] = useState(1);
+  const [totalComments, setTotalComments] = useState(0);
+  const [isLoadingMoreComments, setIsLoadingMoreComments] = useState(false);
   const [shareCount, setShareCount] = useState(0);
   const [commentDraft, setCommentDraft] = useState("");
   const [copied, setCopied] = useState(false);
@@ -128,9 +131,11 @@ export default function ReportDetailsPage() {
     if (matchedReport && /^[a-f\d]{24}$/i.test(String(reportId || ""))) {
       try {
         const engagement = await apiRequest(
-          `/reports/${reportId}/engagement`,
+          `/reports/${reportId}/engagement?page=1&limit=100`,
         );
         nextReaction = { ...nextReaction, likes: engagement.likes || 0 };
+        setCommentPage(Number(engagement.page) || 1);
+        setTotalComments(Number(engagement.totalComments) || 0);
         nextComments = (engagement.comments || []).map((comment) => ({
           ...comment,
           id: comment._id || comment.id,
@@ -154,6 +159,47 @@ export default function ReportDetailsPage() {
     setShareCount(Number(getSavedReportShares()[reportId] || 0));
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
     setIsLoading(false);
+  }
+
+  async function loadMoreComments() {
+    if (
+      isLoadingMoreComments ||
+      !/^[a-f\d]{24}$/i.test(String(reportId || "")) ||
+      commentPage * 100 >= totalComments
+    ) {
+      return;
+    }
+
+    setIsLoadingMoreComments(true);
+
+    try {
+      const nextPage = commentPage + 1;
+      const engagement = await apiRequest(
+        `/reports/${reportId}/engagement?page=${nextPage}&limit=100`,
+      );
+      const olderComments = (engagement.comments || []).map((comment) => ({
+        ...comment,
+        id: comment._id || comment.id,
+        createdAt: comment.createdAt || "Recently",
+        authorName: comment.author?.name || "Community member",
+        authorRole: comment.author?.role || "Reporter",
+        authorInitials: String(comment.author?.name || "U").slice(0, 1),
+      }));
+
+      setComments((currentComments) => {
+        const currentIds = new Set(currentComments.map((comment) => comment.id));
+        return [
+          ...currentComments,
+          ...olderComments.filter((comment) => !currentIds.has(comment.id)),
+        ];
+      });
+      setCommentPage(Number(engagement.page) || nextPage);
+      setTotalComments(Number(engagement.totalComments) || totalComments);
+    } catch (_error) {
+      // Keep the comments already loaded when older comments are unavailable.
+    } finally {
+      setIsLoadingMoreComments(false);
+    }
   }
 
   useEffect(() => {
@@ -759,6 +805,19 @@ export default function ReportDetailsPage() {
                   })
                 )}
               </div>
+
+              {totalComments > commentPage * 100 && (
+                <button
+                  type="button"
+                  onClick={loadMoreComments}
+                  disabled={isLoadingMoreComments}
+                  className="mt-4 min-h-11 w-full rounded-xl border border-slate-200 bg-white text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isLoadingMoreComments
+                    ? "Loading older comments..."
+                    : "Load older comments"}
+                </button>
+              )}
 
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <div className="flex min-h-11 flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 focus-within:border-[#009879] focus-within:ring-4 focus-within:ring-[#009879]/10">
