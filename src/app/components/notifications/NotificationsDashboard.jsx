@@ -90,6 +90,9 @@ export default function NotificationsDashboard() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchValue, setSearchValue] = useState("");
   const [preferences, setPreferences] = useState(defaultNotificationPreferences);
+  const [serverPage, setServerPage] = useState(1);
+  const [serverTotal, setServerTotal] = useState(0);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
   useEffect(() => {
     async function loadNotifications() {
@@ -106,6 +109,8 @@ export default function NotificationsDashboard() {
           const serverNotifications = (result.notifications || []).map(
             normalizeServerNotification,
           );
+          setServerPage(Number(result.page) || 1);
+          setServerTotal(Number(result.total) || serverNotifications.length);
           setNotifications([...serverNotifications, ...localNotifications]);
         } catch (_error) {
           // Keep browser notifications when the API is unavailable.
@@ -126,6 +131,36 @@ export default function NotificationsDashboard() {
       window.removeEventListener("storage", loadNotifications);
     };
   }, []);
+
+  async function loadOlderNotifications() {
+    if (isLoadingOlder || serverPage * 50 >= serverTotal) {
+      return;
+    }
+
+    setIsLoadingOlder(true);
+
+    try {
+      const nextPage = serverPage + 1;
+      const result = await apiRequest(`/notifications?page=${nextPage}&limit=50`);
+      const olderNotifications = (result.notifications || []).map(
+        normalizeServerNotification,
+      );
+
+      setNotifications((currentNotifications) => {
+        const existingIds = new Set(currentNotifications.map((item) => item.id));
+        return [
+          ...currentNotifications,
+          ...olderNotifications.filter((item) => !existingIds.has(item.id)),
+        ];
+      });
+      setServerPage(Number(result.page) || nextPage);
+      setServerTotal(Number(result.total) || serverTotal);
+    } catch (_error) {
+      // Keep already-loaded notifications when older items cannot be fetched.
+    } finally {
+      setIsLoadingOlder(false);
+    }
+  }
 
   const filteredNotifications = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
@@ -448,6 +483,17 @@ export default function NotificationsDashboard() {
                 />
               ))}
             </div>
+          )}
+
+          {serverTotal > serverPage * 50 && (
+            <button
+              type="button"
+              onClick={loadOlderNotifications}
+              disabled={isLoadingOlder}
+              className="mt-4 min-h-11 w-full rounded-xl border border-slate-200 bg-white text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoadingOlder ? "Loading older notifications..." : "Load older notifications"}
+            </button>
           )}
         </div>
       </div>
