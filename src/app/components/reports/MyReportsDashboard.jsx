@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   Check,
@@ -45,6 +45,20 @@ import { apiRequest } from "../../lib/apiClient";
 const tabs = ["All", "Under Review", "Published", "Rejected", "Connected", "Draft"];
 const riskFilters = ["All Risk Levels", "High Risk", "Medium Risk", "Low Risk"];
 
+function createMyReportsQuery({ page, activeTab, riskFilter, searchValue }) {
+  const params = new URLSearchParams({ page: String(page), limit: "50" });
+  const cleanSearch = searchValue.trim();
+
+  if (["Under Review", "Published", "Rejected"].includes(activeTab)) {
+    params.set("status", activeTab);
+  }
+  if (activeTab === "Connected") params.set("connection", "Connected");
+  if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
+  if (cleanSearch) params.set("search", cleanSearch);
+
+  return params.toString();
+}
+
 export default function MyReportsDashboard() {
   const [demoUser, setDemoUser] = useState(null);
   const [submittedReports, setSubmittedReports] = useState([]);
@@ -56,6 +70,7 @@ export default function MyReportsDashboard() {
   const [hasMoreReports, setHasMoreReports] = useState(false);
   const [isLoadingMoreReports, setIsLoadingMoreReports] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState("");
+  const filterEffectReady = useRef(false);
 
   useEffect(() => {
     async function refreshDashboard() {
@@ -73,6 +88,8 @@ export default function MyReportsDashboard() {
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshDashboard);
       window.removeEventListener("storage", refreshDashboard);
     };
+    // loadReports intentionally reads the initial filter state for the first load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadReports() {
@@ -83,7 +100,13 @@ export default function MyReportsDashboard() {
 
     if (window.localStorage.getItem("fraudshield-token")) {
       try {
-        const result = await apiRequest("/reports/mine?page=1&limit=50");
+        const query = createMyReportsQuery({
+          page: 1,
+          activeTab,
+          riskFilter,
+          searchValue,
+        });
+        const result = await apiRequest(`/reports/mine?${query}`);
         nextReports = Array.isArray(result.reports)
           ? result.reports.map(normalizeApiReport)
           : localReports;
@@ -103,6 +126,25 @@ export default function MyReportsDashboard() {
     setDraftReport(getSavedReportDraftFromBrowser());
   }
 
+  useEffect(() => {
+    if (!filterEffectReady.current) {
+      filterEffectReady.current = true;
+      return;
+    }
+
+    if (!window.localStorage.getItem("fraudshield-token")) {
+      return;
+    }
+
+    const refreshTimer = setTimeout(() => {
+      loadReports();
+    }, 300);
+
+    return () => clearTimeout(refreshTimer);
+    // loadReports intentionally follows the explicit filter dependencies above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, riskFilter, searchValue]);
+
   async function loadMoreReports() {
     if (isLoadingMoreReports || !hasMoreReports) return;
 
@@ -110,7 +152,13 @@ export default function MyReportsDashboard() {
     setLoadMoreError("");
     try {
       const nextPage = reportPage + 1;
-      const result = await apiRequest(`/reports/mine?page=${nextPage}&limit=50`);
+      const query = createMyReportsQuery({
+        page: nextPage,
+        activeTab,
+        riskFilter,
+        searchValue,
+      });
+      const result = await apiRequest(`/reports/mine?${query}`);
       const nextReports = (result.reports || []).map(normalizeApiReport);
       setSubmittedReports((currentReports) => {
         const existingIds = new Set(currentReports.map((report) => report.reportId));
