@@ -171,6 +171,8 @@ export default function ReportFormShell() {
     return () => {
       clearTimeout(autoSaveTimer);
     };
+  // saveDraftToBrowser is a local event handler and is intentionally omitted.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasUnsavedChanges, reportData, submitStatus]);
 
   function updateReportData(fieldName, value) {
