@@ -533,8 +533,6 @@ function NotificationPreference({ preference, checked, onChange }) {
 }
 
 function NotificationRow({ notification, onRead }) {
-  const Icon = getNotificationIcon(notification.type);
-
   return (
     <Link
       href={notification.href}
@@ -544,7 +542,7 @@ function NotificationRow({ notification, onRead }) {
       }`}
     >
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
-        <Icon size={23} />
+        {renderNotificationIcon(notification.type)}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -622,28 +620,28 @@ function EmptyNotifications({ activeFilter, hasActiveSearch, onClear }) {
   );
 }
 
-function getNotificationIcon(type) {
+function renderNotificationIcon(type) {
   if (type === "Report") {
-    return FileText;
+    return <FileText size={23} />;
   }
 
   if (type === "Watchlist") {
-    return Eye;
+    return <Eye size={23} />;
   }
 
   if (type === "Search") {
-    return Search;
+    return <Search size={23} />;
   }
 
   if (type === "Viewed") {
-    return Clock;
+    return <Clock size={23} />;
   }
 
   if (type === "Draft") {
-    return Bell;
+    return <Bell size={23} />;
   }
 
-  return ShieldAlert;
+  return <ShieldAlert size={23} />;
 }
 
 function getToneBadgeClass(tone) {
