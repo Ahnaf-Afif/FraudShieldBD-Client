@@ -1,14 +1,14 @@
 # Backend Readiness
 
-This client is ready to move toward a separate backend after the MVP screens are stable.
+The client is connected to the separate Express backend and is ready for production hardening.
 
 ## Backend Work Notice
 
-Before backend work starts, confirm credentials and hosting direction. Do not hardcode secrets in this client repo.
+Keep backend credentials in the server environment only. Do not hardcode secrets in this client repo.
 
 ## Recommended Stack
 
-- Authentication: Better Auth
+- Authentication: Express middleware with JWT access tokens
 - Database: MongoDB Atlas
 - File storage: Cloudinary
 - Server: Express + Node.js
@@ -26,8 +26,9 @@ NEXT_PUBLIC_API_URL=http://localhost:5000
 Server:
 
 ```bash
-BETTER_AUTH_URL=http://localhost:5000
-BETTER_AUTH_SECRET=replace-with-secure-secret
+JWT_SECRET=replace-with-secure-secret
+RESEND_API_KEY=replace-with-resend-api-key
+RESEND_FROM_EMAIL=FraudShield BD <onboarding@resend.dev>
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/fraudshieldbd
 CLOUDINARY_CLOUD_NAME=replace-with-cloud-name
 CLOUDINARY_API_KEY=replace-with-api-key
@@ -36,12 +37,12 @@ CLOUDINARY_API_SECRET=replace-with-api-secret
 
 ## First Backend Milestone
 
-1. Create separate server project.
-2. Add health route: `GET /health`.
-3. Connect MongoDB Atlas.
-4. Add Better Auth.
-5. Add report API routes.
-6. Replace client localStorage report reads with API calls one feature at a time.
+1. Create separate server project. (Complete)
+2. Add health route: `GET /api/health`. (Complete)
+3. Connect MongoDB Atlas. (Complete)
+4. Add JWT authentication and protected API routes. (Complete)
+5. Add report, engagement, watchlist, notification, upload, and moderation routes. (Complete)
+6. Keep localStorage only as an MVP fallback when the client has no API session.
 
 ## Suggested Collections
 

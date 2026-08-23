@@ -57,9 +57,9 @@ const skippedForMvp = [
 
 const backendCredentialGroups = [
   {
-    title: "Better Auth",
-    text: "Used for real login, register, session handling and protected user actions.",
-    envVars: ["BETTER_AUTH_SECRET", "BETTER_AUTH_URL"],
+    title: "JWT authentication",
+    text: "Used for login, registration, token invalidation and protected user actions.",
+    envVars: ["JWT_SECRET"],
     icon: LockKeyhole,
   },
   {
