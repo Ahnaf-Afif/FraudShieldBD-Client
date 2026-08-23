@@ -71,6 +71,12 @@ function addIdentifierTypeParam(params, identifierFilter) {
   }
 }
 
+function addReportSortParam(params, sortMode) {
+  if (sortMode !== "Newest First") {
+    params.set("sort", sortMode);
+  }
+}
+
 export default function ReportsExplorer() {
   const [reports, setReports] = useState([]);
   const [searchValue, setSearchValue] = useState("");
@@ -138,6 +144,7 @@ export default function ReportsExplorer() {
       if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
       if (locationFilter !== "All Locations") params.set("location", locationFilter);
       addIdentifierTypeParam(params, identifierFilter);
+      addReportSortParam(params, sortMode);
 
       try {
         const result = await apiRequest(`/reports?${params.toString()}`, {
@@ -182,6 +189,7 @@ export default function ReportsExplorer() {
     locationFilter,
     riskFilter,
     searchValue,
+    sortMode,
   ]);
 
   async function loadMoreReports() {
@@ -205,6 +213,7 @@ export default function ReportsExplorer() {
       if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
       if (locationFilter !== "All Locations") params.set("location", locationFilter);
       addIdentifierTypeParam(params, identifierFilter);
+      addReportSortParam(params, sortMode);
 
       const result = await apiRequest(`/reports?${params.toString()}`);
       const nextReports = Array.isArray(result.reports)
