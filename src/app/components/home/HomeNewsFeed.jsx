@@ -479,6 +479,11 @@ export default function HomeNewsFeed() {
         newComment = normalizeHomeComment(result.comment);
       } catch (error) {
         syncError = error.message || "Could not sync this comment with the server.";
+        setCommentErrors((currentErrors) => ({
+          ...currentErrors,
+          [reportId]: syncError,
+        }));
+        return;
       }
     }
 
