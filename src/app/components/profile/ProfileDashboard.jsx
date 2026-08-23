@@ -53,8 +53,23 @@ export default function ProfileDashboard() {
       if (currentUser && window.localStorage.getItem("fraudshield-token")) {
         try {
           const result = await apiRequest("/auth/me");
-          updateDemoSession(result.user);
-          setDemoUser(getDemoSession());
+          const hasSessionChanged = [
+            "name",
+            "role",
+            "location",
+            "bio",
+            "emailVerified",
+          ].some(
+            (field) =>
+              String(currentUser[field] ?? "") !==
+              String(result.user[field] ?? ""),
+          );
+
+          if (hasSessionChanged) {
+            updateDemoSession(result.user);
+          }
+
+          setDemoUser(hasSessionChanged ? getDemoSession() : currentUser);
           setFormData({
             name: result.user.name || "",
             role: result.user.role || "Community Member",
