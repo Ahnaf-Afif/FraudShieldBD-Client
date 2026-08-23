@@ -650,7 +650,11 @@ function StatusTimeline({ report }) {
     },
     {
       label: "Review queue",
-      text: isRejected ? "Moderation finished with a rejection." : "Waiting for moderator review.",
+      text: isRejected
+        ? `Moderation finished with a rejection${report.reviewerName ? ` by ${report.reviewerName}` : ""}.`
+        : report.reviewerName
+          ? `Reviewed by ${report.reviewerName}.`
+          : "Waiting for moderator review.",
       isComplete: isPublished || isRejected,
     },
     {
