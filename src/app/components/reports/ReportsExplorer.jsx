@@ -148,7 +148,17 @@ export default function ReportsExplorer() {
         ? result.reports.map(normalizeApiReport)
         : [];
 
-      setReports((currentReports) => [...currentReports, ...nextReports]);
+      setReports((currentReports) => {
+        const existingIds = new Set(
+          currentReports.map((report) => report.reportId || report.id),
+        );
+        return [
+          ...currentReports,
+          ...nextReports.filter(
+            (report) => !existingIds.has(report.reportId || report.id),
+          ),
+        ];
+      });
       setApiPage(nextPage);
       setApiTotal(Number(result.total) || apiTotal);
     } catch (_error) {
