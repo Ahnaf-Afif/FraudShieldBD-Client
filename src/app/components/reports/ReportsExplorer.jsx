@@ -65,6 +65,12 @@ const connectionOptions = [
 ];
 const REPORT_FILTER_PRESETS_KEY = "fraudshield-report-filter-presets";
 
+function addIdentifierTypeParam(params, identifierFilter) {
+  if (identifierFilter !== "All Identifier Types") {
+    params.set("type", identifierFilter);
+  }
+}
+
 export default function ReportsExplorer() {
   const [reports, setReports] = useState([]);
   const [searchValue, setSearchValue] = useState("");
@@ -130,6 +136,7 @@ export default function ReportsExplorer() {
       if (categoryFilter !== "All Categories") params.set("category", categoryFilter);
       if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
       if (locationFilter !== "All Locations") params.set("location", locationFilter);
+      addIdentifierTypeParam(params, identifierFilter);
 
       try {
         const result = await apiRequest(`/reports?${params.toString()}`, {
@@ -161,7 +168,14 @@ export default function ReportsExplorer() {
       clearTimeout(loadTimer);
       requestController.abort();
     };
-  }, [categoryFilter, hasLoadedUrlFilters, locationFilter, riskFilter, searchValue]);
+  }, [
+    categoryFilter,
+    hasLoadedUrlFilters,
+    identifierFilter,
+    locationFilter,
+    riskFilter,
+    searchValue,
+  ]);
 
   async function loadMoreReports() {
     if (isLoadingMore || !isUsingApiReports || reports.length >= apiTotal) {
@@ -182,6 +196,7 @@ export default function ReportsExplorer() {
       if (categoryFilter !== "All Categories") params.set("category", categoryFilter);
       if (riskFilter !== "All Risk Levels") params.set("risk", riskFilter);
       if (locationFilter !== "All Locations") params.set("location", locationFilter);
+      addIdentifierTypeParam(params, identifierFilter);
 
       const result = await apiRequest(`/reports?${params.toString()}`);
       const nextReports = Array.isArray(result.reports)
