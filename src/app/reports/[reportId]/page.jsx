@@ -164,7 +164,11 @@ export default function ReportDetailsPage() {
       getSavedReportReactions()[reportId] || { liked: false, likes: 0 };
     let nextComments = getSavedReportComments()[reportId] || [];
 
-    if (matchedReport && /^[a-f\d]{24}$/i.test(String(reportId || ""))) {
+    if (
+      matchedReport &&
+      isPublicReport(matchedReport) &&
+      /^[a-f\d]{24}$/i.test(String(reportId || ""))
+    ) {
       try {
         const engagement = await apiRequest(
           `/reports/${reportId}/engagement?page=1&limit=100`,
@@ -287,6 +291,7 @@ export default function ReportDetailsPage() {
     report.reportId,
   )}&identifier=${encodeURIComponent(identifier)}`;
   const reporterTrust = getReporterTrustBadge(report);
+  const publicReport = isPublicReport(report);
   const cleanCommentLength = commentDraft.trim().length;
   const missingCommentCharacters = Math.max(
     MIN_COMMENT_LENGTH - cleanCommentLength,
@@ -294,6 +299,7 @@ export default function ReportDetailsPage() {
   );
 
   function toggleLike() {
+    if (!publicReport) return;
     const nextLiked = !reaction.liked;
     const nextReaction = {
       liked: nextLiked,
@@ -353,6 +359,10 @@ export default function ReportDetailsPage() {
   }
 
   async function submitComment() {
+    if (!publicReport) {
+      setCommentError("Comments are available after this report is published.");
+      return;
+    }
     const commentText = commentDraft.trim();
 
     if (commentText.length < MIN_COMMENT_LENGTH) {
@@ -710,12 +720,14 @@ export default function ReportDetailsPage() {
 
               <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 text-sm font-bold text-slate-600">
                 <DetailAction
+                  disabled={!publicReport}
                   active={reaction.liked}
                   icon={<ThumbsUp size={18} />}
                   label={reaction.liked ? "Liked" : "Like"}
                   onClick={toggleLike}
                 />
                 <DetailAction
+                  disabled={!publicReport}
                   icon={<MessageCircle size={18} />}
                   label="Comment"
                   onClick={focusCommentInput}
@@ -727,6 +739,12 @@ export default function ReportDetailsPage() {
                   onClick={copyReportLink}
                 />
               </div>
+
+              {!publicReport && (
+                <p className="mt-3 rounded-xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
+                  Community likes and comments will open after moderation publishes this report.
+                </p>
+              )}
 
               {copyFeedback && (
                 <p className="mt-3 rounded-xl bg-[#f0fbf7] px-4 py-3 text-sm font-black text-[#009879]">
@@ -888,7 +906,7 @@ export default function ReportDetailsPage() {
                 </button>
               )}
 
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              {publicReport && <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <div className="flex min-h-11 flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 focus-within:border-[#009879] focus-within:ring-4 focus-within:ring-[#009879]/10">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#009879] text-xs font-black text-white">
                     {currentAuthor.initials}
@@ -912,7 +930,7 @@ export default function ReportDetailsPage() {
                 >
                   Post
                 </button>
-              </div>
+              </div>}
 
               {cleanCommentLength > 0 &&
                 cleanCommentLength < MIN_COMMENT_LENGTH && (
@@ -997,11 +1015,12 @@ export default function ReportDetailsPage() {
   );
 }
 
-function DetailAction({ active = false, icon, label, onClick }) {
+function DetailAction({ active = false, disabled = false, icon, label, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={`inline-flex items-center justify-center gap-2 py-3 transition hover:bg-slate-50 hover:text-[#009879] active:bg-slate-100 ${
         active ? "text-[#009879]" : ""
       }`}
@@ -1010,6 +1029,10 @@ function DetailAction({ active = false, icon, label, onClick }) {
       {label}
     </button>
   );
+}
+
+function isPublicReport(report) {
+  return report?.status === "Published" || report?.status === "submitted";
 }
 
 function CommentAvatar({ comment }) {
