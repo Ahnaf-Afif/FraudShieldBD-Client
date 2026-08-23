@@ -12,8 +12,12 @@ export async function apiRequest(path, options = {}) {
 
   let response;
   const requestController = options.signal ? null : new AbortController();
+  let didTimeout = false;
   const timeoutId = requestController
-    ? setTimeout(() => requestController.abort(), 30000)
+    ? setTimeout(() => {
+        didTimeout = true;
+        requestController.abort();
+      }, 30000)
     : null;
 
   try {
@@ -28,7 +32,15 @@ export async function apiRequest(path, options = {}) {
         ...(options.headers || {}),
       },
     });
-  } catch (_error) {
+  } catch (error) {
+    if (didTimeout) {
+      throw new Error("The request timed out. Please try again shortly.");
+    }
+
+    if (error?.name === "AbortError") {
+      throw error;
+    }
+
     throw new Error("The FraudShield server is unavailable. Please try again shortly.");
   } finally {
     if (timeoutId) {
