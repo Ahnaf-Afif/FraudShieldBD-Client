@@ -1,7 +1,7 @@
 "use client";
 
 import { ShieldCheck, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../../lib/apiClient";
 import { getDemoSession } from "../../lib/demoSession";
 
@@ -12,16 +12,7 @@ export default function UserRoleManagement() {
   const [users, setUsers] = useState([]);
   const [status, setStatus] = useState("");
 
-  useEffect(() => {
-    const currentSession = getDemoSession();
-    setSession(currentSession);
-
-    if (currentSession?.role === "Admin") {
-      loadUsers();
-    }
-  }, []);
-
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     try {
       const result = await apiRequest("/auth/users");
       setUsers(result.users || []);
@@ -29,7 +20,20 @@ export default function UserRoleManagement() {
     } catch (error) {
       setStatus(error.message || "Could not load users.");
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const currentSession = getDemoSession();
+    // This effect hydrates browser-only session state after SSR.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSession(currentSession);
+
+    if (currentSession?.role === "Admin") {
+      // Loading remote admin data is the purpose of this effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadUsers();
+    }
+  }, [loadUsers]);
 
   async function updateRole(userId, role) {
     setStatus("saving");
