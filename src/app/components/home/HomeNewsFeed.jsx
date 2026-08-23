@@ -875,7 +875,7 @@ function FeedSearchInsight({ query, matchedReport, matchCount }) {
     return (
       <div className="mb-5 rounded-2xl border border-orange-100 bg-orange-50 p-4 shadow-sm">
         <p className="text-sm font-black text-orange-800">
-          No feed posts matched "{cleanQuery}".
+          No feed posts matched &quot;{cleanQuery}&quot;.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Link
@@ -909,8 +909,8 @@ function FeedSearchInsight({ query, matchedReport, matchCount }) {
             {matchedReport.title}
           </Link>
           <p className="mt-1 text-sm font-semibold text-slate-600">
-            {matchCount} result{matchCount === 1 ? "" : "s"} found for "
-            {cleanQuery}" •{" "}
+            {matchCount} result{matchCount === 1 ? "" : "s"} found for &quot;
+            {cleanQuery}&quot; •{" "}
             {maskIdentifier(getPrimaryIdentifier(matchedReport))}
           </p>
         </div>
