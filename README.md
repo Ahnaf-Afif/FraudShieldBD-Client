@@ -46,11 +46,12 @@ The frontend MVP stores demo data in browser localStorage. Use `/settings` to ex
 
 ## Backend Plan
 
-Backend work will be separate from this client and should start only after confirming credentials and hosting decisions.
+The backend is maintained in a separate repository and is configured through
+its own environment file. The client only needs the public API URL.
 
 Planned stack:
 
-- Better Auth for authentication
+- JWT authentication in the Express server
 - MongoDB Atlas for database
 - Cloudinary for evidence file storage
 - Express/Node server as a separate backend
