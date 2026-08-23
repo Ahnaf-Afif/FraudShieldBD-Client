@@ -97,6 +97,7 @@ export default function ReportsExplorer() {
   const [apiTotal, setApiTotal] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isUsingApiReports, setIsUsingApiReports] = useState(false);
+  const [apiLoadError, setApiLoadError] = useState("");
 
   function applyUrlFilters() {
     const searchParams = new URLSearchParams(window.location.search);
@@ -150,6 +151,7 @@ export default function ReportsExplorer() {
         setApiPage(1);
         setApiTotal(Number(result.total) || apiReports.length);
         setIsUsingApiReports(true);
+        setApiLoadError("");
       } catch (error) {
         if (error?.name === "AbortError") {
           return;
@@ -159,6 +161,11 @@ export default function ReportsExplorer() {
         setApiPage(1);
         setApiTotal(0);
         setIsUsingApiReports(false);
+        setApiLoadError(
+          error?.status === 429
+            ? "Too many requests right now. Please wait and try again."
+            : "Could not load the latest reports. Please try again.",
+        );
       }
     };
 
@@ -183,6 +190,7 @@ export default function ReportsExplorer() {
     }
 
     setIsLoadingMore(true);
+    setApiLoadError("");
 
     try {
       const nextPage = apiPage + 1;
@@ -216,8 +224,12 @@ export default function ReportsExplorer() {
       });
       setApiPage(nextPage);
       setApiTotal(Number(result.total) || apiTotal);
-    } catch (_error) {
-      // Keep the reports already loaded when another page is unavailable.
+    } catch (error) {
+      setApiLoadError(
+        error?.status === 429
+          ? "Too many requests right now. Please wait and try again."
+          : "Could not load more reports. Please try again.",
+      );
     } finally {
       setIsLoadingMore(false);
     }
@@ -714,14 +726,25 @@ export default function ReportsExplorer() {
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 {isUsingApiReports && reports.length < apiTotal && (
-                  <button
-                    type="button"
-                    onClick={loadMoreReports}
-                    disabled={isLoadingMore}
-                    className="font-black text-[#009879] transition hover:text-[#007f66] disabled:text-slate-400"
-                  >
-                    {isLoadingMore ? "Loading..." : "Load more reports"}
-                  </button>
+                  <div className="text-right">
+                    {apiLoadError && (
+                      <p className="mb-1 text-xs font-bold text-red-600" role="alert">
+                        {apiLoadError}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={loadMoreReports}
+                      disabled={isLoadingMore}
+                      className="font-black text-[#009879] transition hover:text-[#007f66] disabled:text-slate-400"
+                    >
+                      {isLoadingMore
+                        ? "Loading..."
+                        : apiLoadError
+                          ? "Try again"
+                          : "Load more reports"}
+                    </button>
+                  </div>
                 )}
                 <button
                   type="button"
