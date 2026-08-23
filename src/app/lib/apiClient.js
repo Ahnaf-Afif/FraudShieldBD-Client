@@ -11,10 +11,15 @@ export async function apiRequest(path, options = {}) {
       : window.localStorage.getItem("fraudshield-token") || "";
 
   let response;
+  const requestController = options.signal ? null : new AbortController();
+  const timeoutId = requestController
+    ? window.setTimeout(() => requestController.abort(), 30000)
+    : null;
 
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...options,
+      signal: options.signal || requestController.signal,
       headers: {
         ...(options.body instanceof FormData
           ? {}
@@ -25,6 +30,10 @@ export async function apiRequest(path, options = {}) {
     });
   } catch (_error) {
     throw new Error("The FraudShield server is unavailable. Please try again shortly.");
+  } finally {
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
+    }
   }
 
   const data = await response.json().catch(() => ({}));
