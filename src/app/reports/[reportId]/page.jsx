@@ -130,7 +130,26 @@ export default function ReportDetailsPage() {
           }
         }
       } catch (_error) {
-        matchedReport = getReportByIdFromBrowser(reportId);
+        if (window.localStorage.getItem("fraudshield-token")) {
+          try {
+            const privateResult = await apiRequest(`/reports/${reportId}/private`);
+            matchedReport = normalizeApiReport(privateResult.report);
+
+            try {
+              const evidenceResult = await apiRequest(`/reports/${reportId}/evidence`);
+              matchedReport = normalizeApiReport({
+                ...privateResult.report,
+                evidence: evidenceResult.evidence || [],
+              });
+            } catch (_evidenceError) {
+              // Keep private report details visible if evidence access fails.
+            }
+          } catch (_privateError) {
+            matchedReport = getReportByIdFromBrowser(reportId);
+          }
+        } else {
+          matchedReport = getReportByIdFromBrowser(reportId);
+        }
       }
     }
 
