@@ -142,7 +142,15 @@ export default function Navbar() {
     setIsMenuOpen(false);
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    if (window.localStorage.getItem("fraudshield-token")) {
+      try {
+        await apiRequest("/auth/logout", { method: "POST" });
+      } catch (_error) {
+        // Clear the local session even if the server cannot be reached.
+      }
+    }
+
     clearDemoSession();
     closeMenu();
   }
