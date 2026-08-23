@@ -132,7 +132,11 @@ export default function HomeNewsFeed() {
       setApiPage(1);
       setApiTotal(Number(result.total) || apiReports.length);
       setIsUsingApiFeed(apiReports.length > 0);
-      setReports(apiReports.length > 0 ? [...apiReports, ...demoReports] : localReports);
+      setReports(
+        apiReports.length > 0
+          ? mergeFeedReports(apiReports, demoReports)
+          : localReports,
+      );
     } catch (_error) {
       setApiPage(1);
       setApiTotal(0);
@@ -330,10 +334,9 @@ export default function HomeNewsFeed() {
           }))
         : [];
 
-      setReports((currentReports) => [
-        ...currentReports,
-        ...nextReports,
-      ]);
+      setReports((currentReports) =>
+        mergeFeedReports(currentReports, nextReports),
+      );
       setApiPage(nextPage);
       setApiTotal(Number(result.total) || apiTotal);
       setVisibleReportCount((currentCount) => currentCount + REPORTS_PER_LOAD);
@@ -1699,6 +1702,24 @@ function createScrollableFeedReports(filteredReports) {
     feedId: report.reportId,
     submittedAt: formatFeedTime(report.submittedAt, 0),
   }));
+}
+
+function mergeFeedReports(currentReports, nextReports) {
+  const seenIds = new Set();
+
+  return [...currentReports, ...nextReports].filter((report) => {
+    const reportId =
+      report.reportId ||
+      report.id ||
+      `${report.title || "report"}-${getPrimaryIdentifier(report)}`;
+
+    if (!reportId || seenIds.has(reportId)) {
+      return false;
+    }
+
+    seenIds.add(reportId);
+    return true;
+  });
 }
 
 function createWatchedIdentifierMap() {
