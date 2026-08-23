@@ -302,8 +302,9 @@ export default function ReportDetailsPage() {
     0,
   );
 
-  function toggleLike() {
+  async function toggleLike() {
     if (!publicReport) return;
+    const previousReaction = reaction;
     const nextLiked = !reaction.liked;
     const nextReaction = {
       liked: nextLiked,
@@ -315,8 +316,32 @@ export default function ReportDetailsPage() {
     };
 
     saveReportReactions(updatedReactions);
-    syncReportLike(report.reportId).catch(() => {});
     setReaction(nextReaction);
+
+    if (
+      window.localStorage.getItem("fraudshield-token") &&
+      isApiCommentId(report.reportId)
+    ) {
+      try {
+        const result = await syncReportLike(report.reportId);
+        const serverReaction = {
+          liked: Boolean(result.liked),
+          likes: Number(result.likes) || 0,
+        };
+        saveReportReactions({
+          ...getSavedReportReactions(),
+          [report.reportId]: serverReaction,
+        });
+        setReaction(serverReaction);
+      } catch (error) {
+        saveReportReactions({
+          ...getSavedReportReactions(),
+          [report.reportId]: previousReaction,
+        });
+        setReaction(previousReaction);
+        setCommentError(error.message || "Could not update this reaction.");
+      }
+    }
   }
 
   async function copyReportLink() {
