@@ -823,7 +823,7 @@ export default function HomeNewsFeed() {
         ) : (
           visibleReports.map((report) => (
             <HomeReportPost
-              key={report.feedId}
+            key={report.feedId || getFeedIdentity(report)}
               report={report}
               reaction={reportReactions[report.reportId]}
               comments={reportComments[report.reportId] || []}
@@ -1699,19 +1699,24 @@ function createScrollableFeedReports(filteredReports) {
 
   return filteredReports.map((report) => ({
     ...report,
-    feedId: report.reportId,
+    feedId: getFeedIdentity(report),
     submittedAt: formatFeedTime(report.submittedAt, 0),
   }));
+}
+
+function getFeedIdentity(report) {
+  return (
+    report.reportId ||
+    report.id ||
+    `${report.title || "report"}-${getPrimaryIdentifier(report)}`
+  );
 }
 
 function mergeFeedReports(currentReports, nextReports) {
   const seenIds = new Set();
 
   return [...currentReports, ...nextReports].filter((report) => {
-    const reportId =
-      report.reportId ||
-      report.id ||
-      `${report.title || "report"}-${getPrimaryIdentifier(report)}`;
+    const reportId = getFeedIdentity(report);
 
     if (!reportId || seenIds.has(reportId)) {
       return false;
