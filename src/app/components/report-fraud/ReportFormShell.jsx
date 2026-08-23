@@ -220,12 +220,19 @@ export default function ReportFormShell() {
         const uploadedEvidence = await Promise.all(
           reportData.evidenceFiles.map(uploadEvidenceFile),
         );
-        await apiRequest("/reports", {
+        const apiResult = await apiRequest("/reports", {
           method: "POST",
           body: JSON.stringify(
             createApiReportPayload(submittedReportPayload, uploadedEvidence),
           ),
         });
+
+        const serverReportId = apiResult.report?._id || apiResult.report?.id;
+
+        if (serverReportId) {
+          submittedReportPayload.reportId = serverReportId;
+          setReportId(serverReportId);
+        }
       } catch (error) {
         setSubmitStatus(`server:${error.message || "Report submission failed."}`);
         setIsSubmitting(false);
