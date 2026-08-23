@@ -982,7 +982,7 @@ export default function ReportDetailsPage() {
             <DetailStat
               icon={<ShieldCheck size={20} />}
               label="Status"
-              value="Published warning"
+              value={formatReportStatus(report.status)}
             />
 
             <FollowUpReports reports={followUpReports} />
@@ -1568,8 +1568,16 @@ function formatEvidenceSummary(report) {
 }
 
 function formatReportStatus(status) {
-  if (status === "submitted") {
+  if (status === "Published" || status === "submitted") {
     return "Published warning";
+  }
+
+  if (status === "Under Review") {
+    return "Under review";
+  }
+
+  if (status === "Rejected") {
+    return "Rejected";
   }
 
   if (status === "draft") {
@@ -1581,6 +1589,8 @@ function formatReportStatus(status) {
 
 function createReportTimeline(report) {
   const submittedTime = report.submittedAt || report.savedAt || "Recently";
+  const isPublished = report.status === "Published" || report.status === "submitted";
+  const isRejected = report.status === "Rejected";
 
   return [
     {
@@ -1595,7 +1605,11 @@ function createReportTimeline(report) {
     },
     {
       label: "Visible in community feed",
-      time: report.status === "submitted" ? "Now public" : "Not published yet",
+      time: isPublished
+        ? "Now public"
+        : isRejected
+          ? report.moderationNote || "Not published"
+          : "Not published yet",
       icon: <Clock3 size={15} />,
     },
   ];
