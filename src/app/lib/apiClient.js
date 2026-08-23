@@ -64,7 +64,11 @@ export async function apiRequest(path, options = {}) {
       window.dispatchEvent(new Event("fraudshield-auth-invalid"));
     }
 
-    throw new Error(data.message || "The server request failed.");
+    const requestError = new Error(data.message || "The server request failed.");
+    requestError.status = response.status;
+    requestError.requestId =
+      data.requestId || response.headers.get("X-Request-ID") || "";
+    throw requestError;
   }
 
   return data;
