@@ -22,6 +22,7 @@ const evidenceTypes = [
 
 const MAX_EVIDENCE_FILES = 5;
 const MAX_EVIDENCE_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_EVIDENCE_FILE_NAME_LENGTH = 180;
 const ALLOWED_EVIDENCE_FILE_TYPES = [
   "image/png",
   "image/jpeg",
@@ -88,7 +89,11 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
       (file) => file.size <= MAX_EVIDENCE_FILE_SIZE,
     );
     const oversizedFileCount = supportedFiles.length - sizeAllowedFiles.length;
-    const filesReadyToAdd = sizeAllowedFiles;
+    const nameAllowedFiles = sizeAllowedFiles.filter(
+      (file) => file.name.trim().length <= MAX_EVIDENCE_FILE_NAME_LENGTH,
+    );
+    const longFileNameCount = sizeAllowedFiles.length - nameAllowedFiles.length;
+    const filesReadyToAdd = nameAllowedFiles;
 
     const existingFileKeys = new Set(
       reportData.evidenceFiles.map((file) => createFileKey(file)),
@@ -116,6 +121,7 @@ export default function ReportEvidenceForm({ reportData, updateReportData }) {
         duplicateFileCount,
         limitRejectedFileCount,
         oversizedFileCount,
+        longFileNameCount,
         unsupportedFileCount,
       }),
     );
@@ -468,6 +474,7 @@ function isSupportedEvidenceFile(file) {
 function getEvidenceSelectionMessage({
   duplicateFileCount,
   limitRejectedFileCount,
+  longFileNameCount,
   oversizedFileCount,
   unsupportedFileCount,
 }) {
@@ -493,6 +500,14 @@ function getEvidenceSelectionMessage({
         MAX_EVIDENCE_FILE_SIZE,
       )}.`,
     );
+  }
+
+  if (longFileNameCount === 1) {
+    messages.push("1 filename is too long.");
+  }
+
+  if (longFileNameCount > 1) {
+    messages.push(`${longFileNameCount} filenames are too long.`);
   }
 
   if (duplicateFileCount === 1) {
