@@ -1193,7 +1193,7 @@ function ReportRow({ report }) {
           {report.fraudCategory} • {identifierType}
         </p>
 
-        {report.relatedReportId && (
+        {report.hasRelatedReport && (
           <div className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-black text-[#0b63f6]">
             <ExternalLink size={13} />
             <span className="truncate">
@@ -1283,7 +1283,7 @@ function ReportCard({ report }) {
         {report.fraudCategory} • {identifierType}
       </p>
 
-      {report.relatedReportId && (
+      {report.hasRelatedReport && (
         <div className="mt-3 inline-flex max-w-full items-center gap-2 self-start rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-black text-[#0b63f6]">
           <ExternalLink size={13} />
           <span className="truncate">
@@ -1414,9 +1414,9 @@ function createLocationOptions(reports) {
 
 function createConnectionCountMap(reports) {
   return {
-    "Standalone Reports": reports.filter((report) => !report.relatedReportId)
+    "Standalone Reports": reports.filter((report) => !report.hasRelatedReport)
       .length,
-    "Related Reports": reports.filter((report) => report.relatedReportId).length,
+    "Related Reports": reports.filter((report) => report.hasRelatedReport).length,
     "Reports With Follow-ups": reports.filter(
       (report) => (report.followUpCount || 0) > 0,
     ).length,
@@ -1425,11 +1425,11 @@ function createConnectionCountMap(reports) {
 
 function matchesConnectionFilter(report, connectionFilter) {
   if (connectionFilter === "Standalone Reports") {
-    return !report.relatedReportId;
+    return !report.hasRelatedReport;
   }
 
   if (connectionFilter === "Related Reports") {
-    return Boolean(report.relatedReportId);
+    return Boolean(report.hasRelatedReport);
   }
 
   if (connectionFilter === "Reports With Follow-ups") {
@@ -1599,7 +1599,7 @@ function createReportsCsv(reports) {
   const rows = reports.map((report) => [
     report.reportId,
     report.title,
-    report.relatedReportId || "",
+    report.hasRelatedReport ? "Related report" : "Standalone report",
     report.relatedReportTitle || "",
     report.fraudCategory,
     getEntityType(report),

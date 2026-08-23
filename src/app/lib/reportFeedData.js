@@ -380,6 +380,9 @@ export function normalizeSubmittedReport(report) {
     ownerName: safeReport.ownerName || safeReport.reporterName || "",
     ownerEmail: safeReport.ownerEmail || safeReport.reporterEmail || "",
     isAnonymous: Boolean(safeReport.isAnonymous),
+    hasRelatedReport: Boolean(
+      safeReport.hasRelatedReport ?? safeReport.relatedReportId,
+    ),
   };
 }
 
