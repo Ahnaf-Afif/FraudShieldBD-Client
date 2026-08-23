@@ -36,7 +36,14 @@ export async function apiRequest(path, options = {}) {
     }
   }
 
-  const data = await response.json().catch(() => ({}));
+  const responseText = await response.text();
+  let data = {};
+
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch (_error) {
+    data = responseText.trim() ? { message: responseText.trim() } : {};
+  }
 
   if (!response.ok) {
     if (response.status === 401 && typeof window !== "undefined") {
