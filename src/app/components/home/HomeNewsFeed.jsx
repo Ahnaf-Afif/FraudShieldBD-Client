@@ -540,10 +540,15 @@ export default function HomeNewsFeed() {
           [reportId]: error.message || "Could not delete this comment on the server.",
         }));
         if (existingComment) {
-          setReportComments((currentComments) => ({
-            ...currentComments,
-            [reportId]: [...(currentComments[reportId] || []), existingComment],
-          }));
+          setReportComments((currentComments) => {
+            const restoredComments = {
+              ...currentComments,
+              [reportId]: [...(currentComments[reportId] || []), existingComment],
+            };
+
+            saveReportComments(restoredComments);
+            return restoredComments;
+          });
         }
       });
     }
