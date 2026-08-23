@@ -84,6 +84,19 @@ function normalizeServerNotification(notification) {
   };
 }
 
+function mergeNotifications(serverNotifications, localNotifications) {
+  const seenIds = new Set();
+
+  return [...serverNotifications, ...localNotifications].filter((notification) => {
+    if (!notification.id || seenIds.has(notification.id)) {
+      return false;
+    }
+
+    seenIds.add(notification.id);
+    return true;
+  });
+}
+
 export default function NotificationsDashboard() {
   const [demoUser, setDemoUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -111,7 +124,7 @@ export default function NotificationsDashboard() {
           );
           setServerPage(Number(result.page) || 1);
           setServerTotal(Number(result.total) || serverNotifications.length);
-          setNotifications([...serverNotifications, ...localNotifications]);
+          setNotifications(mergeNotifications(serverNotifications, localNotifications));
         } catch (_error) {
           // Keep browser notifications when the API is unavailable.
         }
