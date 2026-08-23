@@ -39,6 +39,11 @@ export async function apiRequest(path, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.localStorage.removeItem("fraudshield-token");
+      window.dispatchEvent(new Event("fraudshield-auth-invalid"));
+    }
+
     throw new Error(data.message || "The server request failed.");
   }
 
