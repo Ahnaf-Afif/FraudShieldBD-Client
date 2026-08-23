@@ -17,34 +17,38 @@ const completedItems = [
   "Check Before You Pay search flow",
   "Browse Reports filtering and CSV export",
   "Watchlist, notifications, profile and my reports pages",
-  "Local MVP auth and browser storage controls",
+  "JWT authentication with protected API actions",
+  "MongoDB persistence for reports, users and engagement",
+  "Cloudinary evidence uploads with private signed previews",
+  "Moderator queue with status decisions and audit notes",
+  "Server-backed notifications and watchlist syncing",
 ];
 
 const upcomingItems = [
   {
-    title: "Real authentication",
-    text: "Replace local demo auth with Better Auth, real sessions and protected API calls.",
+    title: "Production authentication operations",
+    text: "Add account recovery, email verification and a deliberate moderator provisioning process.",
     icon: KeyRound,
-  },
-  {
-    title: "MongoDB Atlas persistence",
-    text: "Move reports, users, watchlists, comments and notifications from localStorage to MongoDB.",
-    icon: Database,
-  },
-  {
-    title: "Evidence file storage",
-    text: "Upload screenshots and files to Cloudinary, then store only URLs and metadata in the database.",
-    icon: UploadCloud,
   },
   {
     title: "Production hosting",
     text: "Deploy the client and server separately with real environment variables and practical uptime planning.",
+    icon: Database,
+  },
+  {
+    title: "Automated API tests",
+    text: "Add integration coverage for authentication, reports, moderation, uploads and notifications.",
+    icon: UploadCloud,
+  },
+  {
+    title: "Abuse and moderation improvements",
+    text: "Add stronger spam detection, moderation analytics and operational audit tools after MVP validation.",
     icon: Cloud,
   },
 ];
 
 const skippedForMvp = [
-  "Full admin/moderator dashboard",
+  "Full admin analytics and management dashboard",
   "Scam library publishing system",
   "Real-time notifications",
   "Payment or subscription features",
@@ -104,8 +108,8 @@ export default function MvpRoadmap() {
             </h1>
             <p className="mt-4 leading-7 text-slate-600">
               This page keeps the project direction clear while we build. The
-              current app is a frontend MVP using browser data. Backend work
-              starts when the core flows are stable.
+              client and server MVP foundations are now connected; the next
+              phase focuses on production operations and hosting.
             </p>
           </div>
 
@@ -119,7 +123,7 @@ export default function MvpRoadmap() {
                   Current phase
                 </p>
                 <p className="text-sm font-semibold text-slate-600">
-                  Client MVP polish
+                  Connected MVP integration
                 </p>
               </div>
             </div>
@@ -140,7 +144,7 @@ export default function MvpRoadmap() {
             </div>
           </RoadmapPanel>
 
-          <RoadmapPanel title="Backend later">
+          <RoadmapPanel title="Next backend phase">
             <div className="grid gap-3">
               {upcomingItems.map((item) => (
                 <UpcomingCard key={item.title} item={item} />
@@ -166,8 +170,8 @@ export default function MvpRoadmap() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <h2 className="font-black text-[#06285c]">Next decision point</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Before backend starts, we will confirm the stack and collect env
-              credentials for Better Auth, MongoDB Atlas and Cloudinary.
+              The core backend is connected. The next decision is how we will
+              provision moderator accounts and prepare production hosting.
             </p>
             <div className="mt-5 grid gap-3">
               <Link
@@ -180,14 +184,14 @@ export default function MvpRoadmap() {
                 href="/settings"
                 className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
               >
-                Manage Demo Data
+                Manage Local Data
               </Link>
             </div>
           </div>
         </div>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-          <RoadmapPanel title="Backend credentials needed">
+          <RoadmapPanel title="Configured services">
             <div className="grid gap-3">
               {backendCredentialGroups.map((group) => (
                 <CredentialCard key={group.title} group={group} />
