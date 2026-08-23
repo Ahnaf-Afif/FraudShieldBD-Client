@@ -91,7 +91,12 @@ export default function MyReportsDashboard() {
         setHasMoreReports(nextReports.length < Number(result.total || 0));
       } catch (_error) {
         nextReports = localReports;
+        setReportPage(1);
+        setHasMoreReports(false);
       }
+    } else {
+      setReportPage(1);
+      setHasMoreReports(false);
     }
 
     setSubmittedReports(nextReports);
@@ -107,9 +112,18 @@ export default function MyReportsDashboard() {
       const nextPage = reportPage + 1;
       const result = await apiRequest(`/reports/mine?page=${nextPage}&limit=50`);
       const nextReports = (result.reports || []).map(normalizeApiReport);
-      setSubmittedReports((currentReports) => [...currentReports, ...nextReports]);
-      setReportPage(nextPage);
-      setHasMoreReports(nextPage * 50 < Number(result.total || 0));
+      setSubmittedReports((currentReports) => {
+        const existingIds = new Set(currentReports.map((report) => report.reportId));
+        return [
+          ...currentReports,
+          ...nextReports.filter((report) => !existingIds.has(report.reportId)),
+        ];
+      });
+      setReportPage(Number(result.page) || nextPage);
+      setHasMoreReports(
+        (Number(result.page) || nextPage) * (Number(result.limit) || 50) <
+          Number(result.total || 0),
+      );
     } catch (error) {
       setLoadMoreError(error.message || "Could not load older reports.");
     } finally {
