@@ -73,6 +73,23 @@ const INITIAL_VISIBLE_REPORTS = 3;
 const REPORTS_PER_LOAD = 3;
 const MIN_COMMENT_LENGTH = 3;
 
+function isApiReportId(reportId) {
+  return /^[a-f\d]{24}$/i.test(String(reportId || ""));
+}
+
+function normalizeHomeComment(comment) {
+  return {
+    ...comment,
+    id: comment._id || comment.id,
+    createdAt: comment.createdAt || "Recently",
+    authorName: comment.author?.name || comment.authorName || "Community member",
+    authorEmail: comment.author?.email || comment.authorEmail || "",
+    authorRole: comment.author?.role || comment.authorRole || "Reporter",
+    authorInitials: String(comment.author?.name || comment.authorName || "U").slice(0, 1),
+    canManage: Boolean(comment.canManage),
+  };
+}
+
 export default function HomeNewsFeed() {
   const [reports, setReports] = useState(demoReports);
   const [activeFilter, setActiveFilter] = useState("All");
@@ -395,7 +412,7 @@ export default function HomeNewsFeed() {
     }));
   }
 
-  function submitComment(reportId) {
+  async function submitComment(reportId) {
     const commentText = (commentDrafts[reportId] || "").trim();
 
     if (commentText.length < MIN_COMMENT_LENGTH) {
@@ -406,25 +423,35 @@ export default function HomeNewsFeed() {
       return;
     }
 
+    const localComment = {
+      id: `${reportId}-${Date.now()}`,
+      text: commentText,
+      createdAt: "Just now",
+      authorName: currentAuthor.name,
+      authorEmail: currentAuthor.email,
+      authorRole: currentAuthor.role,
+      authorInitials: currentAuthor.initials,
+    };
+    let newComment = localComment;
+    let syncError = "";
+
+    if (isApiReportId(reportId) && window.localStorage.getItem("fraudshield-token")) {
+      try {
+        const result = await syncReportComment(reportId, commentText);
+        newComment = normalizeHomeComment(result.comment);
+      } catch (error) {
+        syncError = error.message || "Could not sync this comment with the server.";
+      }
+    }
+
     setReportComments((currentComments) => {
       const currentReportComments = currentComments[reportId] || [];
-      const newComment = {
-        id: `${reportId}-${Date.now()}`,
-        text: commentText,
-        createdAt: "Just now",
-        authorName: currentAuthor.name,
-        authorEmail: currentAuthor.email,
-        authorRole: currentAuthor.role,
-        authorInitials: currentAuthor.initials,
-      };
       const updatedComments = {
         ...currentComments,
         [reportId]: [...currentReportComments, newComment],
       };
 
       saveReportComments(updatedComments);
-      syncReportComment(reportId, commentText).catch(() => {});
-
       return updatedComments;
     });
 
@@ -434,7 +461,7 @@ export default function HomeNewsFeed() {
     }));
     setCommentErrors((currentErrors) => ({
       ...currentErrors,
-      [reportId]: "",
+      [reportId]: syncError,
     }));
   }
 
