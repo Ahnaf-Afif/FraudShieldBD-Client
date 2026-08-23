@@ -269,6 +269,14 @@ export default function AuthPageShell({ mode }) {
 
             <PasswordStrengthMeter strength={passwordStrength} />
 
+            {!isRegisterMode && (
+              <div className="text-right">
+                <Link href="/forgot-password" className="text-sm font-black text-[#009879]">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
+
             {isRegisterMode && (
               <label className="block">
                 <span className="mb-2 block text-sm font-black text-[#06285c]">
@@ -543,7 +551,7 @@ function AuthStatusMessage({ status, mode }) {
     "login-ready":
       "Logged in for this MVP demo. Redirecting...",
     "register-ready":
-      "Account created for this MVP demo. Redirecting...",
+      "Account created. Check your inbox to verify your email. Redirecting...",
   };
   const isSuccess =
     status === "login-ready" ||
