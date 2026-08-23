@@ -92,6 +92,21 @@ export default function ReportsExplorer() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isUsingApiReports, setIsUsingApiReports] = useState(false);
 
+  function applyUrlFilters() {
+    const searchParams = new URLSearchParams(window.location.search);
+
+    setSearchValue(searchParams.get("q") || searchParams.get("search") || "");
+    setCategoryFilter(searchParams.get("category") || "All Categories");
+    setRiskFilter(searchParams.get("risk") || "All Risk Levels");
+    setIdentifierFilter(searchParams.get("type") || "All Identifier Types");
+    setLocationFilter(searchParams.get("location") || "All Locations");
+    setConnectionFilter(
+      searchParams.get("connection") || "All Report Connections",
+    );
+    setSortMode(searchParams.get("sort") || "Newest First");
+  }
+
+  // Hydrates browser-only filters and saved preferences once on mount.
   useEffect(() => {
     const browserReports = getAllReportsForBrowser();
 
@@ -112,6 +127,7 @@ export default function ReportsExplorer() {
         setApiTotal(0);
         setIsUsingApiReports(false);
       });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
     setFilterPresets(getSavedFilterPresets());
     applyUrlFilters();
@@ -287,20 +303,6 @@ export default function ReportsExplorer() {
     setPresetStatus("");
     setShareStatus("");
     setExportStatus("");
-  }
-
-  function applyUrlFilters() {
-    const searchParams = new URLSearchParams(window.location.search);
-
-    setSearchValue(searchParams.get("q") || searchParams.get("search") || "");
-    setCategoryFilter(searchParams.get("category") || "All Categories");
-    setRiskFilter(searchParams.get("risk") || "All Risk Levels");
-    setIdentifierFilter(searchParams.get("type") || "All Identifier Types");
-    setLocationFilter(searchParams.get("location") || "All Locations");
-    setConnectionFilter(
-      searchParams.get("connection") || "All Report Connections",
-    );
-    setSortMode(searchParams.get("sort") || "Newest First");
   }
 
   async function copyFilterLink() {

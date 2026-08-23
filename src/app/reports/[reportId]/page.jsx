@@ -229,6 +229,8 @@ export default function ReportDetailsPage() {
   }
 
   useEffect(() => {
+    // Initial browser hydration is intentional; event listeners keep the detail view current.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshReportDetails();
 
     window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshReportDetails);
@@ -240,6 +242,8 @@ export default function ReportDetailsPage() {
       window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshReportDetails);
       window.removeEventListener("storage", refreshReportDetails);
     };
+    // The refresh function closes over the current report id and is recreated with it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId]);
 
   if (isLoading) {
