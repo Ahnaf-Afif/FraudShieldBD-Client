@@ -35,6 +35,7 @@ export default function WatchlistDashboard() {
   const [watchlistItems, setWatchlistItems] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchValue, setSearchValue] = useState("");
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     async function refreshWatchlist() {
@@ -91,6 +92,7 @@ export default function WatchlistDashboard() {
   }, [activeFilter, searchValue, watchlistItems]);
 
   async function handleRemove(identifier) {
+    setActionError("");
     const selectedItem = watchlistItems.find(
       (item) => item.identifier === identifier,
     );
@@ -102,8 +104,9 @@ export default function WatchlistDashboard() {
           currentItems.filter((item) => item.identifier !== identifier),
         );
         return;
-      } catch (_error) {
-        // Keep the local action available if the server is temporarily offline.
+      } catch (error) {
+        setActionError(error.message || "Could not remove this watchlist item.");
+        return;
       }
     }
 
@@ -112,6 +115,7 @@ export default function WatchlistDashboard() {
   }
 
   async function handleToggleAlerts(identifier) {
+    setActionError("");
     const selectedItem = watchlistItems.find(
       (item) => item.identifier === identifier,
     );
@@ -134,8 +138,9 @@ export default function WatchlistDashboard() {
           ),
         );
         return;
-      } catch (_error) {
-        // Keep the local action available if the server is temporarily offline.
+      } catch (error) {
+        setActionError(error.message || "Could not update this alert preference.");
+        return;
       }
     }
 
@@ -297,6 +302,12 @@ export default function WatchlistDashboard() {
                 ))}
               </div>
             </div>
+
+            {actionError && (
+              <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                {actionError}
+              </p>
+            )}
 
             {hasActiveFilters && (
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
