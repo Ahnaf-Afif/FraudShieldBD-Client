@@ -541,7 +541,7 @@ export default function HomeNewsFeed() {
     });
   }
 
-  function useRecentFeedSearch(searchValue) {
+  function handleRecentFeedSearch(searchValue) {
     setFeedSearch(searchValue);
   }
 
@@ -687,7 +687,7 @@ export default function HomeNewsFeed() {
                 <button
                   key={search}
                   type="button"
-                  onClick={() => useRecentFeedSearch(search)}
+                  onClick={() => handleRecentFeedSearch(search)}
                   className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-[#06285c] transition hover:border-[#009879] hover:bg-[#f0fbf7] hover:text-[#009879]"
                 >
                   {search}
