@@ -52,6 +52,10 @@ export default function MyReportsDashboard() {
   const [activeTab, setActiveTab] = useState("All");
   const [searchValue, setSearchValue] = useState("");
   const [riskFilter, setRiskFilter] = useState("All Risk Levels");
+  const [reportPage, setReportPage] = useState(1);
+  const [hasMoreReports, setHasMoreReports] = useState(false);
+  const [isLoadingMoreReports, setIsLoadingMoreReports] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState("");
 
   useEffect(() => {
     async function refreshDashboard() {
@@ -79,10 +83,12 @@ export default function MyReportsDashboard() {
 
     if (window.localStorage.getItem("fraudshield-token")) {
       try {
-        const result = await apiRequest("/reports/mine");
+        const result = await apiRequest("/reports/mine?page=1&limit=50");
         nextReports = Array.isArray(result.reports)
           ? result.reports.map(normalizeApiReport)
           : localReports;
+        setReportPage(Number(result.page) || 1);
+        setHasMoreReports(nextReports.length < Number(result.total || 0));
       } catch (_error) {
         nextReports = localReports;
       }
@@ -90,6 +96,25 @@ export default function MyReportsDashboard() {
 
     setSubmittedReports(nextReports);
     setDraftReport(getSavedReportDraftFromBrowser());
+  }
+
+  async function loadMoreReports() {
+    if (isLoadingMoreReports || !hasMoreReports) return;
+
+    setIsLoadingMoreReports(true);
+    setLoadMoreError("");
+    try {
+      const nextPage = reportPage + 1;
+      const result = await apiRequest(`/reports/mine?page=${nextPage}&limit=50`);
+      const nextReports = (result.reports || []).map(normalizeApiReport);
+      setSubmittedReports((currentReports) => [...currentReports, ...nextReports]);
+      setReportPage(nextPage);
+      setHasMoreReports(nextPage * 50 < Number(result.total || 0));
+    } catch (error) {
+      setLoadMoreError(error.message || "Could not load older reports.");
+    } finally {
+      setIsLoadingMoreReports(false);
+    }
   }
 
   function discardDraft() {
@@ -424,6 +449,22 @@ export default function MyReportsDashboard() {
                   onDeleteSubmitted={removeSubmittedReport}
                 />
               ))}
+            </div>
+          )}
+
+          {(hasMoreReports || loadMoreError) && (
+            <div className="border-t border-slate-200 p-4 text-center">
+              {loadMoreError && (
+                <p className="mb-3 text-sm font-semibold text-red-600">{loadMoreError}</p>
+              )}
+              <button
+                type="button"
+                onClick={loadMoreReports}
+                disabled={isLoadingMoreReports}
+                className="rounded-xl border border-[#bfe8dc] px-4 py-2 text-sm font-black text-[#009879] transition hover:bg-[#f0fbf7] disabled:cursor-wait disabled:opacity-60"
+              >
+                {isLoadingMoreReports ? "Loading..." : "Load older reports"}
+              </button>
             </div>
           )}
         </div>
