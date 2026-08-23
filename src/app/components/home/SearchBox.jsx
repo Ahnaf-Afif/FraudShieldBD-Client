@@ -29,7 +29,7 @@ export default function SearchBox() {
     router.push(`/check?q=${encodeURIComponent(cleanSearchValue)}`);
   }
 
-  function useExample(example) {
+  function handleExample(example) {
     setSearchValue(example);
   }
 
@@ -65,7 +65,7 @@ export default function SearchBox() {
           <button
             key={example}
             type="button"
-            onClick={() => useExample(example)}
+            onClick={() => handleExample(example)}
             className="rounded-full bg-white/15 px-4 py-1 transition hover:bg-white/25"
           >
             {example}

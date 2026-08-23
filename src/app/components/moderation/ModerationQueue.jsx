@@ -43,6 +43,8 @@ export default function ModerationQueue() {
   }, [status]);
 
   useEffect(() => {
+    // Load and periodically refresh remote moderation data.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadReports();
     const queueRefreshTimer = window.setInterval(loadReports, 30000);
 

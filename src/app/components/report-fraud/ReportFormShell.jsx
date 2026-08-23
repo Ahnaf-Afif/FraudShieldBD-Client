@@ -111,6 +111,8 @@ export default function ReportFormShell() {
       };
 
       if (Object.keys(nextPrefillData).length > 0) {
+        // Apply browser URL prefill after the form has mounted.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setReportData((currentData) => ({
           ...currentData,
           ...nextPrefillData,
@@ -419,7 +421,7 @@ function RelatedReportPrefillNotice({ relatedReport, onClearContext }) {
       </p>
 
       <h2 className="mt-2 break-words text-xl font-black text-[#06285c]">
-        Reporting another case connected to "{relatedReport.title}"
+        Reporting another case connected to &quot;{relatedReport.title}&quot;
       </h2>
 
       <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
