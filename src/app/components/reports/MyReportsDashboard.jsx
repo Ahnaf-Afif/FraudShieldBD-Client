@@ -176,7 +176,7 @@ export default function MyReportsDashboard() {
     return (
       <AuthRequiredState
         title="Login to see your reports"
-        description="This MVP uses a local demo session. Login or register first, then reports submitted from your account will appear here."
+        description="Login or register first, then reports submitted from your account will appear here."
       />
     );
   }
@@ -647,7 +647,7 @@ function StatusTimeline({ report }) {
     },
     {
       label: "Public warning",
-      text: "Visible in local MVP reports",
+      text: "Visible in your synced reports",
       isComplete: true,
     },
   ];

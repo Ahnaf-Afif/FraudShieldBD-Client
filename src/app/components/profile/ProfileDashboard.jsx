@@ -137,7 +137,7 @@ export default function ProfileDashboard() {
     return (
       <AuthRequiredState
         title="Login to edit your profile"
-        description="This MVP uses a local demo account. Login or register first to edit your profile and see your personal activity summary."
+        description="Login or register to edit your profile and see your personal activity summary."
         icon="user"
       />
     );
@@ -217,8 +217,8 @@ export default function ProfileDashboard() {
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm">
             <h2 className="font-black text-[#06285c]">Profile purpose</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              This is a local MVP profile. Real identity verification and trust
-              scores will come from the backend later.
+              Your profile details are synced to the server. Identity verification
+              and advanced trust scoring will be added as the platform grows.
             </p>
           </div>
         </aside>

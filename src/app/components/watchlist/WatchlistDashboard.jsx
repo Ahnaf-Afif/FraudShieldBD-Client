@@ -147,7 +147,7 @@ export default function WatchlistDashboard() {
     return (
       <AuthRequiredState
         title="Login to use your watchlist"
-        description="This MVP saves watched identifiers to your local demo account. Login or register first to manage your personal watchlist."
+        description="Your watchlist is synced to your account. Login or register first to manage watched identifiers."
       />
     );
   }
