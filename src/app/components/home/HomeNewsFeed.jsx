@@ -345,29 +345,59 @@ export default function HomeNewsFeed() {
   }
 
   function toggleReportLike(reportId) {
-    setReportReactions((currentReactions) => {
-      const currentReportReaction = currentReactions[reportId] || {
-        liked: false,
-        likes: 0,
-      };
-      const nextLiked = !currentReportReaction.liked;
-      const nextLikes = Math.max(
-        currentReportReaction.likes + (nextLiked ? 1 : -1),
+    const currentReportReaction = reportReactions[reportId] || {
+      liked: false,
+      likes: 0,
+    };
+    const optimisticReaction = {
+      liked: !currentReportReaction.liked,
+      likes: Math.max(
+        currentReportReaction.likes + (currentReportReaction.liked ? -1 : 1),
         0,
-      );
-      const updatedReactions = {
-        ...currentReactions,
-        [reportId]: {
-          liked: nextLiked,
-          likes: nextLikes,
-        },
-      };
+      ),
+    };
+    const optimisticReactions = {
+      ...reportReactions,
+      [reportId]: optimisticReaction,
+    };
 
-      saveReportReactions(updatedReactions);
-      syncReportLike(reportId).catch(() => {});
+    setReportReactions(optimisticReactions);
+    saveReportReactions(optimisticReactions);
 
-      return updatedReactions;
-    });
+    if (!isApiReportId(reportId) || !window.localStorage.getItem("fraudshield-token")) {
+      return;
+    }
+
+    syncReportLike(reportId)
+      .then((result) => {
+        setReportReactions((currentReactions) => {
+          const nextReactions = {
+            ...currentReactions,
+            [reportId]: {
+              liked: Boolean(result.liked),
+              likes: Number(result.likes) || 0,
+            },
+          };
+
+          saveReportReactions(nextReactions);
+          return nextReactions;
+        });
+      })
+      .catch(() => {
+        setReportReactions((currentReactions) => {
+          if (currentReactions[reportId]?.liked !== optimisticReaction.liked) {
+            return currentReactions;
+          }
+
+          const rolledBackReactions = {
+            ...currentReactions,
+            [reportId]: currentReportReaction,
+          };
+
+          saveReportReactions(rolledBackReactions);
+          return rolledBackReactions;
+        });
+      });
   }
 
   async function copyReportLink(reportId) {
