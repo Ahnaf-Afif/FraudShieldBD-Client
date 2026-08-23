@@ -339,6 +339,10 @@ function validateAuthForm({ formData, isRegisterMode }) {
     return "missing-name";
   }
 
+  if (isRegisterMode && formData.name.trim().length > 80) {
+    return "long-name";
+  }
+
   if (!formData.email.trim()) {
     return "missing-email";
   }
@@ -531,6 +535,7 @@ function AuthStatusMessage({ status, mode }) {
 
   const messages = {
     "missing-name": "Please enter your full name.",
+    "long-name": "Your name must contain 80 characters or fewer.",
     "missing-email": "Please enter your email address.",
     "invalid-email": "Please enter a valid email address.",
     "short-password": "Password should be at least 8 characters.",

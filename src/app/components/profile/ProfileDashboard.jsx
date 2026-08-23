@@ -144,6 +144,11 @@ export default function ProfileDashboard() {
       return;
     }
 
+    if (formData.name.trim().length > 80) {
+      setSaveStatus("Name must contain 80 characters or fewer.");
+      return;
+    }
+
     try {
       const hasApiSession = Boolean(
         window.localStorage.getItem("fraudshield-token"),
@@ -310,6 +315,7 @@ export default function ProfileDashboard() {
                 </span>
                 <input
                   value={formData.name}
+                  maxLength={80}
                   onChange={(event) => updateField("name", event.target.value)}
                   className="min-h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-[#06285c] outline-none transition focus:border-[#009879] focus:ring-4 focus:ring-[#009879]/10"
                   placeholder="Your display name"
