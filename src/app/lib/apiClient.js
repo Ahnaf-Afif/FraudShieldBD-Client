@@ -1,5 +1,5 @@
 const configuredApiUrl =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/+$/, "");
 const API_URL = configuredApiUrl.endsWith("/api")
   ? configuredApiUrl
   : `${configuredApiUrl}/api`;
