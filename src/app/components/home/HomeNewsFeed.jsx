@@ -342,8 +342,12 @@ export default function HomeNewsFeed() {
       setApiPage(nextPage);
       setApiTotal(Number(result.total) || apiTotal);
       setVisibleReportCount((currentCount) => currentCount + REPORTS_PER_LOAD);
-    } catch (_error) {
-      setFeedLoadError("Could not load more reports. Please try again.");
+    } catch (error) {
+      setFeedLoadError(
+        error?.status === 429
+          ? "Too many requests right now. Please wait a moment and try again."
+          : "Could not load more reports. Please try again.",
+      );
       setVisibleReportCount((currentCount) =>
         Math.min(currentCount + REPORTS_PER_LOAD, feedReports.length),
       );
