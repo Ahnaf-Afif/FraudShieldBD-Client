@@ -15,6 +15,9 @@ export default function ModerationQueue() {
   const [busyId, setBusyId] = useState("");
   const [notes, setNotes] = useState({});
   const [canAccessQueue, setCanAccessQueue] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalReports, setTotalReports] = useState(0);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
   const loadReports = useCallback(async () => {
     const session = getDemoSession();
@@ -32,8 +35,12 @@ export default function ModerationQueue() {
     setError("");
 
     try {
-      const data = await apiRequest(`/reports/moderation?status=${encodeURIComponent(status)}`);
+      const data = await apiRequest(
+        `/reports/moderation?status=${encodeURIComponent(status)}&page=1&limit=50`,
+      );
       setReports((data.reports || []).map(normalizeApiReport));
+      setPage(Number(data.page) || 1);
+      setTotalReports(Number(data.total) || data.reports?.length || 0);
     } catch (requestError) {
       setReports([]);
       setError(requestError.message || "Could not load the moderation queue.");
@@ -41,6 +48,36 @@ export default function ModerationQueue() {
       setIsLoading(false);
     }
   }, [status]);
+
+  async function loadOlderReports() {
+    if (isLoadingOlder || reports.length >= totalReports) {
+      return;
+    }
+
+    setIsLoadingOlder(true);
+
+    try {
+      const nextPage = page + 1;
+      const data = await apiRequest(
+        `/reports/moderation?status=${encodeURIComponent(status)}&page=${nextPage}&limit=50`,
+      );
+      const olderReports = (data.reports || []).map(normalizeApiReport);
+
+      setReports((currentReports) => {
+        const existingIds = new Set(currentReports.map((report) => report.reportId));
+        return [
+          ...currentReports,
+          ...olderReports.filter((report) => !existingIds.has(report.reportId)),
+        ];
+      });
+      setPage(Number(data.page) || nextPage);
+      setTotalReports(Number(data.total) || totalReports);
+    } catch (requestError) {
+      setError(requestError.message || "Could not load older reports.");
+    } finally {
+      setIsLoadingOlder(false);
+    }
+  }
 
   useEffect(() => {
     // Load and periodically refresh remote moderation data.
@@ -232,6 +269,16 @@ export default function ModerationQueue() {
               </article>
             );
           })}
+          {reports.length < totalReports && (
+            <button
+              type="button"
+              onClick={loadOlderReports}
+              disabled={isLoadingOlder}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 disabled:cursor-wait disabled:opacity-60"
+            >
+              {isLoadingOlder ? "Loading older reports..." : "Load older reports"}
+            </button>
+          )}
         </div>
       )}
         </>
