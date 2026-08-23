@@ -44,12 +44,12 @@ npm run lint
 
 The frontend MVP stores demo data in browser localStorage. Use `/settings` to export, import, clear activity, or clear all local MVP data.
 
-## Backend Plan
+## Backend
 
 The backend is maintained in a separate repository and is configured through
 its own environment file. The client only needs the public API URL.
 
-Planned stack:
+Current stack:
 
 - JWT authentication in the Express server
 - MongoDB Atlas for database
