@@ -6,6 +6,7 @@ import {
   Database,
   Download,
   FileUp,
+  LockKeyhole,
   RefreshCcw,
   ShieldCheck,
   Trash2,
@@ -17,12 +18,19 @@ import {
   getLocalMvpStorageSummary,
   restoreLocalMvpBackup,
 } from "../../lib/localMvpData";
+import { apiRequest } from "../../lib/apiClient";
 
 export default function SettingsDashboard() {
   const [storageSummary, setStorageSummary] = useState([]);
   const [status, setStatus] = useState("");
   const [confirmMode, setConfirmMode] = useState("");
   const [importError, setImportError] = useState("");
+  const [passwordStatus, setPasswordStatus] = useState("");
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   useEffect(() => {
     refreshStorageSummary();
@@ -30,6 +38,30 @@ export default function SettingsDashboard() {
 
   function refreshStorageSummary() {
     setStorageSummary(getLocalMvpStorageSummary());
+  }
+
+  async function changePassword(event) {
+    event.preventDefault();
+    setPasswordStatus("saving");
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordStatus("The new passwords do not match.");
+      return;
+    }
+
+    try {
+      await apiRequest("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordStatus("Password changed successfully.");
+    } catch (error) {
+      setPasswordStatus(error.message || "Could not change your password.");
+    }
   }
 
   function clearActivity() {
@@ -223,6 +255,15 @@ export default function SettingsDashboard() {
             )}
           </div>
 
+          <PasswordSecurity
+            form={passwordForm}
+            status={passwordStatus}
+            onChange={(field, value) =>
+              setPasswordForm((currentForm) => ({ ...currentForm, [field]: value }))
+            }
+            onSubmit={changePassword}
+          />
+
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <h2 className="font-black text-[#06285c]">Stored data groups</h2>
             <div className="mt-4 divide-y divide-slate-100 rounded-2xl border border-slate-100">
@@ -234,6 +275,87 @@ export default function SettingsDashboard() {
         </div>
       </div>
     </section>
+  );
+}
+
+function PasswordSecurity({ form, status, onChange, onSubmit }) {
+  const isLoggedIn =
+    typeof window !== "undefined" &&
+    Boolean(window.localStorage.getItem("fraudshield-token"));
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#fff7e8] text-orange-500">
+          <LockKeyhole size={22} />
+        </div>
+        <div>
+          <p className="text-sm font-black uppercase tracking-wide text-[#009879]">
+            Account security
+          </p>
+          <h2 className="text-2xl font-black text-[#06285c]">Change password</h2>
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm leading-6 text-slate-600">
+        Change the password for your server-backed account. Your current password
+        is checked before the new password is saved.
+      </p>
+
+      {!isLoggedIn ? (
+        <p className="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold text-orange-800">
+          Log in to change your password.
+        </p>
+      ) : (
+        <form onSubmit={onSubmit} className="mt-5 grid gap-4 sm:grid-cols-3">
+          <PasswordInput
+            label="Current password"
+            value={form.currentPassword}
+            onChange={(value) => onChange("currentPassword", value)}
+          />
+          <PasswordInput
+            label="New password"
+            value={form.newPassword}
+            onChange={(value) => onChange("newPassword", value)}
+          />
+          <PasswordInput
+            label="Confirm new password"
+            value={form.confirmPassword}
+            onChange={(value) => onChange("confirmPassword", value)}
+          />
+          <div className="sm:col-span-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button
+              type="submit"
+              disabled={status === "saving"}
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#009879] px-5 text-sm font-black text-white transition hover:bg-[#007f66] disabled:cursor-not-allowed disabled:bg-slate-400"
+            >
+              {status === "saving" ? "Saving..." : "Update Password"}
+            </button>
+            {status && status !== "saving" && (
+              <p className={`text-sm font-black ${status.includes("successfully") ? "text-[#009879]" : "text-red-600"}`}>
+                {status}
+              </p>
+            )}
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function PasswordInput({ label, value, onChange }) {
+  return (
+    <label className="grid gap-2 text-sm font-black text-[#06285c]">
+      {label}
+      <input
+        type="password"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        minLength={8}
+        required
+        className="min-h-11 rounded-xl border border-slate-200 px-3 font-semibold outline-none transition focus:border-[#009879] focus:ring-2 focus:ring-[#bfe8dc]"
+      />
+    </label>
   );
 }
 
