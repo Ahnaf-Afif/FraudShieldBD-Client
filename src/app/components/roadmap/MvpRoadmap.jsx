@@ -22,23 +22,14 @@ const completedItems = [
   "Moderator queue with status decisions and audit notes",
   "Server-backed notifications and watchlist syncing",
   "Guarded Admin provisioning with role restrictions",
+  "Database-backed integration tests for core API workflows",
 ];
 
 const upcomingItems = [
   {
-    title: "Database-backed integration tests",
-    text: "Add isolated test-database coverage for authentication, reports, moderation, uploads and notifications.",
-    icon: Database,
-  },
-  {
     title: "Production hosting",
     text: "Deploy the client and server separately with real environment variables and practical uptime planning.",
     icon: Server,
-  },
-  {
-    title: "Automated API tests",
-    text: "Add integration coverage for authentication, reports, moderation, uploads and notifications.",
-    icon: UploadCloud,
   },
   {
     title: "Abuse and moderation improvements",
@@ -108,8 +99,9 @@ export default function MvpRoadmap() {
             </h1>
             <p className="mt-4 leading-7 text-slate-600">
               This page keeps the project direction clear while we build. The
-              client and server MVP foundations are now connected; the next
-              phase focuses on production operations and hosting.
+              client and server MVP foundations are connected and covered by
+              isolated integration tests; the next phase focuses on production
+              operations and hosting.
             </p>
           </div>
 
@@ -123,7 +115,7 @@ export default function MvpRoadmap() {
                   Current phase
                 </p>
                 <p className="text-sm font-semibold text-slate-600">
-                  Connected MVP integration
+                  Production readiness
                 </p>
               </div>
             </div>
