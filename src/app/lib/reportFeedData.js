@@ -374,6 +374,8 @@ export function normalizeSubmittedReport(report) {
     ...safeReport,
     riskLevel: safeReport.riskLevel || estimateReportRiskLevel(safeReport),
     reportsCount: Number(safeReport.reportsCount) || 1,
+    commentsCount: Number(safeReport.commentsCount) || 0,
+    likesCount: Number(safeReport.likesCount) || 0,
     reporterName: safeReport.reporterName || "Community member",
     reporterRole: safeReport.reporterRole || "Reporter",
     reporterEmail: safeReport.reporterEmail || "",

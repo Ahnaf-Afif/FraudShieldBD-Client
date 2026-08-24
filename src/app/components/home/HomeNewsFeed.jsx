@@ -863,8 +863,14 @@ export default function HomeNewsFeed() {
             <HomeReportPost
             key={report.feedId || getFeedIdentity(report)}
               report={report}
-              reaction={reportReactions[report.reportId]}
+              reaction={
+                reportReactions[report.reportId] || {
+                  liked: false,
+                  likes: report.likesCount || 0,
+                }
+              }
               comments={reportComments[report.reportId] || []}
+              commentsCount={report.commentsCount}
               followUpCount={followUpCounts[report.reportId] || 0}
               shares={Number(reportShares[report.reportId] || 0)}
               commentDraft={commentDrafts[report.reportId] || ""}
@@ -1234,6 +1240,7 @@ function HomeReportPost({
   report,
   reaction,
   comments,
+  commentsCount,
   followUpCount,
   shares,
   commentDraft,
@@ -1254,7 +1261,7 @@ function HomeReportPost({
   const riskStyle = getRiskStyle(report.riskLevel);
   const liked = reaction?.liked || false;
   const likes = reaction?.likes || 0;
-  const commentCount = comments.length;
+  const commentCount = Math.max(Number(commentsCount) || 0, comments.length);
   const latestComment = comments[comments.length - 1] || null;
   const reporterTrust = getReporterTrustBadge(report);
 
