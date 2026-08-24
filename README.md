@@ -41,6 +41,17 @@ npm run start
 npm run lint
 ```
 
+## Production Deployment
+
+- Set `NEXT_PUBLIC_API_URL` to the deployed server URL, such as
+  `https://api.example.com`.
+- Build with `npm run build` and start with `npm run start`.
+- Configure the server `CLIENT_URL` with the exact deployed frontend origin.
+- Keep all MongoDB, JWT, Resend, and Cloudinary credentials in the server
+  environment only.
+- Rebuild the client whenever `NEXT_PUBLIC_API_URL` changes because public
+  environment variables are embedded during the Next.js build.
+
 ## MVP Data And Fallbacks
 
 Demo data and report drafts are stored in browser localStorage. Authenticated API data is preferred when the server is available. Use `/settings` to export, import, clear activity, or clear all local MVP data.
