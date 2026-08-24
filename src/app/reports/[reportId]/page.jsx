@@ -157,7 +157,31 @@ export default function ReportDetailsPage() {
       }
     }
 
-    setAllReports(browserReports);
+    let reportsForDetails = browserReports;
+
+    if (
+      matchedReport &&
+      isPublicReport(matchedReport) &&
+      /^[a-f\d]{24}$/i.test(String(reportId || ""))
+    ) {
+      try {
+        const followUpResult = await apiRequest(
+          `/reports/${reportId}/follow-ups`,
+        );
+        const apiFollowUps = (followUpResult.reports || []).map(normalizeApiReport);
+        const existingIds = new Set(
+          browserReports.map((browserReport) => browserReport.reportId),
+        );
+        reportsForDetails = [
+          ...browserReports,
+          ...apiFollowUps.filter((followUp) => !existingIds.has(followUp.reportId)),
+        ];
+      } catch (_followUpError) {
+        // Keep browser data if the follow-up endpoint is temporarily unavailable.
+      }
+    }
+
+    setAllReports(reportsForDetails);
     setReport(matchedReport || null);
 
     if (matchedReport) {
