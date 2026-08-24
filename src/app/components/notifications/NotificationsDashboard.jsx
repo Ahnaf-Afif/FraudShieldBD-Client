@@ -108,6 +108,8 @@ export default function NotificationsDashboard() {
   const [serverTotal, setServerTotal] = useState(0);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     async function loadNotifications() {
@@ -117,6 +119,7 @@ export default function NotificationsDashboard() {
       setPreferences(getNotificationPreferences());
       const localNotifications = getNotificationsForBrowser(currentUser);
       setNotifications(localNotifications);
+      setLoadError("");
 
       if (window.localStorage.getItem("fraudshield-token")) {
         try {
@@ -127,8 +130,11 @@ export default function NotificationsDashboard() {
           setServerPage(Number(result.page) || 1);
           setServerTotal(Number(result.total) || serverNotifications.length);
           setNotifications(mergeNotifications(serverNotifications, localNotifications));
-        } catch (_error) {
-          // Keep browser notifications when the API is unavailable.
+        } catch (error) {
+          setLoadError(
+            error.message ||
+              "Live notifications could not be loaded. Showing saved alerts instead.",
+          );
         }
       }
     }
@@ -145,7 +151,7 @@ export default function NotificationsDashboard() {
       window.removeEventListener(NOTIFICATION_UPDATED_EVENT, loadNotifications);
       window.removeEventListener("storage", loadNotifications);
     };
-  }, []);
+  }, [reloadKey]);
 
   async function loadOlderNotifications() {
     if (isLoadingOlder || serverPage * 50 >= serverTotal) {
@@ -438,6 +444,19 @@ export default function NotificationsDashboard() {
               <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
                 {actionError}
               </p>
+            )}
+
+            {loadError && (
+              <div className="mt-3 flex flex-col gap-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-800 sm:flex-row sm:items-center sm:justify-between">
+                <p>{loadError} Saved alerts may be incomplete.</p>
+                <button
+                  type="button"
+                  onClick={() => setReloadKey((currentKey) => currentKey + 1)}
+                  className="shrink-0 rounded-lg border border-orange-300 px-3 py-2 font-black transition hover:bg-orange-100"
+                >
+                  Retry
+                </button>
+              </div>
             )}
 
             <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
