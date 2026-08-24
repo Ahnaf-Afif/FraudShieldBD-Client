@@ -2084,8 +2084,20 @@ function createFeedStats(reports) {
 }
 
 function createFollowUpCounts(reports) {
+  const serverCounts = reports.reduce((counts, report) => {
+    if (typeof report.followUpCount === "number") {
+      counts[report.reportId] = report.followUpCount;
+    }
+
+    return counts;
+  }, {});
+
   return reports.reduce((counts, report) => {
     if (!report.relatedReportId) {
+      return counts;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(serverCounts, report.relatedReportId)) {
       return counts;
     }
 
@@ -2093,7 +2105,7 @@ function createFollowUpCounts(reports) {
       ...counts,
       [report.relatedReportId]: (counts[report.relatedReportId] || 0) + 1,
     };
-  }, {});
+  }, serverCounts);
 }
 
 function createFeedFilterOptions(reports, activeFilter) {
