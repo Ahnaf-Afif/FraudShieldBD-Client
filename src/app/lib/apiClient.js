@@ -126,6 +126,16 @@ export function syncReportComment(reportId, text) {
   });
 }
 
+export function getReportEngagement(reportId, page = 1, limit = 50) {
+  if (!isApiReportId(reportId)) {
+    return Promise.resolve({ comments: [], likes: 0 });
+  }
+
+  return apiRequest(
+    `/reports/${reportId}/engagement?page=${page}&limit=${limit}`,
+  );
+}
+
 export function updateReportComment(reportId, commentId, text) {
   return apiRequest(`/reports/${reportId}/comments/${commentId}`, {
     method: "PATCH",

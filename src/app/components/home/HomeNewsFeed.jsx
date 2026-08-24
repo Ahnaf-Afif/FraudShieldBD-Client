@@ -65,6 +65,7 @@ import {
 import {
   apiRequest,
   deleteReportComment,
+  getReportEngagement,
   syncReportComment,
   syncReportLike,
   syncWatchlistItem,
@@ -135,6 +136,7 @@ export default function HomeNewsFeed() {
   const [feedActionError, setFeedActionError] = useState("");
   const [feedApiError, setFeedApiError] = useState("");
   const loadMoreRef = useRef(null);
+  const loadedEngagementReports = useRef(new Set());
 
   async function refreshFeedState() {
     const localReports = getAllReportsForBrowser();
@@ -479,9 +481,48 @@ export default function HomeNewsFeed() {
   }
 
   function toggleCommentBox(reportId) {
-    setActiveCommentReportId((currentReportId) =>
-      currentReportId === reportId ? "" : reportId,
-    );
+    const willOpen = activeCommentReportId !== reportId;
+    setActiveCommentReportId(willOpen ? reportId : "");
+
+    if (
+      !willOpen ||
+      loadedEngagementReports.current.has(reportId) ||
+      !isApiReportId(reportId) ||
+      !window.localStorage.getItem("fraudshield-token")
+    ) {
+      return;
+    }
+
+    getReportEngagement(reportId)
+      .then((result) => {
+        const comments = (result.comments || []).map(normalizeHomeComment);
+        setReportComments((currentComments) => {
+          const updatedComments = {
+            ...currentComments,
+            [reportId]: comments,
+          };
+          saveReportComments(updatedComments);
+          return updatedComments;
+        });
+        setReportReactions((currentReactions) => {
+          const updatedReactions = {
+            ...currentReactions,
+            [reportId]: {
+              liked: currentReactions[reportId]?.liked || false,
+              likes: Number(result.likes) || 0,
+            },
+          };
+          saveReportReactions(updatedReactions);
+          return updatedReactions;
+        });
+        loadedEngagementReports.current.add(reportId);
+      })
+      .catch((error) => {
+        setCommentErrors((currentErrors) => ({
+          ...currentErrors,
+          [reportId]: error.message || "Could not load report comments.",
+        }));
+      });
   }
 
   function updateCommentDraft(reportId, value) {
