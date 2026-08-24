@@ -164,10 +164,14 @@ export default function HomeNewsFeed() {
   const loadMoreRef = useRef(null);
   const loadedEngagementReports = useRef(new Set());
   const feedQueryReady = useRef(false);
+  const feedRequestController = useRef(null);
 
   async function refreshFeedState(queryOptions = {}) {
     const localReports = getAllReportsForBrowser();
     let apiReactions = {};
+    feedRequestController.current?.abort();
+    const requestController = new AbortController();
+    feedRequestController.current = requestController;
     const query = createHomeFeedQuery({
       activeFilter,
       feedSearch,
@@ -177,7 +181,9 @@ export default function HomeNewsFeed() {
     });
 
     try {
-      const result = await apiRequest(`/reports?${query}`);
+      const result = await apiRequest(`/reports?${query}`, {
+        signal: requestController.signal,
+      });
       const apiReports = Array.isArray(result.reports)
         ? result.reports.map((report) => ({
             ...normalizeApiReport(report),
@@ -196,6 +202,10 @@ export default function HomeNewsFeed() {
           : localReports,
       );
     } catch (error) {
+      if (error?.name === "AbortError") {
+        return;
+      }
+
       setApiPage(1);
       setApiTotal(0);
       setIsUsingApiFeed(false);
@@ -216,6 +226,10 @@ export default function HomeNewsFeed() {
     setReportShares(getSavedReportShares());
     setWatchedIdentifiers(createWatchedIdentifierMap());
     setRecentlyViewedReports(getRecentlyViewedReportsFromBrowser());
+
+    if (feedRequestController.current === requestController) {
+      feedRequestController.current = null;
+    }
   }
 
   function refreshRecentFeedSearches() {
