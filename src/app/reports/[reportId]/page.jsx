@@ -177,7 +177,13 @@ export default function ReportDetailsPage() {
         const engagement = await apiRequest(
           `/reports/${reportId}/engagement?page=1&limit=100`,
         );
-        nextReaction = { ...nextReaction, likes: engagement.likes || 0 };
+        nextReaction = {
+          ...nextReaction,
+          likes: Number(engagement.likes) || 0,
+          ...(window.localStorage.getItem("fraudshield-token")
+            ? { liked: Boolean(engagement.likedByCurrentUser) }
+            : {}),
+        };
         setCommentPage(Number(engagement.page) || 1);
         setTotalComments(Number(engagement.totalComments) || 0);
         nextComments = (engagement.comments || []).map(normalizeDetailComment);
