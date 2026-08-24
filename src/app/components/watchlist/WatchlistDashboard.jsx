@@ -36,11 +36,14 @@ export default function WatchlistDashboard() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchValue, setSearchValue] = useState("");
   const [actionError, setActionError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     async function refreshWatchlist() {
       setDemoUser(getDemoSession());
       const localItems = getWatchlistFromBrowser();
+      setLoadError("");
 
       if (!window.localStorage.getItem("fraudshield-token")) {
         setWatchlistItems(localItems);
@@ -54,8 +57,12 @@ export default function WatchlistDashboard() {
             ? result.items.map(normalizeWatchlistItem)
             : localItems,
         );
-      } catch (_error) {
+      } catch (error) {
         setWatchlistItems(localItems);
+        setLoadError(
+          error.message ||
+            "The live watchlist could not be loaded. Showing saved items instead.",
+        );
       }
     }
 
@@ -69,7 +76,7 @@ export default function WatchlistDashboard() {
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshWatchlist);
       window.removeEventListener("storage", refreshWatchlist);
     };
-  }, []);
+  }, [reloadKey]);
 
   const filteredItems = useMemo(() => {
     return watchlistItems
@@ -197,6 +204,19 @@ export default function WatchlistDashboard() {
               />
             </div>
           </div>
+
+          {loadError && (
+            <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5 text-sm font-semibold text-orange-800 shadow-sm">
+              <p>{loadError} Saved watchlist data may be incomplete.</p>
+              <button
+                type="button"
+                onClick={() => setReloadKey((currentKey) => currentKey + 1)}
+                className="mt-3 rounded-lg border border-orange-300 px-3 py-2 font-black transition hover:bg-orange-100"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
           <div className="rounded-2xl border border-[#bfe8dc] bg-[#f0fbf7] p-5 shadow-sm">
             <h2 className="font-black text-[#06285c]">Add from checks</h2>
