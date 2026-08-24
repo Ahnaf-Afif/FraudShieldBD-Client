@@ -57,6 +57,7 @@ import { LOCAL_DATA_UPDATED_EVENT } from "../../lib/localDataEvents";
 import {
   apiRequest,
   deleteWatchlistItem,
+  getPublicFollowUpReports,
   syncReportComment,
   syncReportLike,
   syncWatchlistItem,
@@ -165,9 +166,7 @@ export default function ReportDetailsPage() {
       /^[a-f\d]{24}$/i.test(String(reportId || ""))
     ) {
       try {
-        const followUpResult = await apiRequest(
-          `/reports/${reportId}/follow-ups`,
-        );
+        const followUpResult = await getPublicFollowUpReports(reportId);
         const apiFollowUps = (followUpResult.reports || []).map(normalizeApiReport);
         const existingIds = new Set(
           browserReports.map((browserReport) => browserReport.reportId),
