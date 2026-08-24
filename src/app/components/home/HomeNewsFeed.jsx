@@ -261,6 +261,7 @@ export default function HomeNewsFeed() {
     window.addEventListener("storage", refreshRecentFeedSearches);
 
     return () => {
+      feedRequestController.current?.abort();
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
       window.removeEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
       window.removeEventListener(WATCHLIST_UPDATED_EVENT, refreshFeedState);
