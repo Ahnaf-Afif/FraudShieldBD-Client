@@ -4,7 +4,6 @@ import {
   CircleDashed,
   Cloud,
   Database,
-  KeyRound,
   LockKeyhole,
   Server,
   ShieldCheck,
@@ -22,18 +21,19 @@ const completedItems = [
   "Cloudinary evidence uploads with private signed previews",
   "Moderator queue with status decisions and audit notes",
   "Server-backed notifications and watchlist syncing",
+  "Guarded Admin provisioning with role restrictions",
 ];
 
 const upcomingItems = [
   {
-    title: "Production authentication operations",
-    text: "Add account recovery, email verification and a deliberate moderator provisioning process.",
-    icon: KeyRound,
+    title: "Database-backed integration tests",
+    text: "Add isolated test-database coverage for authentication, reports, moderation, uploads and notifications.",
+    icon: Database,
   },
   {
     title: "Production hosting",
     text: "Deploy the client and server separately with real environment variables and practical uptime planning.",
-    icon: Database,
+    icon: Server,
   },
   {
     title: "Automated API tests",
