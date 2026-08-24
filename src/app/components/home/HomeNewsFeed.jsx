@@ -865,7 +865,7 @@ export default function HomeNewsFeed() {
               report={report}
               reaction={
                 reportReactions[report.reportId] || {
-                  liked: false,
+                    liked: Boolean(report.likedByCurrentUser),
                   likes: report.likesCount || 0,
                 }
               }

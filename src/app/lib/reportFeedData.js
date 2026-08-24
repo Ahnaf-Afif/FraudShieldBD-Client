@@ -376,6 +376,7 @@ export function normalizeSubmittedReport(report) {
     reportsCount: Number(safeReport.reportsCount) || 1,
     commentsCount: Number(safeReport.commentsCount) || 0,
     likesCount: Number(safeReport.likesCount) || 0,
+    likedByCurrentUser: Boolean(safeReport.likedByCurrentUser),
     reporterName: safeReport.reporterName || "Community member",
     reporterRole: safeReport.reporterRole || "Reporter",
     reporterEmail: safeReport.reporterEmail || "",
