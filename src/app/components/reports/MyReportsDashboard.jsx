@@ -12,6 +12,7 @@ import {
   FileText,
   ListChecks,
   PencilLine,
+  RefreshCw,
   Search,
   ShieldCheck,
   Trash2,
@@ -70,6 +71,7 @@ export default function MyReportsDashboard() {
   const [hasMoreReports, setHasMoreReports] = useState(false);
   const [isLoadingMoreReports, setIsLoadingMoreReports] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const filterEffectReady = useRef(false);
 
   useEffect(() => {
@@ -107,15 +109,20 @@ export default function MyReportsDashboard() {
           searchValue,
         });
         const result = await apiRequest(`/reports/mine?${query}`);
+        setLoadError("");
         nextReports = Array.isArray(result.reports)
           ? result.reports.map(normalizeApiReport)
           : localReports;
         setReportPage(Number(result.page) || 1);
         setHasMoreReports(nextReports.length < Number(result.total || 0));
-      } catch (_error) {
+      } catch (error) {
         nextReports = localReports;
         setReportPage(1);
         setHasMoreReports(false);
+        setLoadError(
+          error.message ||
+            "The live reports could not be loaded. Showing saved reports instead.",
+        );
       }
     } else {
       setReportPage(1);
@@ -497,6 +504,19 @@ export default function MyReportsDashboard() {
               Showing {visibleReports.length} report
               {visibleReports.length === 1 ? "" : "s"} from this account
             </p>
+            {loadError && (
+              <div className="mt-4 flex flex-col gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm font-semibold text-orange-800 sm:flex-row sm:items-center sm:justify-between">
+                <p>{loadError} Browser-saved data may be incomplete.</p>
+                <button
+                  type="button"
+                  onClick={loadReports}
+                  className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-orange-300 px-3 font-black transition hover:bg-orange-100"
+                >
+                  <RefreshCw size={16} />
+                  Retry
+                </button>
+              </div>
+            )}
           </div>
 
           {visibleReports.length === 0 ? (
