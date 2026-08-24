@@ -80,6 +80,32 @@ function isApiReportId(reportId) {
   return /^[a-f\d]{24}$/i.test(String(reportId || ""));
 }
 
+function createHomeFeedQuery({
+  page = 1,
+  activeFilter = "All",
+  feedSearch = "",
+  sortMode = "Latest",
+}) {
+  const params = new URLSearchParams({ page: String(page), limit: "20" });
+  const cleanSearch = feedSearch.trim();
+
+  if (activeFilter === "Connected") {
+    params.set("connection", "Related Reports");
+  } else if (activeFilter !== "All") {
+    params.set("category", activeFilter);
+  }
+
+  if (cleanSearch) {
+    params.set("search", cleanSearch.slice(0, 120));
+  }
+
+  if (sortMode === "Most Reports") {
+    params.set("sort", "Most Reports");
+  }
+
+  return params.toString();
+}
+
 function createApiReactionState(reports) {
   return reports.reduce((reactions, report) => {
     if (!isApiReportId(report.reportId)) {
@@ -137,13 +163,21 @@ export default function HomeNewsFeed() {
   const [feedApiError, setFeedApiError] = useState("");
   const loadMoreRef = useRef(null);
   const loadedEngagementReports = useRef(new Set());
+  const feedQueryReady = useRef(false);
 
-  async function refreshFeedState() {
+  async function refreshFeedState(queryOptions = {}) {
     const localReports = getAllReportsForBrowser();
     let apiReactions = {};
+    const query = createHomeFeedQuery({
+      activeFilter,
+      feedSearch,
+      sortMode,
+      ...queryOptions,
+      page: 1,
+    });
 
     try {
-      const result = await apiRequest("/reports?page=1&limit=20");
+      const result = await apiRequest(`/reports?${query}`);
       const apiReports = Array.isArray(result.reports)
         ? result.reports.map((report) => ({
             ...normalizeApiReport(report),
@@ -191,13 +225,16 @@ export default function HomeNewsFeed() {
   useEffect(() => {
     // Synchronize browser storage and the feed API with the mounted page.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    refreshFeedState();
     refreshRecentFeedSearches();
 
     const savedPreferences = getFeedPreferences();
 
     setActiveFilter(savedPreferences.activeFilter);
     setSortMode(savedPreferences.sortMode);
+    refreshFeedState({
+      activeFilter: savedPreferences.activeFilter,
+      sortMode: savedPreferences.sortMode,
+    });
 
     window.addEventListener(LOCAL_DATA_UPDATED_EVENT, refreshFeedState);
     window.addEventListener(DEMO_SESSION_UPDATED_EVENT, refreshFeedState);
@@ -220,7 +257,24 @@ export default function HomeNewsFeed() {
       window.removeEventListener("storage", refreshFeedState);
       window.removeEventListener("storage", refreshRecentFeedSearches);
     };
+    // The listener effect intentionally uses stable browser-sync callbacks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!feedQueryReady.current) {
+      feedQueryReady.current = true;
+      return;
+    }
+
+    const refreshTimer = setTimeout(() => {
+      refreshFeedState();
+    }, 350);
+
+    return () => clearTimeout(refreshTimer);
+    // The feed query intentionally follows the visible feed controls.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFilter, feedSearch, sortMode]);
 
   const feedStats = useMemo(() => createFeedStats(reports), [reports]);
   const followUpCounts = useMemo(() => createFollowUpCounts(reports), [reports]);
@@ -359,7 +413,13 @@ export default function HomeNewsFeed() {
 
     try {
       const nextPage = apiPage + 1;
-      const result = await apiRequest(`/reports?page=${nextPage}&limit=20`);
+      const query = createHomeFeedQuery({
+        page: nextPage,
+        activeFilter,
+        feedSearch,
+        sortMode,
+      });
+      const result = await apiRequest(`/reports?${query}`);
       const nextReports = Array.isArray(result.reports)
         ? result.reports.map((report) => ({
             ...normalizeApiReport(report),
