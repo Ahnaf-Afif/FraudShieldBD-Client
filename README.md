@@ -4,7 +4,7 @@ FraudShield BD is a community safety MVP for reporting scams, checking suspiciou
 
 ## Current Status
 
-This repo is currently the Next.js client MVP. Most data is still stored in browser localStorage so the product flow can be tested before the backend is connected.
+This repo is the Next.js client MVP. Authenticated sessions use the separate API for reports, engagement, watchlists, notifications, profile updates, moderation data, and uploads. Browser localStorage remains the fallback for demo sessions and temporary draft data when the API is unavailable.
 
 Completed client flows:
 
@@ -13,6 +13,7 @@ Completed client flows:
 - Browse Reports with filters and CSV export
 - Report Fraud form with draft saving
 - Report detail pages
+- API-backed likes, comments, and report engagement
 - My Reports, Watchlist, Notifications, Profile
 - Local demo login/register
 - Local MVP settings, backup, restore and reset controls
@@ -40,9 +41,9 @@ npm run start
 npm run lint
 ```
 
-## MVP Data
+## MVP Data And Fallbacks
 
-The frontend MVP stores demo data in browser localStorage. Use `/settings` to export, import, clear activity, or clear all local MVP data.
+Demo data and report drafts are stored in browser localStorage. Authenticated API data is preferred when the server is available. Use `/settings` to export, import, clear activity, or clear all local MVP data.
 
 ## Backend
 
