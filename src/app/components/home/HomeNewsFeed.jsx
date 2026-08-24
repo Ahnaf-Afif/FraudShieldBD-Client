@@ -645,6 +645,10 @@ export default function HomeNewsFeed() {
       return false;
     }
 
+    const previousComment = (reportComments[reportId] || []).find(
+      (comment) => comment.id === commentId,
+    );
+
     setReportComments((currentComments) => {
       const currentReportComments = currentComments[reportId] || [];
       const updatedReportComments = currentReportComments.map((comment) => {
@@ -678,6 +682,19 @@ export default function HomeNewsFeed() {
           ...currentErrors,
           [reportId]: error.message || "Could not edit this comment on the server.",
         }));
+        if (previousComment) {
+          setReportComments((currentComments) => {
+            const restoredComments = {
+              ...currentComments,
+              [reportId]: (currentComments[reportId] || []).map((comment) =>
+                comment.id === commentId ? previousComment : comment,
+              ),
+            };
+
+            saveReportComments(restoredComments);
+            return restoredComments;
+          });
+        }
       });
     }
 
