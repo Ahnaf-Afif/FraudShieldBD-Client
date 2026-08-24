@@ -5,6 +5,8 @@ import { AlertTriangle, Home, RefreshCcw, Search, ShieldAlert } from "lucide-rea
 import Navbar from "./components/shared/Navbar";
 
 export default function AppError({ error, reset }) {
+  const showErrorDetails = process.env.NODE_ENV !== "production";
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
@@ -26,7 +28,7 @@ export default function AppError({ error, reset }) {
             action fails. Try again, or return to a core safety tool.
           </p>
 
-          {error?.message && (
+          {showErrorDetails && error?.message && (
             <p className="mx-auto mt-5 max-w-2xl break-words rounded-2xl bg-slate-50 p-4 text-left text-sm font-semibold text-slate-500">
               {error.message}
             </p>
