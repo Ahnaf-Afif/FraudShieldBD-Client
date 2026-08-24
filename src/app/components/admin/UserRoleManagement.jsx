@@ -141,8 +141,9 @@ export default function UserRoleManagement() {
                     ) : (
                       <select
                         value={editableRoles.includes(user.role) ? user.role : "Community Member"}
+                        disabled={status === "saving"}
                         onChange={(event) => updateRole(user._id, event.target.value)}
-                        className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-[#06285c] outline-none focus:border-[#009879]"
+                        className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-[#06285c] outline-none focus:border-[#009879] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                       >
                         {editableRoles.map((role) => (
                           <option key={role}>{role}</option>
