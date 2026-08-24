@@ -58,6 +58,7 @@ import {
   apiRequest,
   deleteWatchlistItem,
   getPublicFollowUpReports,
+  getPublicRelatedReports,
   syncReportComment,
   syncReportLike,
   syncWatchlistItem,
@@ -168,12 +169,18 @@ export default function ReportDetailsPage() {
       try {
         const followUpResult = await getPublicFollowUpReports(reportId);
         const apiFollowUps = (followUpResult.reports || []).map(normalizeApiReport);
+        const relatedResult = await getPublicRelatedReports(reportId);
+        const apiRelatedReports = (relatedResult.reports || []).map(normalizeApiReport);
         const existingIds = new Set(
           browserReports.map((browserReport) => browserReport.reportId),
         );
         reportsForDetails = [
           ...browserReports,
-          ...apiFollowUps.filter((followUp) => !existingIds.has(followUp.reportId)),
+          ...[...apiFollowUps, ...apiRelatedReports].filter(
+            (apiReport, index, apiReports) =>
+              !existingIds.has(apiReport.reportId) &&
+              apiReports.findIndex((item) => item.reportId === apiReport.reportId) === index,
+          ),
         ];
       } catch (_followUpError) {
         // Keep browser data if the follow-up endpoint is temporarily unavailable.

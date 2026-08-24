@@ -156,6 +156,14 @@ export function getPublicFollowUpReports(reportId) {
   return apiRequest(`/reports/${reportId}/follow-ups`);
 }
 
+export function getPublicRelatedReports(reportId) {
+  if (!isApiReportId(reportId)) {
+    return Promise.resolve({ reports: [] });
+  }
+
+  return apiRequest(`/reports/${reportId}/related`);
+}
+
 export function updateReportComment(reportId, commentId, text) {
   return apiRequest(`/reports/${reportId}/comments/${commentId}`, {
     method: "PATCH",
