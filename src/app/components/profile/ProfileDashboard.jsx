@@ -45,10 +45,13 @@ export default function ProfileDashboard() {
   });
   const [saveStatus, setSaveStatus] = useState("");
   const [verificationStatus, setVerificationStatus] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     async function refreshProfile() {
       const currentUser = getDemoSession();
+      setLoadError("");
 
       if (currentUser && window.localStorage.getItem("fraudshield-token")) {
         try {
@@ -77,8 +80,11 @@ export default function ProfileDashboard() {
             bio: result.user.bio || "",
           });
           return;
-        } catch (_error) {
-          // Keep the cached session visible if the server is temporarily unavailable.
+        } catch (error) {
+          setLoadError(
+            error.message ||
+              "The live profile could not be loaded. Showing saved details instead.",
+          );
         }
       }
 
@@ -101,7 +107,7 @@ export default function ProfileDashboard() {
       window.removeEventListener(LOCAL_DATA_UPDATED_EVENT, refreshProfile);
       window.removeEventListener("storage", refreshProfile);
     };
-  }, []);
+  }, [reloadKey]);
 
   async function resendVerificationEmail() {
     setVerificationStatus("sending");
@@ -293,6 +299,19 @@ export default function ProfileDashboard() {
         </aside>
 
         <div className="min-w-0 space-y-5">
+          {loadError && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-sm font-semibold text-orange-800 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <p>{loadError} Saved profile details may be incomplete.</p>
+              <button
+                type="button"
+                onClick={() => setReloadKey((currentKey) => currentKey + 1)}
+                className="shrink-0 rounded-lg border border-orange-300 px-3 py-2 font-black transition hover:bg-orange-100"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e9f8f4] text-[#009879]">
