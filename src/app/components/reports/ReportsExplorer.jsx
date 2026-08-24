@@ -37,7 +37,7 @@ import {
   searchReports,
 } from "../../lib/reportFeedData";
 import { copyTextToClipboard } from "../../lib/clipboard";
-import { apiRequest } from "../../lib/apiClient";
+import { getPublicReports } from "../../lib/apiClient";
 
 const categoryOptions = [
   "All Categories",
@@ -155,7 +155,7 @@ export default function ReportsExplorer() {
       addReportSortParam(params, sortMode);
 
       try {
-        const result = await apiRequest(`/reports?${params.toString()}`, {
+        const result = await getPublicReports(params, {
           signal: requestController.signal,
         });
         const apiReports = Array.isArray(result.reports)
@@ -229,7 +229,7 @@ export default function ReportsExplorer() {
       addConnectionParam(params, connectionFilter);
       addReportSortParam(params, sortMode);
 
-      const result = await apiRequest(`/reports?${params.toString()}`, {
+      const result = await getPublicReports(params, {
         signal: requestController.signal,
       });
       const nextReports = Array.isArray(result.reports)

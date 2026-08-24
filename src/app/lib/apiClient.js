@@ -101,6 +101,15 @@ export function getApiUrl() {
   return API_URL;
 }
 
+export function getPublicReports(query = "", options = {}) {
+  const queryString = query instanceof URLSearchParams
+    ? query.toString()
+    : String(query || "").replace(/^\?/, "");
+  const path = queryString ? `/reports?${queryString}` : "/reports";
+
+  return apiRequest(path, options);
+}
+
 export async function syncWatchlistItem(item) {
   if (typeof window === "undefined" || !window.localStorage.getItem("fraudshield-token")) {
     return null;

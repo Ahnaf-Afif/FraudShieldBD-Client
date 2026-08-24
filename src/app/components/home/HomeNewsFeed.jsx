@@ -63,9 +63,9 @@ import {
   saveRecentSearch,
 } from "../../lib/recentSearches";
 import {
-  apiRequest,
   deleteReportComment,
   getReportEngagement,
+  getPublicReports,
   syncReportComment,
   syncReportLike,
   syncWatchlistItem,
@@ -181,7 +181,7 @@ export default function HomeNewsFeed() {
     });
 
     try {
-      const result = await apiRequest(`/reports?${query}`, {
+      const result = await getPublicReports(query, {
         signal: requestController.signal,
       });
       const apiReports = Array.isArray(result.reports)
@@ -434,7 +434,7 @@ export default function HomeNewsFeed() {
         feedSearch,
         sortMode,
       });
-      const result = await apiRequest(`/reports?${query}`);
+      const result = await getPublicReports(query);
       const nextReports = Array.isArray(result.reports)
         ? result.reports.map((report) => ({
             ...normalizeApiReport(report),
