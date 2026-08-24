@@ -11,20 +11,31 @@ export async function apiRequest(path, options = {}) {
       : window.localStorage.getItem("fraudshield-token") || "";
 
   let response;
-  const requestController = options.signal ? null : new AbortController();
+  const requestController = new AbortController();
+  let removeExternalAbortListener = null;
   let didTimeout = false;
-  const timeoutId = requestController
-    ? setTimeout(() => {
-        didTimeout = true;
-        requestController.abort();
-      }, 30000)
-    : null;
+  const timeoutId = setTimeout(() => {
+    didTimeout = true;
+    requestController.abort();
+  }, 30000);
+
+  if (options.signal) {
+    const abortRequest = () => requestController.abort();
+
+    if (options.signal.aborted) {
+      abortRequest();
+    } else {
+      options.signal.addEventListener("abort", abortRequest, { once: true });
+      removeExternalAbortListener = () =>
+        options.signal.removeEventListener("abort", abortRequest);
+    }
+  }
 
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...options,
       cache: options.cache || "no-store",
-      signal: options.signal || requestController.signal,
+      signal: requestController.signal,
       headers: {
         ...(options.body instanceof FormData
           ? {}
@@ -47,6 +58,7 @@ export async function apiRequest(path, options = {}) {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
+    removeExternalAbortListener?.();
   }
 
   const responseText = await response.text();
