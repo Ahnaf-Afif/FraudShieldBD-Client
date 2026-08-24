@@ -79,6 +79,22 @@ function isApiReportId(reportId) {
   return /^[a-f\d]{24}$/i.test(String(reportId || ""));
 }
 
+function createApiReactionState(reports) {
+  return reports.reduce((reactions, report) => {
+    if (!isApiReportId(report.reportId)) {
+      return reactions;
+    }
+
+    return {
+      ...reactions,
+      [report.reportId]: {
+        liked: Boolean(report.likedByCurrentUser),
+        likes: Number(report.likesCount) || 0,
+      },
+    };
+  }, {});
+}
+
 function normalizeHomeComment(comment) {
   return {
     ...comment,
@@ -122,6 +138,7 @@ export default function HomeNewsFeed() {
 
   async function refreshFeedState() {
     const localReports = getAllReportsForBrowser();
+    let apiReactions = {};
 
     try {
       const result = await apiRequest("/reports?page=1&limit=20");
@@ -131,6 +148,7 @@ export default function HomeNewsFeed() {
             _fromApi: true,
           }))
         : [];
+      apiReactions = createApiReactionState(apiReports);
 
       setApiPage(1);
       setApiTotal(Number(result.total) || apiReports.length);
@@ -154,7 +172,10 @@ export default function HomeNewsFeed() {
     }
 
     setCurrentAuthor(createDemoAuthor(getDemoSession()));
-    setReportReactions(getSavedReportReactions());
+    setReportReactions({
+      ...getSavedReportReactions(),
+      ...apiReactions,
+    });
     setReportComments(getSavedReportComments());
     setReportShares(getSavedReportShares());
     setWatchedIdentifiers(createWatchedIdentifierMap());
@@ -347,6 +368,10 @@ export default function HomeNewsFeed() {
       setReports((currentReports) =>
         mergeFeedReports(currentReports, nextReports),
       );
+      setReportReactions((currentReactions) => ({
+        ...currentReactions,
+        ...createApiReactionState(nextReports),
+      }));
       setApiPage(nextPage);
       setApiTotal(Number(result.total) || apiTotal);
       setVisibleReportCount((currentCount) => currentCount + REPORTS_PER_LOAD);
