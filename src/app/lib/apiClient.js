@@ -4,6 +4,17 @@ const API_URL = configuredApiUrl.endsWith("/api")
   ? configuredApiUrl
   : `${configuredApiUrl}/api`;
 
+function buildApiRequestUrl(path) {
+  const cleanPath = String(path || "").startsWith("/")
+    ? String(path || "")
+    : `/${String(path || "")}`;
+  const apiPath = cleanPath === "/api" || cleanPath.startsWith("/api/")
+    ? cleanPath.slice(4) || "/"
+    : cleanPath;
+
+  return `${API_URL}${apiPath}`;
+}
+
 export async function apiRequest(path, options = {}) {
   const token =
     typeof window === "undefined"
@@ -32,7 +43,7 @@ export async function apiRequest(path, options = {}) {
   }
 
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(buildApiRequestUrl(path), {
       ...options,
       cache: options.cache || "no-store",
       signal: requestController.signal,
