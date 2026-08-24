@@ -166,25 +166,29 @@ export default function ReportDetailsPage() {
       isPublicReport(matchedReport) &&
       /^[a-f\d]{24}$/i.test(String(reportId || ""))
     ) {
-      try {
-        const followUpResult = await getPublicFollowUpReports(reportId);
-        const apiFollowUps = (followUpResult.reports || []).map(normalizeApiReport);
-        const relatedResult = await getPublicRelatedReports(reportId);
-        const apiRelatedReports = (relatedResult.reports || []).map(normalizeApiReport);
-        const existingIds = new Set(
-          browserReports.map((browserReport) => browserReport.reportId),
-        );
-        reportsForDetails = [
-          ...browserReports,
-          ...[...apiFollowUps, ...apiRelatedReports].filter(
-            (apiReport, index, apiReports) =>
-              !existingIds.has(apiReport.reportId) &&
-              apiReports.findIndex((item) => item.reportId === apiReport.reportId) === index,
-          ),
-        ];
-      } catch (_followUpError) {
-        // Keep browser data if the follow-up endpoint is temporarily unavailable.
-      }
+      const [followUpResult, relatedResult] = await Promise.allSettled([
+        getPublicFollowUpReports(reportId),
+        getPublicRelatedReports(reportId),
+      ]);
+      const apiReports = [
+        ...(followUpResult.status === "fulfilled"
+          ? followUpResult.value.reports || []
+          : []),
+        ...(relatedResult.status === "fulfilled"
+          ? relatedResult.value.reports || []
+          : []),
+      ].map(normalizeApiReport);
+      const existingIds = new Set(
+        browserReports.map((browserReport) => browserReport.reportId),
+      );
+      reportsForDetails = [
+        ...browserReports,
+        ...apiReports.filter(
+          (apiReport, index, reports) =>
+            !existingIds.has(apiReport.reportId) &&
+            reports.findIndex((item) => item.reportId === apiReport.reportId) === index,
+        ),
+      ];
     }
 
     setAllReports(reportsForDetails);
