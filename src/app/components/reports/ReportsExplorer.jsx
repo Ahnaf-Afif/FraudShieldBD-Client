@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   BadgeCheck,
@@ -110,6 +110,7 @@ export default function ReportsExplorer() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isUsingApiReports, setIsUsingApiReports] = useState(false);
   const [apiLoadError, setApiLoadError] = useState("");
+  const loadMoreController = useRef(null);
 
   function applyUrlFilters() {
     const searchParams = new URLSearchParams(window.location.search);
@@ -188,6 +189,7 @@ export default function ReportsExplorer() {
     return () => {
       clearTimeout(loadTimer);
       requestController.abort();
+      loadMoreController.current?.abort();
     };
   }, [
     categoryFilter,
@@ -207,6 +209,9 @@ export default function ReportsExplorer() {
 
     setIsLoadingMore(true);
     setApiLoadError("");
+    loadMoreController.current?.abort();
+    const requestController = new AbortController();
+    loadMoreController.current = requestController;
 
     try {
       const nextPage = apiPage + 1;
@@ -224,7 +229,9 @@ export default function ReportsExplorer() {
       addConnectionParam(params, connectionFilter);
       addReportSortParam(params, sortMode);
 
-      const result = await apiRequest(`/reports?${params.toString()}`);
+      const result = await apiRequest(`/reports?${params.toString()}`, {
+        signal: requestController.signal,
+      });
       const nextReports = Array.isArray(result.reports)
         ? result.reports.map(normalizeApiReport)
         : [];
@@ -243,6 +250,10 @@ export default function ReportsExplorer() {
       setApiPage(nextPage);
       setApiTotal(Number(result.total) || apiTotal);
     } catch (error) {
+      if (error?.name === "AbortError") {
+        return;
+      }
+
       setApiLoadError(
         error?.status === 429
           ? "Too many requests right now. Please wait and try again."
@@ -250,6 +261,9 @@ export default function ReportsExplorer() {
       );
     } finally {
       setIsLoadingMore(false);
+      if (loadMoreController.current === requestController) {
+        loadMoreController.current = null;
+      }
     }
   }
 
