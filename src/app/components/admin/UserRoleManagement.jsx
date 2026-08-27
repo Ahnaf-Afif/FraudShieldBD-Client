@@ -9,6 +9,7 @@ const editableRoles = ["Community Member", "Moderator"];
 
 export default function UserRoleManagement() {
   const [session, setSession] = useState(null);
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [status, setStatus] = useState("");
 
@@ -27,6 +28,7 @@ export default function UserRoleManagement() {
     // This effect hydrates browser-only session state after SSR.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSession(currentSession);
+    setIsSessionLoading(false);
 
     if (currentSession?.role === "Admin") {
       // Loading remote admin data is the purpose of this effect.
@@ -52,6 +54,16 @@ export default function UserRoleManagement() {
     } catch (error) {
       setStatus(error.message || "Could not update the role.");
     }
+  }
+
+  if (isSessionLoading) {
+    return (
+      <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-bold text-slate-500">Checking admin access...</p>
+        </div>
+      </section>
+    );
   }
 
   if (session?.role !== "Admin") {
