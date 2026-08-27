@@ -15,6 +15,7 @@ export default function ModerationQueue() {
   const [busyId, setBusyId] = useState("");
   const [notes, setNotes] = useState({});
   const [canAccessQueue, setCanAccessQueue] = useState(null);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
   const [page, setPage] = useState(1);
   const [totalReports, setTotalReports] = useState(0);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
@@ -23,6 +24,7 @@ export default function ModerationQueue() {
     const session = getDemoSession();
     const hasAccess = ["Moderator", "Admin"].includes(session?.role);
     setCanAccessQueue(hasAccess);
+    setIsCheckingAccess(false);
 
     if (!hasAccess) {
       setReports([]);
@@ -109,7 +111,15 @@ export default function ModerationQueue() {
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      {canAccessQueue === false && (
+      {isCheckingAccess && (
+        <div className="rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <p className="text-sm font-bold text-slate-500">
+            Checking moderator access...
+          </p>
+        </div>
+      )}
+
+      {!isCheckingAccess && canAccessQueue === false && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
           <h1 className="text-xl font-bold">Moderator access required</h1>
           <p className="mt-2 text-sm">
@@ -118,7 +128,7 @@ export default function ModerationQueue() {
         </div>
       )}
 
-      {canAccessQueue !== false && (
+      {!isCheckingAccess && canAccessQueue !== false && (
         <>
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
