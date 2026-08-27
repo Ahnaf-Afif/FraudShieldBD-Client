@@ -78,8 +78,8 @@ const backendCredentialGroups = [
 ];
 
 const hostingPlan = [
-  "Client: Vercel or another frontend host with Next.js support",
-  "Server: Render, Railway, Fly.io or VPS depending on uptime needs",
+  "Client: Vercel with the Next.js application",
+  "Server: Render with the Express application",
   "Database: MongoDB Atlas production cluster",
   "Storage: Cloudinary production account",
   "Secrets: never committed, only stored in hosting environment variables",
