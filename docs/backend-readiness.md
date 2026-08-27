@@ -12,8 +12,8 @@ Keep backend credentials in the server environment only. Do not hardcode secrets
 - Database: MongoDB Atlas
 - File storage: Cloudinary
 - Server: Express + Node.js
-- Client hosting: Vercel or equivalent Next.js host
-- Server hosting: Render, Railway, Fly.io, or VPS
+- Client hosting: Vercel
+- Server hosting: Render
 
 ## Environment Variables
 

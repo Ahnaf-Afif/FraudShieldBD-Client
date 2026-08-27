@@ -43,8 +43,8 @@ npm run lint
 
 ## Production Deployment
 
-- Set `NEXT_PUBLIC_API_URL` to the deployed server URL, such as
-  `https://api.example.com`.
+- Set `NEXT_PUBLIC_API_URL` to the deployed Render server URL, such as
+  `https://fraudshield-api.onrender.com`.
 - Build with `npm run build` and start with `npm run start`.
 - Configure the server `CLIENT_URL` with the exact deployed frontend origin.
 - Keep all MongoDB, JWT, Resend, and Cloudinary credentials in the server
@@ -67,7 +67,8 @@ Current stack:
 - MongoDB Atlas for database
 - Cloudinary for evidence file storage
 - Express/Node server as a separate backend
-- Client/server deployed separately
+- Client: Vercel
+- Server: Render
 
 See:
 
