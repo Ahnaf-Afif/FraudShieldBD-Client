@@ -46,6 +46,7 @@ export default function ProfileDashboard() {
   const [saveStatus, setSaveStatus] = useState("");
   const [verificationStatus, setVerificationStatus] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -79,6 +80,7 @@ export default function ProfileDashboard() {
             location: result.user.location || "",
             bio: result.user.bio || "",
           });
+          setIsSessionLoading(false);
           return;
         } catch (error) {
           setLoadError(
@@ -95,6 +97,7 @@ export default function ProfileDashboard() {
         location: currentUser?.location || "",
         bio: currentUser?.bio || "",
       });
+      setIsSessionLoading(false);
     }
 
     refreshProfile();
@@ -179,6 +182,16 @@ export default function ProfileDashboard() {
     } catch (error) {
       setSaveStatus(error.message || "profile-error");
     }
+  }
+
+  if (isSessionLoading) {
+    return (
+      <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-bold text-slate-500">Checking your session...</p>
+        </div>
+      </section>
+    );
   }
 
   if (!demoUser) {
