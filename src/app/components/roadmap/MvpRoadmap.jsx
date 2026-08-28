@@ -115,7 +115,7 @@ export default function MvpRoadmap() {
                   Current phase
                 </p>
                 <p className="text-sm font-semibold text-slate-600">
-                  Production readiness
+                  MVP complete
                 </p>
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function MvpRoadmap() {
             </div>
           </RoadmapPanel>
 
-          <RoadmapPanel title="Next backend phase">
+          <RoadmapPanel title="Later: production operations">
             <div className="grid gap-3">
               {upcomingItems.map((item) => (
                 <UpcomingCard key={item.title} item={item} />
@@ -162,8 +162,9 @@ export default function MvpRoadmap() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <h2 className="font-black text-[#06285c]">Next decision point</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              The core backend is connected. The next decision is how we will
-              provision moderator accounts and prepare production hosting.
+              The core MVP is connected and tested. Production deployment,
+              uptime planning, and operational analytics can happen after the
+              product workflows are validated.
             </p>
             <div className="mt-5 grid gap-3">
               <Link
