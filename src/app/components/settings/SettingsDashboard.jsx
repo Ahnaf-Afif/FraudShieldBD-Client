@@ -22,6 +22,7 @@ import { apiRequest } from "../../lib/apiClient";
 
 export default function SettingsDashboard() {
   const [storageSummary, setStorageSummary] = useState([]);
+  const [isStorageLoading, setIsStorageLoading] = useState(true);
   const [status, setStatus] = useState("");
   const [confirmMode, setConfirmMode] = useState("");
   const [importError, setImportError] = useState("");
@@ -38,6 +39,7 @@ export default function SettingsDashboard() {
 
   function refreshStorageSummary() {
     setStorageSummary(getLocalMvpStorageSummary());
+    setIsStorageLoading(false);
   }
 
   async function changePassword(event) {
@@ -168,11 +170,19 @@ export default function SettingsDashboard() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="font-black text-[#06285c]">Storage summary</h2>
             <div className="mt-4 grid gap-3">
-              <SettingsStat label="Stored groups" value={storedItemCount} />
-              <SettingsStat
-                label="Approx. size"
-                value={`${totalStorageSize.toLocaleString()} chars`}
-              />
+              {isStorageLoading ? (
+                <p className="text-sm font-bold text-slate-500">
+                  Reading browser storage...
+                </p>
+              ) : (
+                <>
+                  <SettingsStat label="Stored groups" value={storedItemCount} />
+                  <SettingsStat
+                    label="Approx. size"
+                    value={`${totalStorageSize.toLocaleString()} chars`}
+                  />
+                </>
+              )}
             </div>
           </div>
         </aside>
