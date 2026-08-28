@@ -109,6 +109,7 @@ export default function NotificationsDashboard() {
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [actionError, setActionError] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -137,6 +138,8 @@ export default function NotificationsDashboard() {
           );
         }
       }
+
+      setIsSessionLoading(false);
     }
 
     loadNotifications();
@@ -290,6 +293,16 @@ export default function NotificationsDashboard() {
     saveNotificationPreferences(nextPreferences);
     setPreferences(nextPreferences);
     setNotifications(getNotificationsForBrowser(demoUser));
+  }
+
+  if (isSessionLoading) {
+    return (
+      <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-bold text-slate-500">Checking your session...</p>
+        </div>
+      </section>
+    );
   }
 
   if (!demoUser) {
