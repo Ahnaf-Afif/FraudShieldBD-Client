@@ -160,8 +160,8 @@ export default function SettingsDashboard() {
               Settings
             </h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Manage local MVP data saved in this browser. Backend account
-              settings will replace this later.
+              Manage local MVP data saved in this browser and update your
+              server-backed account password.
             </p>
           </div>
 
