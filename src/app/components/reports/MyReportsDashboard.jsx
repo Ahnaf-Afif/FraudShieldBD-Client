@@ -72,12 +72,14 @@ export default function MyReportsDashboard() {
   const [isLoadingMoreReports, setIsLoadingMoreReports] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
   const filterEffectReady = useRef(false);
 
   useEffect(() => {
     async function refreshDashboard() {
       setDemoUser(getDemoSession());
       await loadReports();
+      setIsSessionLoading(false);
     }
 
     refreshDashboard();
@@ -265,6 +267,16 @@ export default function MyReportsDashboard() {
     searchValue,
     submittedReports,
   ]);
+
+  if (isSessionLoading) {
+    return (
+      <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-bold text-slate-500">Checking your session...</p>
+        </div>
+      </section>
+    );
+  }
 
   if (!demoUser) {
     return (

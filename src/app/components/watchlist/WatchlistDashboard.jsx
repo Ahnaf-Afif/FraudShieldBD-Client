@@ -37,6 +37,7 @@ export default function WatchlistDashboard() {
   const [searchValue, setSearchValue] = useState("");
   const [actionError, setActionError] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function WatchlistDashboard() {
 
       if (!window.localStorage.getItem("fraudshield-token")) {
         setWatchlistItems(localItems);
+        setIsSessionLoading(false);
         return;
       }
 
@@ -64,6 +66,8 @@ export default function WatchlistDashboard() {
             "The live watchlist could not be loaded. Showing saved items instead.",
         );
       }
+
+      setIsSessionLoading(false);
     }
 
     refreshWatchlist();
@@ -153,6 +157,16 @@ export default function WatchlistDashboard() {
 
     toggleWatchlistAlerts(identifier);
     setWatchlistItems(getWatchlistFromBrowser());
+  }
+
+  if (isSessionLoading) {
+    return (
+      <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-bold text-slate-500">Checking your session...</p>
+        </div>
+      </section>
+    );
   }
 
   if (!demoUser) {
